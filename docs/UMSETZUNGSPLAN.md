@@ -190,7 +190,7 @@ tests/                unit/ e2e/
 
 ### Vor dem Start nötig
 1. **GitHub-Repo:** ~~Bitte ein leeres, privates Repo `Tash52/raumstrom-website` anlegen.~~ Erledigt am 16.11.2026, Repo ist verbunden.
-2. **Cloud-Umgebung:** Darf ich eine eigene Umgebung „raumstrom-website" mit Freigabeliste vorschlagen (Doku-Seiten von Astro, three.js, R3F, Keystatic, ALTCHA, GSAP, Mistral sowie ambientcg.com und polyhaven.com)? Dazu erscheint ein Freigabe-Dialog. *Empfehlung: ja.*
+2. **Cloud-Umgebung:** Erledigt am 16.11.2026. Die persönliche Umgebung „raumstrom-website" ist angelegt und dem Repo zugeordnet. Freigegeben sind 15 Hosts: Domain-Abfrage (rdap.denic.de, rdap.verisign.com, cloudflare-dns.com), Doku (docs.astro.build, threejs.org, r3f.docs.pmnd.rs, drei.docs.pmnd.rs, keystatic.com, altcha.org, gsap.com, docs.mistral.ai), www.gesetze-im-internet.de sowie die CC0-Texturquellen (ambientcg.com, api.polyhaven.com, dl.polyhaven.org).
 3. **Astro 7 statt Astro 6?** *Empfehlung: ja.*
 4. **Lizenz-Ausnahmen** (Regel „nur MIT/Apache/BSD/ISC"):
    a) GSAP (kostenlos, eigene Lizenz). Alternative: Motion (MIT) plus native Scroll-Animationen.
@@ -202,8 +202,8 @@ tests/                unit/ e2e/
 
 ### Inhaltlich (Platzhalter sind möglich, Antworten verbessern das Ergebnis)
 6. **Meister-Partnerbetriebe:** Gibt es bereits feste Partner, und für welche Gewerke? Die Aussage „unsere festen Meister-Partnerbetriebe" muss zum Launch stimmen. Hinweis: Mit einem Abschluss als staatlich geprüfter Techniker (Elektrotechnik) kommt eine Eintragung in die Handwerksrolle nach § 7 Abs. 2 HwO in Betracht. Das wäre ein Thema für das Gespräch mit der HWK, danach ließe sich Elektro in der Matrix auf `eigen` stellen.
-7. **Rechtsform und Domain:** GbR und `raumstrom.de` als Annahme, oder Platzhalter?
+7. **Rechtsform und Domain:** GbR als Annahme, oder Platzhalter? **Domain geklärt:** `raumstrom.de` ist laut DENIC-Registerabfrage (RDAP) am 16.11.2026 nicht registriert, ebenso `raum-strom.de`, `raumstrom.com` und `raumstrom.net`. `raumstrom.de` wird als Domain in `firma.yaml` vorbelegt. Die Abfrage ist eine Momentaufnahme und ersetzt nicht die Marken- und Namensrecherche (DPMA, Handelsregister) aus der Launch-Checkliste.
 8. **Orte:** Gilt die Startliste aus dem Briefing (Schweinfurt, Gochsheim, Grafenrheinfeld, Bergrheinfeld, Niederwerrn, Werneck, Haßfurt, Gerolzhofen, Bad Kissingen)? Ich würde für alle neun recherchierte Entwürfe schreiben, veröffentlicht wird nur, was der Betreiber bestätigt.
 9. **CI mit GitHub Actions** einrichten? *Empfehlung: ja* (im kostenlosen Kontingent privater Repos).
 
-**Ohne Antwort gilt bei 3, 4, 5, 7, 8 und 9 jeweils die Empfehlung bzw. der Platzhalter. Für 1 und 2 brauche ich eine Rückmeldung.**
+**Ohne Antwort gilt bei 3, 4, 5, 7, 8 und 9 jeweils die Empfehlung bzw. der Platzhalter. Die Punkte 1 und 2 sind erledigt.**
