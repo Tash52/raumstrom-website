@@ -1,0 +1,8 @@
+/* STUB (architect, Phase 1a). Owned by design-system. */
+@import './tokens.css';
+
+html {
+  background: var(--color-kalk);
+  color: var(--color-graphit);
+  font-family: system-ui, sans-serif;
+}

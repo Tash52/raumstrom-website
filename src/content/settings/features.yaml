@@ -1,0 +1,6 @@
+# Feature-Flags. true = aktiv. Umstellen per Keystatic oder hier.
+floorplan_ai: false
+bewertungen_anzeigen: false
+referenzen_anzeigen: false
+ratgeber_anzeigen: false
+consent_manager: false

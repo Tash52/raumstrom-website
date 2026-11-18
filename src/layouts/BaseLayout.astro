@@ -1,0 +1,29 @@
+---
+// STUB (architect, Phase 1a). Owned by design-system: header, footer, skip link, fonts.
+// No style attributes and no inline scripts (CSP).
+import '../styles/base.css';
+
+interface Props {
+  title: string;
+  description: string;
+  noindex?: boolean;
+}
+const { title, description, noindex = false } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex" />}
+  </head>
+  <body>
+    <main id="inhalt">
+      <slot />
+    </main>
+  </body>
+</html>

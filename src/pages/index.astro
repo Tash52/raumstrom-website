@@ -1,0 +1,11 @@
+---
+// STUB (architect, Phase 1a). Owned by page-builder.
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getFirma } from '../lib/content/index.ts';
+
+const firma = await getFirma();
+---
+<BaseLayout title={`${firma.name} · ${firma.claim}`} description={`${firma.name}: ${firma.claim}`}>
+  <h1>{firma.name}</h1>
+  <p>{firma.claim}</p>
+</BaseLayout>

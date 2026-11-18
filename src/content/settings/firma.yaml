@@ -1,0 +1,85 @@
+# Zentrale Firmendaten. Impressum, Footer, Kontakt, Schema.org und Mails lesen NUR hier.
+# Fehlende Werte stehen als Platzhalter in doppelten eckigen Klammern (PLATZHALTER: …). Bearbeitung per Keystatic (npm run dev -> /keystatic).
+name: RAUMSTROM
+# Annahme bis zur Bestätigung durch den Betreiber
+rechtsform: GbR
+firmierung: "[[PLATZHALTER: vollständiger Name der Gesellschaft laut Gesellschaftsvertrag]]"
+claim: Renoviert bis in die Leitung.
+gesellschafter:
+  - name: "[[PLATZHALTER: vollständiger Name Gesellschafter 1 (Christian Maul?)]]"
+    vertretungsberechtigt: true
+  - name: "[[PLATZHALTER: vollständiger Name Gesellschafter 2 (Jernar Kassimov?)]]"
+    vertretungsberechtigt: true
+adresse:
+  strasse: "[[PLATZHALTER: Straße und Hausnummer, ladungsfähig, kein Postfach]]"
+  plz: "[[PLATZHALTER: Postleitzahl]]"
+  ort: "[[PLATZHALTER: Ort]]"
+  land: Deutschland
+kontakt:
+  telefon: "[[PLATZHALTER: Telefonnummer im Format +49…]]"
+  telefon_anzeige: "[[PLATZHALTER: Telefonnummer zur Anzeige, z. B. 09721 …]]"
+  email: "[[PLATZHALTER: allgemeine E-Mail-Adresse, z. B. info@raumstrom.de]]"
+  anfragen_empfaenger: "[[PLATZHALTER: Empfängeradresse für Anfragen aus Kontaktformular und Raumplaner]]"
+steuer:
+  ust_idnr: "[[PLATZHALTER: USt-IdNr. (DE + 9 Ziffern) oder leer lassen, falls nicht vorhanden]]"
+  w_idnr: "[[PLATZHALTER: Wirtschafts-Identifikationsnummer oder leer lassen, falls noch nicht zugeteilt]]"
+handwerk:
+  kammer: Handwerkskammer für Unterfranken
+  kammer_anschrift: "[[PLATZHALTER: Anschrift der Handwerkskammer für Unterfranken]]"
+  eintragung: "[[PLATZHALTER: Eintragung Handwerksrolle bzw. Verzeichnis zulassungsfreier Handwerke, oder leer lassen]]"
+  berufsbezeichnung: "[[PLATZHALTER: Berufsbezeichnung]]"
+  staat_verleihung: Deutschland
+  berufsrecht_url: https://www.gesetze-im-internet.de/hwo/
+versicherung:
+  art: Betriebshaftpflichtversicherung
+  versicherer: "[[PLATZHALTER: Name des Versicherers]]"
+  anschrift: "[[PLATZHALTER: Anschrift des Versicherers]]"
+  geltungsraum: "[[PLATZHALTER: räumlicher Geltungsbereich, z. B. Deutschland]]"
+redaktion:
+  name: "[[PLATZHALTER: Verantwortlich für redaktionelle Inhalte nach § 18 Abs. 2 MStV]]"
+  anschrift: "[[PLATZHALTER: Anschrift der verantwortlichen Person]]"
+einzugsgebiet:
+  beschreibung: "[[PLATZHALTER: Einzugsgebiet in einem Satz, z. B. Schweinfurt und Umland]]"
+  # Startliste aus dem Briefing. bestaetigt: false = Entwurf, noch nicht vom Betreiber bestätigt.
+  orte:
+    - name: Schweinfurt
+      slug: schweinfurt
+      landkreis: Schweinfurt
+      bestaetigt: false
+    - name: Gochsheim
+      slug: gochsheim
+      landkreis: Schweinfurt
+      bestaetigt: false
+    - name: Grafenrheinfeld
+      slug: grafenrheinfeld
+      landkreis: Schweinfurt
+      bestaetigt: false
+    - name: Bergrheinfeld
+      slug: bergrheinfeld
+      landkreis: Schweinfurt
+      bestaetigt: false
+    - name: Niederwerrn
+      slug: niederwerrn
+      landkreis: Schweinfurt
+      bestaetigt: false
+    - name: Werneck
+      slug: werneck
+      landkreis: Schweinfurt
+      bestaetigt: false
+    - name: Haßfurt
+      slug: hassfurt
+      landkreis: Haßberge
+      bestaetigt: false
+    - name: Gerolzhofen
+      slug: gerolzhofen
+      landkreis: Schweinfurt
+      bestaetigt: false
+    - name: Bad Kissingen
+      slug: bad-kissingen
+      landkreis: Bad Kissingen
+      bestaetigt: false
+erreichbarkeit:
+  - tage: Montag bis Freitag
+    zeiten: "[[PLATZHALTER: Erreichbarkeit, z. B. 8:00–17:00 Uhr]]"
+social: []
+domain: raumstrom.de

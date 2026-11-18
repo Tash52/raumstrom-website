@@ -1,0 +1,9 @@
+[
+  {
+    "id": "GHSA-fc5q-39xc-vjpf",
+    "paket": "picomatch <=4.0.7 (über astro, vite, tinyglobby, @astrojs/*)",
+    "grund": "ReDoS nur bei angreiferkontrollierten Glob-Mustern. Es gibt keine gepatchte Version (Stand 18.11.2026). picomatch läuft nur im Build und Dev-Server mit Mustern aus unserem Code; server/server.mjs nutzt kein picomatch und gibt keine Nutzereingaben an Glob-Funktionen weiter.",
+    "geprueft": "2026-11-18",
+    "bis": "2026-12-31"
+  }
+]

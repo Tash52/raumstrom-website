@@ -1,0 +1,49 @@
+# Gewerke-Matrix (Briefing Abschnitt 2).
+# ausfuehrung: eigen | partner. Bei "partner" zeigt die Website direkt an der Leistung:
+# "Ausführung durch unseren Meister-Partnerbetrieb".
+# hinweis_hwk_geprueft: true erst, wenn die Handwerkskammer für Unterfranken die Formulierung geprüft hat.
+gewerke:
+  - id: koordination
+    name: Koordination aller Gewerke
+    ausfuehrung: eigen
+    hinweis_hwk_geprueft: false
+  - id: demontage-entkernung
+    name: Demontage und Entkernung
+    ausfuehrung: eigen
+    hinweis_hwk_geprueft: false
+  - id: trockenbau
+    name: Trockenbau
+    ausfuehrung: eigen
+    hinweis_hwk_geprueft: false
+  - id: bodenbelag
+    name: Bodenbelag (Vinyl, Laminat, Teppich)
+    ausfuehrung: eigen
+    hinweis_hwk_geprueft: false
+  - id: elektroinstallation
+    name: Elektroinstallation
+    ausfuehrung: partner
+    hinweis_hwk_geprueft: false
+  - id: wallbox-installation
+    name: Wallbox-Installation
+    ausfuehrung: partner
+    hinweis_hwk_geprueft: false
+  - id: zaehlerschrank
+    name: Zählerschrank und Unterverteilung
+    ausfuehrung: partner
+    hinweis_hwk_geprueft: false
+  - id: fliesen-bad
+    name: Fliesen und Bad
+    ausfuehrung: partner
+    hinweis_hwk_geprueft: false
+  - id: putz-stuck
+    name: Putz und Stuck
+    ausfuehrung: partner
+    hinweis_hwk_geprueft: false
+  - id: malerarbeiten
+    name: Malerarbeiten
+    ausfuehrung: partner
+    hinweis_hwk_geprueft: false
+  - id: pruefservice-dguv-v3
+    name: Prüfservice DGUV V3 (Ladesäulen, Wallboxen, Ladekabel)
+    ausfuehrung: eigen
+    hinweis_hwk_geprueft: false
