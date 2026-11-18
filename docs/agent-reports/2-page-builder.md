@@ -25,3 +25,10 @@ Dev/Staging (`RAUMSTROM_STAGING=1`): Entwuerfe sichtbar mit Banner, Rechtsseiten
 - Placeholder-Texte (`[[PLATZHALTER…]]`) erscheinen in Staging sichtbar im Fliesstext (z. B. Startseite "Region").
 - Screenshots 390 px nur erzeugt, nicht einzeln durchgesehen (1440 Startseite geprueft).
 - Kein JSON-LD (SEO-Phase).
+
+## Nacharbeit Phase 2 (Rueckmeldeseiten, noscript)
+- `/kontakt/danke/` und `/kontakt/fehler/` ausgestaltet: noindex, Statuszeile (role status/alert, Icon), "Wie es weitergeht" bzw. "Moegliche Gruende", Telefon/E-Mail aus getFirma() (Platzhalter ausgeblendet), Links zurueck zum Formular und zur Startseite.
+- Neue Komponente `src/components/sections/KontaktDirekt.astro` (Telefon/E-Mail-Zeile), genutzt auf beiden Seiten und im noscript-Hinweis in `KontaktFormular.astro` am `[data-altcha-platz]`; veralteter Kommentar korrigiert.
+- Tests: `tests/e2e/seiten.spec.ts` um 3 Specs je Projekt ergaenzt (noindex, H1, axe, noscript ohne JS). npm ci, vitest (216) + Hook-Test, check, scan:wording, build:staging, vollstaendiges test:e2e (Docker/Mailpit lief) gruen.
+- Hinweis: Playwright-Port 4399 war zeitweise von einem parallelen Lauf belegt; nach Wartezeit erneut gestartet.
+- Offen (architect): Sitemap-Filter fuer beide Seiten. Die Texte stehen im Template, nicht in `src/content/pages/` (nur 2 Kurzseiten).

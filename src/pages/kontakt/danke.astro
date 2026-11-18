@@ -1,15 +1,25 @@
 ---
-// Target of the native form POST without JavaScript (303 from /api/contact). Minimal page by backend-api;
-// texts may move to src/content/pages/ (page-builder / content-writer). noindex, not linked.
+// Target of the native form POST without JavaScript (303 from /api/contact). noindex, not linked.
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Button from '../../components/base/Button.astro';
+import Icon from '../../components/base/Icon.astro';
+import KontaktDirekt from '../../components/sections/KontaktDirekt.astro';
 import Seitenkopf from '../../components/sections/Seitenkopf.astro';
 ---
 <BaseLayout title="Anfrage gesendet | RAUMSTROM" description="Ihre Anfrage ist bei uns eingegangen." noindex>
   <Seitenkopf titel="Anfrage gesendet" lead="Vielen Dank. Wir haben Ihre Anfrage erhalten und melden uns bei Ihnen." />
-  <section class="rueckmeldung" aria-label="Weiter">
+  <section class="rueckmeldung" aria-labelledby="weiter-titel">
     <div class="container container-text">
-      <p>Sie erhalten in Kürze eine kurze Eingangsbestätigung per E-Mail.</p>
+      <p class="status" role="status">
+        <Icon name="check" class="status-icon" />
+        <span>Ihre Anfrage wurde übermittelt.</span>
+      </p>
+      <h2 id="weiter-titel" class="weiter-titel">Wie es weitergeht</h2>
+      <ol class="schritte">
+        <li>Sie erhalten in Kürze eine Eingangsbestätigung per E-Mail. Prüfen Sie bei Bedarf auch Ihren Spam-Ordner.</li>
+        <li>Wir sichten Ihre Angaben und Fotos und melden uns bei Ihnen zur Abstimmung.</li>
+      </ol>
+      <KontaktDirekt einleitung="Wenn Sie etwas ergänzen möchten, erreichen Sie uns" class="direkt-block" />
       <div class="cluster aktionen">
         <Button href="/" icon="arrow-right">Zur Startseite</Button>
         <Button href="/leistungen/" variante="sekundaer">Leistungen ansehen</Button>
@@ -21,6 +31,40 @@ import Seitenkopf from '../../components/sections/Seitenkopf.astro';
 <style>
   .rueckmeldung {
     padding-bottom: var(--section-y);
+  }
+
+  .status {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    font-weight: 600;
+  }
+
+  .status-icon {
+    flex: none;
+    width: 1.75em;
+    height: 1.75em;
+    padding: 0.25em;
+    border-radius: 50%;
+    background: var(--color-strom);
+    color: var(--color-kabelgruen);
+  }
+
+  .weiter-titel {
+    margin-top: var(--space-6);
+    font-size: var(--step-1);
+  }
+
+  .schritte {
+    margin-top: var(--space-3);
+    padding-left: 1.25em;
+    list-style: decimal;
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  .rueckmeldung :global(.direkt-block) {
+    margin-top: var(--space-5);
   }
 
   .aktionen {

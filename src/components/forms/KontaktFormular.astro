@@ -2,14 +2,15 @@
 // Contact form (UI only). Interface to POST /api/contact: kontakt-schnittstelle.ts.
 // Works without JavaScript through native validation and a plain multipart POST; with JavaScript
 // (kontakt-formular.ts) it validates with accessible messages and sends via fetch.
-// [data-altcha-platz] is the mount point for the ALTCHA widget (backend-api / later phase); it writes its
-// payload into the field "altcha". Until then the field is not sent.
+// [data-altcha-platz] is the mount point for the ALTCHA widget (see kontakt-formular.ts); it writes its
+// payload into the field "altcha". Without JavaScript the <noscript> note points to phone / e-mail.
 import AuswahlFeld from '../base/AuswahlFeld.astro';
 import Button from '../base/Button.astro';
 import Checkbox from '../base/Checkbox.astro';
 import DateiFeld from '../base/DateiFeld.astro';
 import TextBereich from '../base/TextBereich.astro';
 import TextFeld from '../base/TextFeld.astro';
+import KontaktDirekt from '../sections/KontaktDirekt.astro';
 import { getLeistungen } from '../sections/seiten.ts';
 import { CSRF_URL, FELD, KONTAKT_ENDPOINT, LIMITS } from './kontakt-schnittstelle.ts';
 
@@ -76,7 +77,12 @@ const mb = (b: number) => `${Math.round(b / 1024 / 1024)} MB`;
     <input id="feld-website" type="text" name={FELD.website} tabindex="-1" autocomplete="off" />
   </div>
 
-  <div class="altcha" data-altcha-platz></div>
+  <div class="altcha" data-altcha-platz>
+    <noscript>
+      <p class="noscript-hinweis">Der Spam-Schutz dieses Formulars benötigt JavaScript. Bitte aktivieren Sie JavaScript, um die Anfrage zu senden.</p>
+      <KontaktDirekt einleitung="Alternativ erreichen Sie uns" />
+    </noscript>
+  </div>
 
   <Checkbox name={FELD.einwilligung} value="ja" required>
     Ich habe die <a class="textlink" href="/datenschutz/">Datenschutzerklärung</a> gelesen und bin damit einverstanden, dass RAUMSTROM meine Angaben und Fotos zur Bearbeitung der Anfrage verwendet.
