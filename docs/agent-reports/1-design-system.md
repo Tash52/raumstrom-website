@@ -59,3 +59,16 @@ Lesart: lokaler Handwerks- und Elektrobetrieb für Eigentümer und Verwaltungen.
 - Popover-Menü braucht Chrome 114+, Safari 17+ bzw. Firefox 125+. Ältere Browser sehen den Menü-Button ohne Funktion. Abhilfe wäre ein kleines gebündeltes Fallback-Skript, falls nötig.
 - `fonts` in `astro.config.mjs` ist als `any` gecastet, weil der Config-Typ die Provider-Optionen aus einer Variable nicht ableitet. Astro validiert zur Laufzeit.
 - Der Datei-Button zeigt im Test-Chromium englischen Text („Choose Files"), weil der Browser die Sprache vorgibt. In deutschen Browsern ist er deutsch.
+
+## Nacharbeit nach QA (Stand a333656, 18.11.2026)
+| Befund | Änderung |
+|---|---|
+| B1 Popover-Rahmen in der Desktop-Navigation | `src/components/layout/Header.astro` (Desktop-Block): `border: 0`, `margin: 0`, `inset: auto`, `max-width/max-height: none`. Gemessen bei 1152 und 1440 px: `border-top-width` 0px. |
+| B3 Gewerke-Kennzeichnung | Neue Basis-Komponente `src/components/base/GewerkeHinweis.astro` (`gewerke`: IDs, `nennen`: betroffene Gewerke aufzählen, Standard ja). Sie nutzt `getPartnerGewerke()` und `PARTNER_HINWEIS` und rendert nichts, wenn alle Gewerke „eigen" sind. Unbekannte IDs brechen den Build ab. Eingesetzt im Start-Stub (Hero mit `elektroinstallation`, Säule 1 und 2 je an der Karte) und im Styleguide (Säulen-Karten, Graphit-Karten). Styleguide-Mustertexte ohne Gewerke-Nennung umformuliert, Blueprint-Beschriftung „Elektrik" ersetzt durch „Prüfservice Ladesäulen", „Wallbox, Typ 2" ersetzt durch „Ladesäule geprüft". Für page-builder: an jeder Leistung `<GewerkeHinweis gewerke={leistung.data.gewerke} />` direkt beim Text. |
+| B8 Knoten zu dicht | `Section.astro`: Variablen `--leitung-x` (Gutter/2) und `--inhalt-x` (`max(gutter, 1.875rem)`). Leitungs-Sections rücken den Inhalt auf mindestens 30 px ein, der Knoten rechnet sich daraus. Abstand Ring zu Text bei 390 px jetzt 9 px statt ca. 3 px. Gleicher Versatz am Footer-Claim. Am Desktop ändert sich nichts (Gutter 48 px). |
+
+Neue E2E-Tests in `tests/e2e/design-system.spec.ts`: Rahmen 0 px (B1), `[data-gewerke-hinweis]` mit Text auf `/` und `/styleguide/` (B3), Knotenabstand ≥ 8 px bei 390 px (B8).
+
+Tests: `npm test` 148/148 (+ Hook 7/7), `npm run check` 0 Fehler, Wording-Scan ok, `npm run build:staging` ok, `npm run test:e2e` 49 bestanden, 3 übersprungen (gerätespezifisch), darin axe 0 Verstöße auf `/` und `/styleguide/` in Desktop und mobil. Screenshots neu: `docs/agent-reports/screenshots/1/design-system-{start,styleguide}-{390,1440}.png`, `design-system-menue-390.png`.
+
+Offen: Ob die Lead-Formulierung „Modernisierung aus einer Hand" neben dem Hinweis ausreicht, entscheiden content-writer und legal-compliance in Phase 2.

@@ -1,6 +1,7 @@
 ---
 // STUB (Phase 1b, design-system: uses the base layout and components). Owned by page-builder, replaced in Phase 2.
 import BaseLayout from '../layouts/BaseLayout.astro';
+import GewerkeHinweis from '../components/base/GewerkeHinweis.astro';
 import Karte from '../components/base/Karte.astro';
 import MonoLabel from '../components/base/MonoLabel.astro';
 import Section from '../components/base/Section.astro';
@@ -10,21 +11,27 @@ const firma = await getFirma();
 ---
 <BaseLayout title={`${firma.name} · ${firma.claim}`} description={`${firma.name}: ${firma.claim}`}>
   <Section id="start" titel={firma.claim} ebene={1} leitung class="stub-hero">
-    <p slot="einleitung" class="t-lead">Modernisierung aus einer Hand. Jede Renovierung beginnt bei der Elektrik.</p>
+    <Fragment slot="einleitung">
+      <p class="t-lead">Modernisierung aus einer Hand. Jede Renovierung beginnt bei der Elektrik.</p>
+      <GewerkeHinweis gewerke={['koordination', 'elektroinstallation']} />
+    </Fragment>
   </Section>
   <Section id="saeulen" titel="Drei Säulen" flaeche="graphit" leitung>
     <div class="stub-saeulen">
       <Karte titel="Modernisieren">
         <MonoLabel slot="label" ton="akzent">Säule 1</MonoLabel>
         Komplettrenovierung: Elektrik, Trockenbau, Boden, Wände, Fliesen und Bad, Malerarbeiten.
+        <GewerkeHinweis slot="fuss" gewerke={['elektroinstallation', 'trockenbau', 'bodenbelag', 'putz-stuck', 'fliesen-bad', 'malerarbeiten']} />
       </Karte>
       <Karte titel="Elektrifizieren">
         <MonoLabel slot="label" ton="akzent">Säule 2</MonoLabel>
         Wallbox-Installation, Elektro-Modernisierung, Zählerschrank und Unterverteilung.
+        <GewerkeHinweis slot="fuss" gewerke={['wallbox-installation', 'elektroinstallation', 'zaehlerschrank']} />
       </Karte>
       <Karte titel="Sicher betreiben">
         <MonoLabel slot="label" ton="akzent">Säule 3</MonoLabel>
         Wiederkehrende Prüfung von Ladesäulen, Wallboxen und Ladekabeln nach DGUV V3.
+        <GewerkeHinweis slot="fuss" gewerke={['pruefservice-dguv-v3']} />
       </Karte>
     </div>
   </Section>

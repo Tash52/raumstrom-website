@@ -10,6 +10,7 @@ import DateiFeld from '../../components/base/DateiFeld.astro';
 import Feldgruppe from '../../components/base/Feldgruppe.astro';
 import Icon from '../../components/base/Icon.astro';
 import { ICON_NAMES } from '../../components/base/icons.ts';
+import GewerkeHinweis from '../../components/base/GewerkeHinweis.astro';
 import Karte from '../../components/base/Karte.astro';
 import Logo from '../../components/base/Logo.astro';
 import MonoLabel from '../../components/base/MonoLabel.astro';
@@ -36,9 +37,9 @@ const skala = [
   { klasse: 't-display', token: '--step-5', text: 'Renoviert bis in die Leitung.' },
   { klasse: 't-h1', token: '--step-4', text: 'Wohnung gekauft? Wir machen sie bezugsfertig.' },
   { klasse: 't-h2', token: '--step-3', text: 'Hinter der Wand beginnt die Renovierung' },
-  { klasse: 't-h3', token: '--step-1', text: 'Elektro-Modernisierung im Altbau' },
-  { klasse: 't-lead', token: '--step-1 · 300', text: 'Elektrik, Trockenbau, Boden und Wände aus einer Hand.' },
-  { klasse: 't-body', token: '--step-0', text: 'Wir planen die Leitungen zuerst und schließen die Wände danach. So halten Oberflächen, und Sie haben einen Ansprechpartner für alle Gewerke.' },
+  { klasse: 't-h3', token: '--step-1', text: 'Prüfservice für Ladesäulen' },
+  { klasse: 't-lead', token: '--step-1 · 300', text: 'Wir koordinieren alle Gewerke und bleiben Ihr Ansprechpartner.' },
+  { klasse: 't-body', token: '--step-0', text: 'Wir klären zuerst, was hinter der Wand liegt, und planen die Oberflächen danach. So passt am Ende alles zusammen, und Sie behalten den Überblick.' },
 ];
 ---
 <BaseLayout
@@ -153,7 +154,7 @@ const skala = [
           <Button variante="sekundaer" href="#karten">Leistungen ansehen</Button>
         </div>
         <p>Grüne Schrift ist auf Dunkel Strom: <TextLink href="#farben">zu den Farben</TextLink>.</p>
-        <p class="cluster"><MonoLabel ton="akzent">22 kW</MonoLabel><MonoLabel>Wallbox, Typ 2</MonoLabel></p>
+        <p class="cluster"><MonoLabel ton="akzent">22 kW</MonoLabel><MonoLabel>Ladesäule geprüft</MonoLabel></p>
       </div>
     </div>
     <h3 class="sg-unter">Icons (Tabler, Strichstärke 1,75)</h3>
@@ -167,12 +168,15 @@ const skala = [
       <Karte titel="Modernisieren" href="#karten">
         <MonoLabel slot="label" ton="text">Säule 1</MonoLabel>
         Komplettrenovierung mit Elektrik, Trockenbau, Boden, Wänden und Bad.
+        <GewerkeHinweis slot="fuss" gewerke={['elektroinstallation', 'trockenbau', 'bodenbelag', 'putz-stuck', 'fliesen-bad']} />
       </Karte>
       <Karte titel="Elektrifizieren" href="#karten">
         <MonoLabel slot="label" ton="text">Säule 2</MonoLabel>
         Wallbox, Elektro-Modernisierung, Zählerschrank und Unterverteilung.
+        <GewerkeHinweis slot="fuss" gewerke={['wallbox-installation', 'elektroinstallation', 'zaehlerschrank']} />
       </Karte>
       <Karte titel="Sicher betreiben" href="#karten" variante="flaeche">
+        <GewerkeHinweis slot="fuss" gewerke={['pruefservice-dguv-v3']} />
         <MonoLabel slot="label" ton="text">Säule 3</MonoLabel>
         Wiederkehrende Prüfung von Ladesäulen, Wallboxen und Ladekabeln.
         <MonoLabel slot="fuss">DGUV V3</MonoLabel>
@@ -180,7 +184,7 @@ const skala = [
     </div>
     <div class="sg-blueprints">
       <Blueprint variante="team" name="Christian Maul" alt="Illustration als Platzhalter für das Foto von Christian Maul" beschriftung="Organisation, Trockenbau" />
-      <Blueprint variante="team" name="Jernar Kassimov" alt="Illustration als Platzhalter für das Foto von Jernar Kassimov" beschriftung="Elektrik" />
+      <Blueprint variante="team" name="Jernar Kassimov" alt="Illustration als Platzhalter für das Foto von Jernar Kassimov" beschriftung="Prüfservice Ladesäulen" />
       <Blueprint variante="referenz" name="Altbau" alt="Grundriss-Skizze einer Altbauwohnung" beschriftung="Wohnung, 3 Zimmer" class="sg-blueprint-breit" />
     </div>
   </Section>
@@ -188,8 +192,14 @@ const skala = [
   <Section id="flaeche" titel="Fläche Graphit: hinter der Wand" flaeche="graphit" leitung>
     <p slot="einleitung" class="t-lead">Dunkle Abschnitte schalten die semantischen Tokens um. Die Leitung leuchtet in Strom.</p>
     <div class="sg-karten">
-      <Karte titel="Leitungen" href="#flaeche">Schlitze, Dosen und Verteilung, bevor die Wand geschlossen wird.</Karte>
-      <Karte titel="Unterverteilung" href="#flaeche" variante="flaeche">Neue Stromkreise mit Fehlerstromschutz.</Karte>
+      <Karte titel="Leitungen" href="#flaeche">
+        Schlitze, Dosen und Verteilung, bevor die Wand geschlossen wird.
+        <GewerkeHinweis slot="fuss" gewerke={['elektroinstallation']} nennen={false} />
+      </Karte>
+      <Karte titel="Unterverteilung" href="#flaeche" variante="flaeche">
+        Neue Stromkreise mit Fehlerstromschutz.
+        <GewerkeHinweis slot="fuss" gewerke={['zaehlerschrank']} nennen={false} />
+      </Karte>
     </div>
   </Section>
 

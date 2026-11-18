@@ -121,3 +121,39 @@ test('security.txt nach RFC 9116 (Expires höchstens 1 Jahr)', async ({ request 
   expect(tage).toBeGreaterThan(0);
   expect(tage).toBeLessThanOrEqual(366);
 });
+
+test('Desktop-Navigation ohne Popover-Standardrahmen (QA B1)', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'nur Desktop');
+  for (const breite of [1152, 1440]) {
+    await page.setViewportSize({ width: breite, height: 800 });
+    await page.goto('/styleguide/');
+    const rand = await page.locator('#hauptmenue').evaluate((e) => getComputedStyle(e).borderTopWidth);
+    expect(rand, `${breite} px`).toBe('0px');
+  }
+});
+
+test('Partner-Gewerke sind gekennzeichnet (QA B3)', async ({ page }) => {
+  for (const pfad of SEITEN) {
+    await page.goto(pfad);
+    const hinweise = page.locator('[data-gewerke-hinweis]');
+    expect(await hinweise.count(), pfad).toBeGreaterThan(0);
+    await expect(hinweise.first()).toContainText('Ausführung durch unseren Meister-Partnerbetrieb');
+  }
+});
+
+test('Leitungsknoten halten Abstand zur Überschrift (QA B8)', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  for (const pfad of SEITEN) {
+    await page.goto(pfad);
+    const abstaende = await page.$$eval('[data-leitung-knoten]', (ks) =>
+      ks.map((k) => {
+        const h = k.parentElement!;
+        const range = document.createRange();
+        range.selectNodeContents(h);
+        const text = [...range.getClientRects()].find((r) => r.width > 0 && r.left > k.getBoundingClientRect().right - 1);
+        return (text?.left ?? h.getBoundingClientRect().left) - (k.getBoundingClientRect().right + 3.5 + 2);
+      }),
+    );
+    for (const a of abstaende) expect(a, pfad).toBeGreaterThanOrEqual(8);
+  }
+});

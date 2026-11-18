@@ -61,8 +61,15 @@ const titelId = titel ? `${id ?? 'abschnitt'}-titel` : undefined;
   }
 
   .section-inner {
+    /* x of the cable and of the content; content keeps >= 11 px clear of the node on small screens */
+    --leitung-x: calc(var(--gutter) * 0.5);
+    --inhalt-x: max(var(--gutter), 1.875rem);
     position: relative;
     display: flow-root; /* keeps child margins inside, so the cable reaches the section edges */
+  }
+
+  .section-leitung .section-inner {
+    padding-left: var(--inhalt-x);
   }
 
   .section-kopf {
@@ -82,7 +89,7 @@ const titelId = titel ? `${id ?? 'abschnitt'}-titel` : undefined;
   .leitung {
     position: absolute;
     inset-block: calc(var(--section-y) * -1) calc(var(--section-y) * -1);
-    left: calc(var(--gutter) * 0.5 - var(--leitung-w) * 0.5);
+    left: calc(var(--leitung-x) - var(--leitung-w) * 0.5);
     width: var(--leitung-w);
     background: var(--leitung);
     box-shadow: 0 0 10px 0 var(--leitung-glow);
@@ -92,7 +99,7 @@ const titelId = titel ? `${id ?? 'abschnitt'}-titel` : undefined;
   .leitung-knoten {
     position: absolute;
     top: 0.45em;
-    left: calc(var(--gutter) * -0.5 - 0.3125rem);
+    left: calc(var(--leitung-x) - var(--inhalt-x) - 0.3125rem);
     width: 0.625rem;
     height: 0.625rem;
     border-radius: var(--radius-punkt);

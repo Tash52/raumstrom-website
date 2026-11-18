@@ -1,0 +1,48 @@
+---
+// Gewerke-Kennzeichnung (Briefing Abschnitt 2): wherever a Leistung or text names Gewerke that a
+// Meister-Partnerbetrieb executes, render this right next to it. Renders nothing if all are "eigen".
+// Data only from src/content/settings/gewerke.yaml (unknown ids fail the build).
+import { getPartnerGewerke } from '../../lib/content/index.ts';
+import { PARTNER_HINWEIS } from '../../lib/schemas/index.ts';
+import Icon from './Icon.astro';
+
+interface Props {
+  /** Gewerk ids named in the related text/Leistung. */
+  gewerke: string[];
+  /** Name the affected Gewerke after the notice (default true). */
+  nennen?: boolean;
+  class?: string;
+}
+const { gewerke, nennen = true, class: className } = Astro.props;
+const partner = await getPartnerGewerke(gewerke);
+---
+{
+  partner.length > 0 && (
+    <p class:list={['gewerke-hinweis', className]} data-gewerke-hinweis>
+      <Icon name="info-circle" size="s" />
+      <span>
+        {PARTNER_HINWEIS}
+        {nennen && `: ${partner.map((g) => g.name).join(', ')}`}
+      </span>
+    </p>
+  )
+}
+
+<style>
+  .gewerke-hinweis {
+    display: flex;
+    gap: var(--space-2);
+    align-items: flex-start;
+    max-width: 34rem;
+    color: var(--text);
+    hyphens: manual;
+    font-size: var(--step--1);
+    font-weight: var(--weight-ui);
+    line-height: 1.45;
+  }
+
+  .gewerke-hinweis :global(.icon) {
+    margin-top: 0.15em;
+    color: var(--accent-text);
+  }
+</style>

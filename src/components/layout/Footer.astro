@@ -88,7 +88,8 @@ const jahr = new Date().getFullYear();
   }
 
   .fuss-claim {
-    padding: var(--space-9) 0 var(--space-8);
+    /* same content offset as Section.astro with leitung */
+    padding: var(--space-9) 0 var(--space-8) calc(max(var(--gutter), 1.875rem) - var(--gutter));
   }
 
   /* The page's cable comes down and ends in the point next to the claim */
