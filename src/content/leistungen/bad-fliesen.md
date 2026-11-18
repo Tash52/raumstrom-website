@@ -12,6 +12,7 @@ gewerke:
   - demontage-entkernung
   - fliesen-bad
   - elektroinstallation
+  - malerarbeiten
 ablauf:
   - titel: Planung
     text: Wir klären Grundriss, Ausstattung und Anschlüsse und stimmen die Steckdosen und Lichtpunkte ab.
@@ -20,7 +21,7 @@ ablauf:
   - titel: Installation und Fliesen
     text: "Elektro und Fliesen führen unsere Meister-Partnerbetriebe aus. [[PLATZHALTER: Sanitärinstallation – ausführendes Gewerk (Partner) in gewerke.yaml noch nicht enthalten, vom Betreiber festlegen]]"
   - titel: Abschluss
-    text: Malerarbeiten, Ausstattung, Abnahme.
+    text: Malerarbeiten führt unser Meister-Partnerbetrieb aus. Danach folgen Ausstattung und Abnahme.
 reihenfolge: 8
 faq:
   - bad-dauer
@@ -29,7 +30,7 @@ faq:
 entwurf: false
 ---
 
-Im Bad treffen mehrere Gewerke aufeinander: Rückbau, Elektro, Wasser, Fliesen, Anstrich. Die Reihenfolge entscheidet über das Ergebnis. Wir planen und koordinieren sie. **Fliesen und Elektro führen unsere Meister-Partnerbetriebe aus**, den Rückbau führen wir selbst aus.
+Im Bad treffen mehrere Gewerke aufeinander: Rückbau, Elektro, Wasser, Fliesen, Anstrich. Die Reihenfolge entscheidet über das Ergebnis. Wir planen und koordinieren sie. **Fliesen, Elektro und Malerarbeiten führen unsere Meister-Partnerbetriebe aus**, den Rückbau führen wir selbst aus.
 
 ## Elektro im Bad
 Steckdosen, Spiegelbeleuchtung und Lüftung planen wir vor den Fliesen. Die Ausführung übernimmt der Meister-Partnerbetrieb.

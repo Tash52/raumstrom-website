@@ -33,3 +33,7 @@ Branch: worktree-agent-a9eeb6bcbe986ee22
 
 ## Tests
 npm ci, scan:wording, platzhalter, npm test (Unit 148, Hook 7), build:staging, check: grün.
+
+## Nachtrag Phase 2: Gewerke-Abgleich (B3)
+- bad-fliesen: malerarbeiten ergänzt, Text nennt Partnerausführung. wohnung-bezugsfertig: zaehlerschrank ergänzt.
+- Alle 11 Leistungen geprüft, übrige konsistent. Offen: Sanitär/Heizung (kein Gewerk in gewerke.yaml, Platzhalter in bad-fliesen bleibt); Parkett (Platzhalter in boden).
