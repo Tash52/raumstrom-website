@@ -95,8 +95,8 @@ Automatisch erzeugt mit `npm run platzhalter` am 2026-11-18. Nicht von Hand bear
 - [ ] Angebotsform und Preisbindung laut AGB, von legal-compliance zu bestätigen · `src/content/faq/komplett-angebot.yaml:2`
 - [ ] Fristen gegen DGUV-Primärquelle prüfen · `src/content/faq/pruef-frist.yaml:2`
 - [ ] aktuelle Förderlage recherchieren · `src/content/faq/wallbox-foerderung.yaml:2`
-- [ ] Sanitärinstallation – ausführendes Gewerk (Partner) in gewerke.yaml noch nicht enthalten, vom Betreiber festlegen · `src/content/leistungen/bad-fliesen.md:21`
-- [ ] Umgang mit Sanitär- und Heizungsinstallation klären, ob Leistung angeboten wird und von wem sie ausgeführt wird · `src/content/leistungen/bad-fliesen.md:38`
+- [ ] Sanitärinstallation – ausführendes Gewerk (Partner) in gewerke.yaml noch nicht enthalten, vom Betreiber festlegen · `src/content/leistungen/bad-fliesen.md:22`
+- [ ] Umgang mit Sanitär- und Heizungsinstallation klären, ob Leistung angeboten wird und von wem sie ausgeführt wird · `src/content/leistungen/bad-fliesen.md:39`
 - [ ] Parkettverlegung im Leistungsumfang ja/nein, vom Betreiber festzulegen · `src/content/leistungen/boden.md:34`
 - [ ] technische Mindestanforderungen laut TAB des örtlichen Netzbetreibers prüfen · `src/content/leistungen/elektro-modernisierung.md:40`
 - [ ] Hinweis zu rechtlichen Rahmenbedingungen für Wohnungseigentümergemeinschaften nur nach Recherche · `src/content/leistungen/ladepunkte-unternehmen.md:37`

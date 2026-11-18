@@ -11,6 +11,7 @@ gewerke:
   - demontage-entkernung
   - bodenbelag
   - elektroinstallation
+  - zaehlerschrank
   - putz-stuck
   - malerarbeiten
 ablauf:
@@ -36,6 +37,6 @@ Nach dem Kauf ist der Wunsch meist derselbe: einziehen, ohne wochenlang zwischen
 Alte Böden, nicht mehr zeitgemäße Steckdosenanzahl, ein veralteter Zählerschrank oder Wände, die neu gespachtelt werden sollen. Welche Arbeiten bei Ihrer Wohnung nötig sind, klären wir bei der Besichtigung.
 
 ## Wer führt aus
-Rückbau und Bodenbeläge führen wir selbst aus. Elektroinstallation, Putz und Malerarbeiten übernehmen unsere Meister-Partnerbetriebe. Wir koordinieren alle Gewerke.
+Rückbau und Bodenbeläge führen wir selbst aus. Elektroinstallation (einschließlich Zählerschrank), Putz und Malerarbeiten übernehmen unsere Meister-Partnerbetriebe. Wir koordinieren alle Gewerke.
 
 <!-- Quelle: eigene Konzeption, keine externen Fachfakten. -->
