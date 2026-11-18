@@ -18,6 +18,10 @@ describe('Wording-Scan', () => {
     'Gewährleistung nach BGB',
     'Ein verbindliches Angebot erhalten Sie nach der Besichtigung.',
     'Meister-Partnerbetrieb für Elektroinstallation',
+    'eine andere Art der Lieferung als die von uns angebotene, günstigste Standardlieferung gewählt haben',
+    'nach § 5 Abs. 1 Nr. 1 DDG',
+    'gemäß § 36 Absatz 3 Nr. 1 VSBG und Art. 6 Nr. 1 DSGVO',
+    '§ 309 Nr. 1 BGB',
     'Ein Ansprechpartner für Ihre gesamte Renovierung.',
     'Mit besten Grüßen, Ihr RAUMSTROM-Team',
     'Beste Grüße aus Schweinfurt',
@@ -53,6 +57,10 @@ describe('Wording-Scan', () => {
     ['Top 1 Anbieter', 'superlativ'],
     ['Höchste Qualität seit Jahren', 'superlativ'],
     ['unschlagbare Preise', 'superlativ'],
+    ['die günstigste Lösung', 'superlativ'],
+    ['günstigste Standardpreise', 'superlativ'],
+    ['Wir sind Nr. 1 in Schweinfurt', 'superlativ'],
+    ['Seit 2020 Nr. 1', 'superlativ'],
     ['Meister-Partnerbetrieb und Meisterqualität', 'meister'],
   ])('verbietet: %s', (t, rule) => expect(rules(t)).toContain(rule));
 

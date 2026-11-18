@@ -1,5 +1,5 @@
 // Pure helpers for the Gewerke-Kennzeichnung (no astro:content import, unit-testable).
-import { PARTNER_HINWEIS, type Gewerk } from '../schemas/index.ts';
+import { partnerHinweisText, type Gewerk } from '../schemas/index.ts';
 
 /** Gewerk by id; throws on unknown ids so typos fail the build. */
 export function findGewerk(gewerke: Gewerk[], id: string): Gewerk {
@@ -8,12 +8,15 @@ export function findGewerk(gewerke: Gewerk[], id: string): Gewerk {
   return gewerk;
 }
 
-/** Gewerke of a Leistung that are executed by a Meister-Partnerbetrieb. */
+/** Gewerke of a Leistung that are executed by a Meister-Partnerbetrieb (unique, in the given order). */
 export function partnerGewerke(gewerke: Gewerk[], ids: string[]): Gewerk[] {
-  return ids.map((id) => findGewerk(gewerke, id)).filter((g) => g.ausfuehrung === 'partner');
+  return [...new Set(ids)].map((id) => findGewerk(gewerke, id)).filter((g) => g.ausfuehrung === 'partner');
 }
 
-/** Visible notice for a Leistung; null if all its Gewerke are executed in-house. */
+/**
+ * Visible notice for a Leistung: singular for exactly one partner Gewerk, plural for several,
+ * null if all its Gewerke are executed in-house.
+ */
 export function kennzeichnung(gewerke: Gewerk[], ids: string[]): string | null {
-  return partnerGewerke(gewerke, ids).length > 0 ? PARTNER_HINWEIS : null;
+  return partnerHinweisText(partnerGewerke(gewerke, ids).length);
 }

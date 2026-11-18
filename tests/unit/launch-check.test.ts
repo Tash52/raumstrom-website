@@ -118,3 +118,49 @@ describe('Trend-Schema', () => {
     expect(() => execFileSync(process.execPath, ['scripts/trend-schema.mjs', '--check'], { stdio: 'pipe' })).not.toThrow();
   });
 });
+
+describe('Launch-Check und bedingte Blöcke', () => {
+  const legal = (root: string, body: string) => {
+    mkdirSync(path.join(root, 'src/content/legal'), { recursive: true });
+    writeFileSync(path.join(root, 'src/content/legal/datenschutz.md'), `---\ntitel: D\nseite: datenschutz\nstand: 2026-11-18\nentwurf: false\n---\n${body}`);
+  };
+  const setFeature = (root: string, key: string, value: boolean) => {
+    const f = path.join(root, 'src/content/settings/features.yaml');
+    const d = parse(readFileSync(f, 'utf8'));
+    d[key] = value;
+    writeFileSync(f, stringify(d));
+  };
+  const block = 'Text\n\n<!-- wenn features.floorplan_ai -->\n\nKI: [[PLATZHALTER: Mistral-Angaben]]\n\n<!-- VOR AKTIVIERUNG prüfen: AVV Mistral -->\n\n<!-- /wenn -->\n';
+
+  it('Platzhalter hinter abgeschaltetem Flag zählen nicht', () => {
+    const root = fixture();
+    makeReady(root);
+    setFeature(root, 'floorplan_ai', false);
+    legal(root, block);
+    expect(runLaunchCheck({ root, env: GOOD_ENV })).toEqual([]);
+  });
+
+  it('bei aktivem Flag zählen Platzhalter und VOR-AKTIVIERUNG-Hinweise', () => {
+    const root = fixture();
+    makeReady(root);
+    setFeature(root, 'floorplan_ai', true);
+    legal(root, block);
+    const arten = runLaunchCheck({ root, env: { ...GOOD_ENV, MISTRAL_API_KEY: 'k' } }).map((f) => f.art);
+    expect(arten).toEqual(expect.arrayContaining(['Platzhalter', 'Vor Aktivierung']));
+  });
+
+  it('leerer firma-Wert blendet Block samt Platzhalter aus', () => {
+    const root = fixture();
+    makeReady(root);
+    legal(root, 'A\n\n<!-- wenn firma.steuer.w_idnr -->\n\nW-IdNr.: [[PLATZHALTER: W-IdNr.]]\n\n<!-- /wenn -->\n');
+    expect(runLaunchCheck({ root, env: GOOD_ENV })).toEqual([]);
+  });
+
+  it('unbekannte Marker sind fatal', () => {
+    const root = fixture();
+    makeReady(root);
+    legal(root, '{{firma.gibtsnicht}}\n');
+    const f = runLaunchCheck({ root, env: GOOD_ENV });
+    expect(f.some((x) => x.fatal && x.art === 'Marker')).toBe(true);
+  });
+});

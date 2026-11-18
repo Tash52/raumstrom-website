@@ -2,6 +2,7 @@
 import { getEntry } from 'astro:content';
 import type { Features, Firma, Gewerk } from '../schemas/index.ts';
 import { findGewerk, kennzeichnung, partnerGewerke } from './gewerke.ts';
+import { renderMitFirma } from './rechtstext.ts';
 
 async function setting<T>(collection: 'firma' | 'features' | 'gewerke'): Promise<T> {
   const entry = await getEntry(collection, collection);
@@ -30,4 +31,18 @@ export async function getPartnerGewerke(gewerkIds: string[]): Promise<Gewerk[]> 
   return partnerGewerke(await getGewerke(), gewerkIds);
 }
 
+/**
+ * Legal text with company data: applies the marker syntax (src/lib/content/rechtstext.ts) to the
+ * rendered HTML of an entry. Use with `<Fragment set:html={await renderRechtstext(entry)} />`.
+ */
+export async function renderRechtstext(entry: { id: string; rendered?: { html: string } }): Promise<string> {
+  if (!entry.rendered) throw new Error(`Rechtstext "${entry.id}" ist nicht gerendert`);
+  try {
+    return renderMitFirma(entry.rendered.html, { firma: await getFirma(), features: await getFeatures() });
+  } catch (e) {
+    throw new Error(`src/content/legal/${entry.id}.md: ${(e as Error).message}`);
+  }
+}
+
+export { renderMitFirma, MarkerFehler } from './rechtstext.ts';
 export { isPlaceholder } from '../schemas/shared.ts';

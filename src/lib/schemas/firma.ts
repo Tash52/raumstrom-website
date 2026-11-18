@@ -41,6 +41,14 @@ export const firmaSchema = z.object({
     /** Recipient for contact and planner requests (server side only). */
     anfragen_empfaenger: orPlaceholder(z.email()),
   }),
+  /** § 5 Abs. 1 Nr. 4 DDG, e.g. eingetragene GbR. Empty strings = not registered (Impressum omits it). */
+  register: z
+    .object({
+      art: orPlaceholder(z.string()),
+      gericht: orPlaceholder(z.string()),
+      nummer: orPlaceholder(z.string()),
+    })
+    .default({ art: '', gericht: '', nummer: '' }),
   steuer: z.object({
     /** Empty string = not available, the Impressum omits the line. */
     ust_idnr: orPlaceholder(z.string().regex(/^(DE\d{9})?$/, 'USt-IdNr.: DE + 9 Ziffern oder leer')),

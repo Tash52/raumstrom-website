@@ -1,7 +1,13 @@
 // Wording rules (Briefing Abschnitt 1, rechtlich relevant). Used by scripts/wording-scan.mjs and tests.
 
 /** Allowed phrases are blanked out before the rules run (columns stay intact). */
-export const ALLOWED = [/Meister-Partnerbetrieb\w*/gi, /meisterpflichtig\w*/gi, /(?:mit\s+)?(?:den\s+)?besten?\s+Grü(?:ß|ss)en?/gi];
+export const ALLOWED = [
+  /Meister-Partnerbetrieb\w*/gi,
+  /meisterpflichtig\w*/gi,
+  /(?:mit\s+)?(?:den\s+)?besten?\s+Grü(?:ß|ss)en?/gi,
+  // Statutory model text (Muster-Widerrufsbelehrung, Anlage 1 EGBGB), must stay verbatim.
+  /günstigste Standardlieferung/gi,
+];
 
 export const RULES = [
   { id: 'meister', re: /meister\w*/gi, hint: '„Meister" nur als „Meister-Partnerbetrieb" (oder „meisterpflichtig")' },
@@ -22,7 +28,7 @@ export const RULES = [
   },
   {
     id: 'superlativ',
-    re: /\b(?:günstigst|billigst|preiswertest|schnellst|zuverlässigst|erstklassig|unschlagbar|konkurrenzlos|unübertroffen|einzigartig)\w*|(?<!\bam\s)(?<!\baufs\s)(?<!\bzum\s)\bbeste[nrms]?\b|\bhöchste[nrms]?\s+(?:qualität|standard|niveau)\w*|\bnr\.?\s*1\b|\bnummer\s+(?:1|eins)\b|\btop[\s-]?(?:1|eins|anbieter|qualität)\b|marktführer\w*|\bführende[nrms]?\b/gi,
+    re: /\b(?:günstigst|billigst|preiswertest|schnellst|zuverlässigst|erstklassig|unschlagbar|konkurrenzlos|unübertroffen|einzigartig)\w*|(?<!\bam\s)(?<!\baufs\s)(?<!\bzum\s)\bbeste[nrms]?\b|\bhöchste[nrms]?\s+(?:qualität|standard|niveau)\w*|(?<!(?:\babs|\babsatz|\bsatz|\bart|\bartikel|\banlage|§)\.?\s*\d+[a-z]?\s+)\bnr\.?\s*1\b|\bnummer\s+(?:1|eins)\b|\btop[\s-]?(?:1|eins|anbieter|qualität)\b|marktführer\w*|\bführende[nrms]?\b/gi,
     hint: 'keine unbelegten Superlative',
   },
   {

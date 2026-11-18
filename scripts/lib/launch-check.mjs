@@ -9,13 +9,14 @@ import {
   firmaSchema,
   gewerkeSchema,
 } from '../../src/lib/schemas/index.ts';
+import { BLOCK_RE, bedingungErfuellt, renderMitFirma, wendeBloeckeAn } from '../../src/lib/content/rechtstext.ts';
 import { listFiles, rel } from './files.mjs';
 
 export const KATEGORIEN = ['Rechtliches', 'Kontaktdaten', 'Fotos', 'Texte', 'Technik'];
 const PLACEHOLDER = /\[\[PLATZHALTER:\s*([^\]]+?)\s*\]\]/g;
 const PLACEHOLDER_DIRS = ['src/content', 'src/pages', 'src/components', 'src/layouts', 'src/islands', 'src/assets', 'public'];
 const PLACEHOLDER_EXTS = ['.astro', '.md', '.mdoc', '.mdx', '.yaml', '.yml', '.json', '.html', '.txt', '.svg', '.tsx', '.ts'];
-const FIRMA_RECHTLICH = ['firmierung', 'gesellschafter', 'rechtsform', 'steuer', 'handwerk', 'versicherung', 'redaktion'];
+const FIRMA_RECHTLICH = ['firmierung', 'gesellschafter', 'rechtsform', 'register', 'steuer', 'handwerk', 'versicherung', 'redaktion'];
 
 /**
  * @typedef {{ kategorie: string, art: string, datei: string, zeile?: number, text: string, fatal?: boolean }} Finding
@@ -51,10 +52,18 @@ export function runLaunchCheck({ root, env = process.env }) {
   for (const dir of PLACEHOLDER_DIRS) {
     for (const file of listFiles(path.join(root, dir), PLACEHOLDER_EXTS)) {
       const relFile = rel(root, file);
-      const lines = readFileSync(file, 'utf8').split(/\r?\n/);
+      const content = readFileSync(file, 'utf8');
+      const lines = content.split(/\r?\n/);
       const firmaKeys = relFile === 'src/content/settings/firma.yaml' ? topLevelKeys(lines) : null;
+      const hidden = markerChecks(content, relFile, data, findings);
+      let offset = 0;
       lines.forEach((line, i) => {
+        const lineStart = offset;
+        offset += line.length + 1;
         for (const m of line.matchAll(PLACEHOLDER)) {
+          // Placeholders inside blocks that are switched off (<!-- wenn features.x --> with x=false) do not count.
+          const at = lineStart + (m.index ?? 0);
+          if (hidden.some(([a, b]) => at >= a && at < b)) continue;
           findings.push({
             kategorie: categorize(relFile, m[1], firmaKeys?.[i]),
             art: 'Platzhalter',
@@ -111,6 +120,32 @@ export function runLaunchCheck({ root, env = process.env }) {
   }
 
   return findings;
+}
+
+/**
+ * Validates markers ({{firma.…}}, <!-- wenn … -->) in content files and returns the character
+ * ranges of blocks that are currently removed. Comments inside active feature blocks are
+ * reminders ("VOR AKTIVIERUNG …") and are listed as open items.
+ */
+function markerChecks(content, relFile, data, findings) {
+  if (!relFile.startsWith('src/content/') || !/\{\{|<!-- wenn /.test(content)) return [];
+  if (!data.firma || !data.features) return [];
+  const ctx = { firma: data.firma, features: data.features };
+  try {
+    renderMitFirma(content, ctx);
+    for (const m of content.matchAll(BLOCK_RE)) {
+      if (m[1].startsWith('features.') && bedingungErfuellt(m[1], ctx)) {
+        for (const c of m[2].matchAll(/<!--\s*([\s\S]*?)\s*-->/g)) {
+          const zeile = content.slice(0, (m.index ?? 0) + m[0].indexOf(c[0])).split('\n').length;
+          findings.push({ kategorie: 'Rechtliches', art: 'Vor Aktivierung', datei: relFile, zeile, text: `${m[1]} ist aktiv: ${c[1].slice(0, 160)}` });
+        }
+      }
+    }
+    return wendeBloeckeAn(content, ctx).entfernt;
+  } catch (e) {
+    findings.push({ kategorie: 'Technik', art: 'Marker', datei: relFile, text: e.message, fatal: true });
+    return [];
+  }
 }
 
 function topLevelKeys(lines) {

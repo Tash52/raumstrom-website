@@ -20,7 +20,7 @@ const saeule = fields.select({
   ],
   defaultValue: 'modernisieren',
 });
-const markdown = (label = 'Inhalt') => fields.markdoc({ label, extension: 'md' });
+const markdown = (label = 'Inhalt', description?: string) => fields.markdoc({ label, description, extension: 'md' });
 const farbe = fields.object({ name: fields.text({ label: 'Name (neutral, keine Markennamen)' }), hex: fields.text({ label: 'Hex (#RRGGBB)' }) });
 
 export default config({
@@ -59,6 +59,10 @@ export default config({
             anfragen_empfaenger: text('Empfänger für Anfragen'),
           },
           { label: 'Kontakt' },
+        ),
+        register: fields.object(
+          { art: text('Registerart (leer = nicht eingetragen)'), gericht: text('Registergericht'), nummer: text('Registernummer') },
+          { label: 'Registereintrag (z. B. eingetragene GbR)' },
         ),
         steuer: fields.object({ ust_idnr: text('USt-IdNr. (leer = keine)'), w_idnr: text('W-IdNr. (leer = keine)') }, { label: 'Steuer' }),
         handwerk: fields.object(
@@ -326,7 +330,7 @@ export default config({
       },
     }),
     legal: collection({
-      label: 'Rechtstexte',
+      label: 'Rechtstexte (nur lesen, im Texteditor ändern)',
       path: 'src/content/legal/*',
       slugField: 'titel',
       format: { contentField: 'inhalt' },
@@ -339,7 +343,7 @@ export default config({
         }),
         stand: fields.date({ label: 'Stand', validation: { isRequired: true } }),
         entwurf: fields.checkbox({ label: 'Entwurf (vor Veröffentlichung prüfen lassen)', defaultValue: true }),
-        inhalt: markdown(),
+        inhalt: markdown('Inhalt', 'Nicht hier bearbeiten: Keystatic schreibt Tabellen beim Speichern in eine Syntax um, die die Website nicht darstellt, und entfernt Escape-Zeichen. Rechtstexte im Texteditor ändern (Anleitung: docs/ANLEITUNG-BEARBEITEN.md).'),
       },
     }),
   },

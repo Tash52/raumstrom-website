@@ -20,6 +20,11 @@ kontakt:
   telefon_anzeige: "[[PLATZHALTER: Telefonnummer zur Anzeige, z. B. 09721 …]]"
   email: "[[PLATZHALTER: allgemeine E-Mail-Adresse, z. B. info@raumstrom.de]]"
   anfragen_empfaenger: "[[PLATZHALTER: Empfängeradresse für Anfragen aus Kontaktformular und Raumplaner]]"
+# Registereintrag (z. B. eingetragene GbR im Gesellschaftsregister). Alle drei leer lassen, wenn keiner besteht.
+register:
+  art: "[[PLATZHALTER: Registerart, z. B. Gesellschaftsregister, oder leer lassen, wenn nicht eingetragen]]"
+  gericht: "[[PLATZHALTER: Registergericht, z. B. Amtsgericht …, oder leer lassen]]"
+  nummer: "[[PLATZHALTER: Registernummer, z. B. GsR …, oder leer lassen]]"
 steuer:
   ust_idnr: "[[PLATZHALTER: USt-IdNr. (DE + 9 Ziffern) oder leer lassen, falls nicht vorhanden]]"
   w_idnr: "[[PLATZHALTER: Wirtschafts-Identifikationsnummer oder leer lassen, falls noch nicht zugeteilt]]"

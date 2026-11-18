@@ -11,7 +11,7 @@ Automatisch erzeugt mit `npm run platzhalter` am 2026-11-18. Nicht von Hand bear
 - [ ] Gewerke-Matrix: Ausführung eigen/partner je Gewerk (`src/content/settings/gewerke.yaml`)
 - [ ] Server-Secrets auf dem Server in `.env` gesetzt (Vorlage `.env.example`; `npm run check:launch` prüft sie)
 
-## Rechtliches (53)
+## Rechtliches (56)
 
 - [ ] Vertragsmodell festlegen: RAUMSTROM als Vertragspartner mit Meister-Partnerbetrieben als Nachunternehmer (dieser Entwurf) oder Direktvertrag zwischen Kunde und Partnerbetrieb; danach Abschnitt „Ausführung durch Meister-Partnerbetriebe“ anpassen · `src/content/legal/agb.md:11`
 - [ ] Bindefrist für Angebote, z. B. 30 Tage · `src/content/legal/agb.md:27`
@@ -39,16 +39,19 @@ Automatisch erzeugt mit `npm run platzhalter` am 2026-11-18. Nicht von Hand bear
 - [ ] vollständiger Name der Gesellschaft laut Gesellschaftsvertrag · `src/content/settings/firma.yaml:6`
 - [ ] vollständiger Name Gesellschafter 1 (Christian Maul?) · `src/content/settings/firma.yaml:9`
 - [ ] vollständiger Name Gesellschafter 2 (Jernar Kassimov?) · `src/content/settings/firma.yaml:11`
-- [ ] USt-IdNr. (DE + 9 Ziffern) oder leer lassen, falls nicht vorhanden · `src/content/settings/firma.yaml:24`
-- [ ] Wirtschafts-Identifikationsnummer oder leer lassen, falls noch nicht zugeteilt · `src/content/settings/firma.yaml:25`
-- [ ] Anschrift der Handwerkskammer für Unterfranken · `src/content/settings/firma.yaml:28`
-- [ ] Eintragung Handwerksrolle bzw. Verzeichnis zulassungsfreier Handwerke, oder leer lassen · `src/content/settings/firma.yaml:29`
-- [ ] Berufsbezeichnung · `src/content/settings/firma.yaml:30`
-- [ ] Name des Versicherers · `src/content/settings/firma.yaml:35`
-- [ ] Anschrift des Versicherers · `src/content/settings/firma.yaml:36`
-- [ ] räumlicher Geltungsbereich, z. B. Deutschland · `src/content/settings/firma.yaml:37`
-- [ ] Verantwortlich für redaktionelle Inhalte nach § 18 Abs. 2 MStV · `src/content/settings/firma.yaml:39`
-- [ ] Anschrift der verantwortlichen Person · `src/content/settings/firma.yaml:40`
+- [ ] Registerart, z. B. Gesellschaftsregister, oder leer lassen, wenn nicht eingetragen · `src/content/settings/firma.yaml:25`
+- [ ] Registergericht, z. B. Amtsgericht …, oder leer lassen · `src/content/settings/firma.yaml:26`
+- [ ] Registernummer, z. B. GsR …, oder leer lassen · `src/content/settings/firma.yaml:27`
+- [ ] USt-IdNr. (DE + 9 Ziffern) oder leer lassen, falls nicht vorhanden · `src/content/settings/firma.yaml:29`
+- [ ] Wirtschafts-Identifikationsnummer oder leer lassen, falls noch nicht zugeteilt · `src/content/settings/firma.yaml:30`
+- [ ] Anschrift der Handwerkskammer für Unterfranken · `src/content/settings/firma.yaml:33`
+- [ ] Eintragung Handwerksrolle bzw. Verzeichnis zulassungsfreier Handwerke, oder leer lassen · `src/content/settings/firma.yaml:34`
+- [ ] Berufsbezeichnung · `src/content/settings/firma.yaml:35`
+- [ ] Name des Versicherers · `src/content/settings/firma.yaml:40`
+- [ ] Anschrift des Versicherers · `src/content/settings/firma.yaml:41`
+- [ ] räumlicher Geltungsbereich, z. B. Deutschland · `src/content/settings/firma.yaml:42`
+- [ ] Verantwortlich für redaktionelle Inhalte nach § 18 Abs. 2 MStV · `src/content/settings/firma.yaml:44`
+- [ ] Anschrift der verantwortlichen Person · `src/content/settings/firma.yaml:45`
 - [ ] Entwurf: vor Veröffentlichung durch Rechtstexte-Service oder Anwalt prüfen lassen · `src/content/legal/impressum.md`
 - [ ] Entwurf: vor Veröffentlichung durch Rechtstexte-Service oder Anwalt prüfen lassen · `src/content/legal/datenschutz.md`
 - [ ] Entwurf: vor Veröffentlichung durch Rechtstexte-Service oder Anwalt prüfen lassen · `src/content/legal/agb.md`
@@ -76,8 +79,8 @@ Automatisch erzeugt mit `npm run platzhalter` am 2026-11-18. Nicht von Hand bear
 - [ ] Telefonnummer zur Anzeige, z. B. 09721 … · `src/content/settings/firma.yaml:20`
 - [ ] allgemeine E-Mail-Adresse, z. B. info@raumstrom.de · `src/content/settings/firma.yaml:21`
 - [ ] Empfängeradresse für Anfragen aus Kontaktformular und Raumplaner · `src/content/settings/firma.yaml:22`
-- [ ] Einzugsgebiet in einem Satz, z. B. Schweinfurt und Umland · `src/content/settings/firma.yaml:42`
-- [ ] Erreichbarkeit, z. B. 8:00–17:00 Uhr · `src/content/settings/firma.yaml:83`
+- [ ] Einzugsgebiet in einem Satz, z. B. Schweinfurt und Umland · `src/content/settings/firma.yaml:47`
+- [ ] Erreichbarkeit, z. B. 8:00–17:00 Uhr · `src/content/settings/firma.yaml:88`
 - [ ] Schweinfurt: bestätigen, dass der Ort bedient wird (bestaetigt: true) · `src/content/settings/firma.yaml`
 - [ ] Gochsheim: bestätigen, dass der Ort bedient wird (bestaetigt: true) · `src/content/settings/firma.yaml`
 - [ ] Grafenrheinfeld: bestätigen, dass der Ort bedient wird (bestaetigt: true) · `src/content/settings/firma.yaml`
