@@ -1,6 +1,7 @@
 // Progressive enhancement of the contact form: accessible validation messages and fetch submit.
 // Without this script the form still works with native validation and a plain POST.
 import { FELD, type KontaktAntwort } from './kontakt-schnittstelle.ts';
+import type { AltchaElement } from './altcha-widget.ts';
 
 const form = document.getElementById('kontakt-formular') as HTMLFormElement | null;
 
@@ -25,6 +26,24 @@ if (form) {
   if (vorwahl && auswahl && [...auswahl.options].some((o) => o.value === vorwahl)) auswahl.value = vorwahl;
 
   form.noValidate = true; // our messages replace the browser bubbles
+
+  // ALTCHA spam protection (backend-api): loaded on demand into [data-altcha-platz], writes the field "altcha".
+  let altcha: AltchaElement | null = null;
+  const altchaPlatz = form.querySelector<HTMLElement>('[data-altcha-platz]');
+  const altchaLaden = altchaPlatz
+    ? import('./altcha-widget.ts')
+        .then((m) => (altcha = m.bindeAltchaEin(altchaPlatz, FELD.altcha)))
+        .catch(() => null)
+    : Promise.resolve(null);
+
+  async function altchaPayload(): Promise<boolean> {
+    const w = await altchaLaden;
+    if (!w) return false;
+    if (w.getState() === 'verified' && feld(FELD.altcha)?.value) return true;
+    status.textContent = 'Der Spam-Schutz wird geprüft.';
+    const r = await w.verify().catch(() => null);
+    return Boolean(r?.payload);
+  }
 
   const feld = (name: string) => form.elements.namedItem(name) as HTMLInputElement | null;
   const fehlerEl = (name: string) => document.getElementById(`feld-${name}-fehler`);
@@ -137,6 +156,11 @@ if (form) {
     senden.disabled = true;
     status.textContent = 'Ihre Anfrage wird gesendet.';
     try {
+      if (!(await altchaPayload())) {
+        zeigeZusammenfassung('Der Spam-Schutz konnte nicht geprüft werden. Bitte laden Sie die Seite neu oder schreiben Sie uns direkt per E-Mail.', {});
+        return;
+      }
+      status.textContent = 'Ihre Anfrage wird gesendet.';
       await holeCsrf();
       const daten = new FormData(form);
       const fotos = daten.getAll(FELD.fotos).filter((d) => d instanceof File && d.size > 0);
@@ -152,6 +176,8 @@ if (form) {
         erfolg.focus();
         return;
       }
+      // The proof of work is single-use; solve a fresh one for the next attempt.
+      altcha?.reset();
       const fe: Record<string, string> = {};
       if (antwort && !antwort.ok && antwort.fehler) {
         for (const [n, t] of Object.entries(antwort.fehler)) if (t && feld(n)) fe[n] = t;

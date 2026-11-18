@@ -1,0 +1,29 @@
+---
+// Target of the native form POST without JavaScript (303 from /api/contact). Minimal page by backend-api;
+// texts may move to src/content/pages/ (page-builder / content-writer). noindex, not linked.
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Button from '../../components/base/Button.astro';
+import Seitenkopf from '../../components/sections/Seitenkopf.astro';
+---
+<BaseLayout title="Anfrage gesendet | RAUMSTROM" description="Ihre Anfrage ist bei uns eingegangen." noindex>
+  <Seitenkopf titel="Anfrage gesendet" lead="Vielen Dank. Wir haben Ihre Anfrage erhalten und melden uns bei Ihnen." />
+  <section class="rueckmeldung" aria-label="Weiter">
+    <div class="container container-text">
+      <p>Sie erhalten in Kürze eine kurze Eingangsbestätigung per E-Mail.</p>
+      <div class="cluster aktionen">
+        <Button href="/" icon="arrow-right">Zur Startseite</Button>
+        <Button href="/leistungen/" variante="sekundaer">Leistungen ansehen</Button>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .rueckmeldung {
+    padding-bottom: var(--section-y);
+  }
+
+  .aktionen {
+    margin-top: var(--space-5);
+  }
+</style>

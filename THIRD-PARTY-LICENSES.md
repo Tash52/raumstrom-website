@@ -9,9 +9,9 @@ Projektregel: nur MIT, Apache-2.0, BSD, ISC (und gleich oder freizügigere Lizen
 | Paket | Lizenz | Grund | Status |
 |---|---|---|---|
 | `gsap` | Standard no charge license | Animation (Phase 3); kostenlos, keine OSI-Lizenz | freigegeben |
-| `sharp` | Apache-2.0 (enthält libvips LGPL-3.0) | Bildoptimierung von Astro, nur im Build | freigegeben |
-| `@img/sharp-*` | LGPL-3.0-or-later | vorkompiliertes libvips für sharp, dynamisch gelinkt, unverändert, nur im Build | freigegeben |
-| `libheif-js` | LGPL-3.0 | HEIC-Decoder im Raumplaner (Phase 4), unverändert, eigener Chunk | freigegeben |
+| `sharp` | Apache-2.0 (enthält libvips LGPL-3.0) | Bildoptimierung von Astro im Build; zur Laufzeit Neukodierung von Foto-Uploads (/api/contact) | freigegeben |
+| `@img/sharp-*` | LGPL-3.0-or-later | vorkompiliertes libvips für sharp, dynamisch gelinkt, unverändert (Build und Upload-Neukodierung) | freigegeben |
+| `libheif-js` | LGPL-3.0 | HEIC-Decoder im Raumplaner (Phase 4) und für HEIC-Uploads im Kontaktformular (Server), unverändert, eigenes Modul | freigegeben |
 | `heic-to` | LGPL-3.0 | HEIC-Decoder im Raumplaner (Phase 4) | freigegeben |
 | `axe-core` | MPL-2.0 | nur Testwerkzeug, wird nicht ausgeliefert | freigegeben |
 | `@axe-core/*` | MPL-2.0 | nur Testwerkzeug, wird nicht ausgeliefert | freigegeben |
@@ -20,7 +20,7 @@ Projektregel: nur MIT, Apache-2.0, BSD, ISC (und gleich oder freizügigere Lizen
 
 LGPL-Bibliotheken werden unverändert und als austauschbare Einheit genutzt (dynamisch gelinkt bzw. eigener Chunk). MPL-2.0-Werkzeuge werden unverändert genutzt und nicht ausgeliefert.
 
-## Laufzeit- und Build-Abhängigkeiten (303)
+## Laufzeit- und Build-Abhängigkeiten (308)
 
 Plattform-spezifische optionale Pakete (z. B. `@img/sharp-*`, `lightningcss-*`) werden nur für das jeweilige Betriebssystem installiert.
 
@@ -146,6 +146,8 @@ Plattform-spezifische optionale Pakete (z. B. `@img/sharp-*`, `lightningcss-*`) 
 | @types/unist | 3.0.3 | MIT |
 | @ungap/structured-clone | 1.4.0 | ISC |
 | @vitejs/plugin-react | 6.3.0 | MIT |
+| altcha | 3.6.0 | MIT |
+| altcha-lib | 2.9.0 | MIT |
 | am-i-vibing | 0.5.0 | MIT |
 | anymatch | 3.1.3 | ISC |
 | aria-query | 5.3.2 | Apache-2.0 |
@@ -205,6 +207,7 @@ Plattform-spezifische optionale Pakete (z. B. `@img/sharp-*`, `lightningcss-*`) 
 | get-tsconfig | 5.0.0-beta.6 | MIT |
 | github-slugger | 2.0.0 | ISC |
 | h3 | 1.15.11 | MIT |
+| hash-wasm | 4.13.0 | MIT |
 | hast-util-to-html | 9.0.6 | MIT |
 | hast-util-whitespace | 3.0.0 | MIT |
 | html-escaper | 3.0.3 | MIT |
@@ -217,6 +220,7 @@ Plattform-spezifische optionale Pakete (z. B. `@img/sharp-*`, `lightningcss-*`) 
 | is-docker | 4.0.0 | MIT |
 | is-plain-obj | 4.1.0 | MIT |
 | jsonc-parser | 3.3.1 | MIT |
+| libheif-js | 1.23.5 | LGPL-3.0 ⚑ |
 | lightningcss | 1.33.0 | MPL-2.0 ⚑ |
 | lightningcss-android-arm64 | 1.33.0 | MPL-2.0 ⚑ |
 | lightningcss-darwin-arm64 | 1.33.0 | MPL-2.0 ⚑ |
@@ -250,6 +254,7 @@ Plattform-spezifische optionale Pakete (z. B. `@img/sharp-*`, `lightningcss-*`) 
 | nlcst-to-string | 4.0.0 | MIT |
 | node-fetch-native | 1.6.7 | MIT |
 | node-mock-http | 1.0.5 | MIT |
+| nodemailer | 10.6.0 | MIT-0 |
 | normalize-path | 3.0.0 | MIT |
 | nth-check | 2.1.1 | BSD-2-Clause |
 | obug | 3.0.0 | MIT |

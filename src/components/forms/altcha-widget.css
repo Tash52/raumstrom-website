@@ -1,0 +1,19 @@
+/* ALTCHA widget in RAUMSTROM tokens (backend-api). Only custom properties of altcha.css are overridden. */
+altcha-widget {
+  --altcha-border-color: var(--line-strong);
+  --altcha-border-radius: var(--radius-s);
+  --altcha-color-base: var(--surface-field);
+  --altcha-color-base-content: var(--text);
+  --altcha-color-neutral: var(--line-strong);
+  --altcha-color-neutral-content: var(--text-muted);
+  --altcha-color-primary: var(--text);
+  --altcha-color-primary-content: var(--surface-field);
+  --altcha-color-success: var(--leitung);
+  --altcha-color-error: var(--error);
+  --altcha-checkbox-border-color: var(--line-strong);
+  --altcha-checkbox-border-radius: var(--radius-s);
+  --altcha-checkbox-outline-color: var(--focus);
+  --altcha-max-width: 100%;
+  display: block;
+  font-family: var(--font-sans);
+}

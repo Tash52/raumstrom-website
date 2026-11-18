@@ -34,6 +34,11 @@ export const envSchema = z.object({
   SMTP_PASS: secret(8),
   /** Sender, always an address of the own domain. */
   MAIL_FROM: z.email({ error: 'keine gültige E-Mail-Adresse' }),
+  /**
+   * Staging only: recipient while firma.kontakt.anfragen_empfaenger is still a placeholder
+   * (e.g. Mailpit in E2E). Ignored as soon as firma.yaml has a real address.
+   */
+  MAIL_TO_STAGING: z.preprocess((v) => (v === '' ? undefined : v), z.email({ error: 'keine gültige E-Mail-Adresse' }).optional()),
   /** Only needed when features.floorplan_ai is true (Phase 6). */
   MISTRAL_API_KEY: z.string().optional(),
 });

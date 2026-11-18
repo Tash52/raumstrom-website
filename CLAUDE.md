@@ -6,7 +6,7 @@ Cloud-Umgebung: Netz nur npm/PyPI/GitHub (lesen) plus 15 freigegebene Hosts (Pla
 ## Befehle
 - `npm ci` · `npm run dev` (http://localhost:4321, Keystatic unter `/keystatic`)
 - `npm run build:staging` (Platzhalter erlaubt, enthält `/styleguide/`; `npm run build` entfernt ihn) · `npm run build` (bricht ab, solange `check:launch` offen ist) · `npm start` (dist + Header; liest `.env` im Projektstamm, echte Umgebungsvariablen haben Vorrang, wie beim Launch-Check)
-- `npm test` (Vitest + Hook-Test) · `npm run test:e2e` (Playwright gegen `dist`, vorher `build:staging`) · `npm run check` (Typen)
+- `npm test` (Vitest + Hook-Test) · `npm run test:e2e` (Playwright gegen `dist`, vorher `build:staging`; startet Mailpit per Docker aus `compose.test.yml`, STARTTLS mit Wegwerf-Zertifikat; `E2E_MAILPIT=extern` nutzt ein laufendes Mailpit auf 127.0.0.1:1025/8025, Postfach http://127.0.0.1:8025) · `npm run check` (Typen)
 - `npm run check:launch` · `npm run platzhalter` (schreibt `PLATZHALTER.md`, nach Inhaltsänderungen ausführen, Test prüft Aktualität)
 - `npm run scan:wording` · `npm run licenses [-- --check]` · `npm run trend-schema [-- --check]` · `npm run audit`
 
@@ -38,6 +38,7 @@ Cloud-Umgebung: Netz nur npm/PyPI/GitHub (lesen) plus 15 freigegebene Hosts (Pla
 - Rechtstexte: `renderRechtstext(entry)` (index.ts) bzw. rein `renderMitFirma(htmlOderMd, { firma, features })` aus `lib/content/rechtstext.ts`, Ausgabe per `set:html`. Syntax: `{{firma.<pfad>}}`, `{{firma.gesellschafter.*.name}}`, `{{firma.vertretungsberechtigte}}`, Block `<!-- wenn firma.x|features.y -->…<!-- /wenn -->` (keine Verschachtelung). Escaped, E-Mail/Telefon/`_url` als Link, Platzhalter bleiben sichtbar, übrige Kommentare entfallen, unbekannte Pfade brechen ab. Launch-Check prüft Marker und zählt Platzhalter in ausgeblendeten Blöcken nicht. Rechtstexte nicht über Keystatic speichern (formatiert Tabellen um).
 - Schemas: `import { leistungSchema, … } from '<rel>/lib/schemas/index.ts'` (Client und Server gleich). Bilder: `teamSchema(image())`.
 - API-Routen: `src/pages/api/*.ts` mit `export const prerender = false`. Secrets: `getServerEnv()` aus `server/env.mjs` (ALTCHA_HMAC_KEY, CSRF_SECRET, SMTP_*, MAIL_FROM; `.env.example`). Ohne Pflicht-Secrets startet der Server nicht.
+- Kontakt-API (backend-api): `GET /api/csrf` → `{token}` (signiert, einmalig, 2 h, kein Cookie), `GET /api/altcha` (Challenge), `POST /api/contact` laut `kontakt-schnittstelle.ts`; ohne `Accept: application/json` 303 auf `/kontakt/danke/` bzw. `/kontakt/fehler/`. Widget: `src/components/forms/altcha-widget.ts` (lädt `kontakt-formular.ts`). Logik in `src/lib/{security,uploads,mail}/`, Empfänger `firma.kontakt.anfragen_empfaenger` (solange Platzhalter: `MAIL_TO_STAGING`).
 - Header/CSP: `server/headers.mjs`, `server/csp.mjs`. Astro schreibt die Seiten-CSP (Hashes) nach `dist/_headers.json`, der Server sendet sie als Header.
 - `'wasm-unsafe-eval'` nur auf `/raumplaner/` und `/planer/ansehen`: dort `Astro.csp?.insertScriptResource("'wasm-unsafe-eval'")`. Worker/blob: ebenso nur seitenweise.
 - Schriften: Astro-Fonts-API mit `fontProviders.local()` in `astro.config.mjs` (Block `fonts` ergänzt design-system).

@@ -20,9 +20,9 @@ export const ALLOWED = new Set([
  */
 export const EXCEPTIONS = [
   { match: 'gsap', lizenz: 'Standard no charge license', grund: 'Animation (Phase 3); kostenlos, keine OSI-Lizenz', freigegeben: true },
-  { match: 'sharp', lizenz: 'Apache-2.0 (enthält libvips LGPL-3.0)', grund: 'Bildoptimierung von Astro, nur im Build', freigegeben: true },
-  { match: '@img/sharp-*', lizenz: 'LGPL-3.0-or-later', grund: 'vorkompiliertes libvips für sharp, dynamisch gelinkt, unverändert, nur im Build', freigegeben: true },
-  { match: 'libheif-js', lizenz: 'LGPL-3.0', grund: 'HEIC-Decoder im Raumplaner (Phase 4), unverändert, eigener Chunk', freigegeben: true },
+  { match: 'sharp', lizenz: 'Apache-2.0 (enthält libvips LGPL-3.0)', grund: 'Bildoptimierung von Astro im Build; zur Laufzeit Neukodierung von Foto-Uploads (/api/contact)', freigegeben: true },
+  { match: '@img/sharp-*', lizenz: 'LGPL-3.0-or-later', grund: 'vorkompiliertes libvips für sharp, dynamisch gelinkt, unverändert (Build und Upload-Neukodierung)', freigegeben: true },
+  { match: 'libheif-js', lizenz: 'LGPL-3.0', grund: 'HEIC-Decoder im Raumplaner (Phase 4) und für HEIC-Uploads im Kontaktformular (Server), unverändert, eigenes Modul', freigegeben: true },
   { match: 'heic-to', lizenz: 'LGPL-3.0', grund: 'HEIC-Decoder im Raumplaner (Phase 4)', freigegeben: true },
   { match: 'axe-core', lizenz: 'MPL-2.0', grund: 'nur Testwerkzeug, wird nicht ausgeliefert', freigegeben: true },
   { match: '@axe-core/*', lizenz: 'MPL-2.0', grund: 'nur Testwerkzeug, wird nicht ausgeliefert', freigegeben: true },

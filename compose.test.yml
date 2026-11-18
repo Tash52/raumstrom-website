@@ -1,0 +1,28 @@
+# Mailpit for the E2E tests of the contact form (backend-api). Started and stopped by Playwright
+# (tests/e2e/mailpit/global-setup.ts); manual: see CLAUDE.md. Test only, never in production.
+# SMTP with mandatory STARTTLS and a throwaway self-signed certificate that the server trusts via
+# NODE_EXTRA_CA_CERTS, so the app's TLS verification stays switched on. Accepts any SMTP login.
+name: raumstrom-test
+services:
+  mailpit:
+    image: axllent/mailpit:v1.34.0
+    ports:
+      - "127.0.0.1:1025:1025"
+      - "127.0.0.1:8025:8025"
+    volumes:
+      - ${MAILPIT_CERT_DIR:?MAILPIT_CERT_DIR fehlt}:/certs:ro
+    environment:
+      MP_SMTP_TLS_CERT: /certs/cert.pem
+      MP_SMTP_TLS_KEY: /certs/key.pem
+      MP_SMTP_REQUIRE_STARTTLS: "true"
+      MP_SMTP_AUTH_ACCEPT_ANY: "true"
+      MP_MAX_MESSAGES: "500"
+      MP_DISABLE_VERSION_CHECK: "true"
+    read_only: true
+    tmpfs:
+      - /tmp
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 2s
+      timeout: 2s
+      retries: 15
