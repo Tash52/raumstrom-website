@@ -64,3 +64,7 @@ Automatisch erzeugt mit `npm run platzhalter` am 2026-11-18. Nicht von Hand bear
 - [ ] Haßfurt: bestätigen, dass der Ort bedient wird (bestaetigt: true) · `src/content/settings/firma.yaml`
 - [ ] Gerolzhofen: bestätigen, dass der Ort bedient wird (bestaetigt: true) · `src/content/settings/firma.yaml`
 - [ ] Bad Kissingen: bestätigen, dass der Ort bedient wird (bestaetigt: true) · `src/content/settings/firma.yaml`
+
+## Texte (1)
+
+- [ ] E-Mail-Adresse für Sicherheitsmeldungen, z. B. sicherheit@raumstrom.de · `public/.well-known/security.txt:2`

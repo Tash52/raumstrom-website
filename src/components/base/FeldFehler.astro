@@ -1,0 +1,11 @@
+---
+// Error text below a field. Always rendered (empty = hidden) so scripts can fill it; announced politely.
+import Icon from './Icon.astro';
+
+interface Props {
+  id: string;
+  text?: string;
+}
+const { id, text } = Astro.props;
+---
+<p class="feld-fehler" id={id} aria-live="polite">{text && <><Icon name="alert-circle" size="s" /><span>{text}</span></>}</p>

@@ -1,0 +1,5 @@
+# Sicherheitskontakt nach RFC 9116. Vor dem Launch: Contact ausfüllen, Expires spätestens jährlich erneuern.
+Contact: mailto:[[PLATZHALTER: E-Mail-Adresse für Sicherheitsmeldungen, z. B. sicherheit@raumstrom.de]]
+Expires: 2027-11-17T00:00:00.000Z
+Preferred-Languages: de, en
+Canonical: https://raumstrom.de/.well-known/security.txt

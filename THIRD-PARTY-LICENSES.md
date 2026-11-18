@@ -20,7 +20,7 @@ Projektregel: nur MIT, Apache-2.0, BSD, ISC (und gleich oder freizügigere Lizen
 
 LGPL-Bibliotheken werden unverändert und als austauschbare Einheit genutzt (dynamisch gelinkt bzw. eigener Chunk). MPL-2.0-Werkzeuge werden unverändert genutzt und nicht ausgeliefert.
 
-## Laufzeit- und Build-Abhängigkeiten (302)
+## Laufzeit- und Build-Abhängigkeiten (303)
 
 Plattform-spezifische optionale Pakete (z. B. `@img/sharp-*`, `lightningcss-*`) werden nur für das jeweilige Betriebssystem installiert.
 
@@ -132,6 +132,7 @@ Plattform-spezifische optionale Pakete (z. B. `@img/sharp-*`, `lightningcss-*`) 
 | @shikijs/themes | 4.6.0 | MIT |
 | @shikijs/types | 4.6.0 | MIT |
 | @shikijs/vscode-textmate | 10.1.0 | MIT |
+| @tabler/icons | 3.52.0 | MIT |
 | @tybys/wasm-util | 0.10.5 | MIT |
 | @types/estree | 1.0.10 | MIT |
 | @types/estree-jsx | 1.0.5 | MIT |
@@ -329,7 +330,7 @@ Plattform-spezifische optionale Pakete (z. B. `@img/sharp-*`, `lightningcss-*`) 
 | zod | 4.6.7 | MIT |
 | zwitch | 2.0.4 | MIT |
 
-## Nur Entwicklung und Tests (255)
+## Nur Entwicklung und Tests (257)
 
 | Paket | Version | Lizenz |
 |---|---|---|
@@ -338,6 +339,7 @@ Plattform-spezifische optionale Pakete (z. B. `@img/sharp-*`, `lightningcss-*`) 
 | @astrojs/check | 0.9.12 | MIT |
 | @astrojs/language-server | 2.17.3 | MIT |
 | @astrojs/yaml2ts | 0.2.4 | MIT |
+| @axe-core/playwright | 4.14.0 | MPL-2.0 ⚑ |
 | @babel/runtime | 7.29.14 | MIT |
 | @braintree/sanitize-url | 6.0.4 | MIT |
 | @emmetio/abbreviation | 2.3.3 | MIT |
@@ -415,6 +417,7 @@ Plattform-spezifische optionale Pakete (z. B. `@img/sharp-*`, `lightningcss-*`) 
 | argparse | 2.0.1 | Python-2.0 |
 | aria-hidden | 1.2.6 | MIT |
 | assertion-error | 2.0.1 | MIT |
+| axe-core | 4.14.1 | MPL-2.0 ⚑ |
 | balanced-match | 4.0.4 | MIT |
 | brace-expansion | 5.0.13 | MIT |
 | chai | 6.3.0 | MIT |

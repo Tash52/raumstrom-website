@@ -11,8 +11,8 @@ Astro 7.4 (statisch) + Node-Server nur für `/api/*`, React-Inseln, zod 4, Keyst
 
 ## Ordner (Besitzer)
 - `src/lib/schemas/` zod je Inhaltstyp, `src/lib/content/` Lesezugriff, `src/content.config.ts`, `src/content/settings/`, `keystatic.config.ts`, `server/`, `scripts/`, Test-/CI-Konfiguration: architect
-- `src/styles/`, `src/layouts/`, `src/components/base/`, `src/assets/{brand,fonts}/`: design-system (derzeit Stubs)
-- `src/pages/`, `src/components/{layout,sections}/`: page-builder · `src/pages/api/`, `src/lib/{security,mail}/`: backend-api
+- `src/styles/`, `src/layouts/`, `src/components/base/`, `src/components/layout/` (Header, Footer, Skip-Link; page-builder darf erweitern), `src/assets/{brand,fonts}/`: design-system
+- `src/pages/`, `src/components/sections/`: page-builder · `src/pages/api/`, `src/lib/{security,mail}/`: backend-api
 - `src/content/*` (außer settings): content-writer / legal-compliance / trend-researcher · `src/islands/`: motion-3d, planner-*
 - `tests/unit/*.test.ts`, `tests/e2e/*.spec.ts`: je Agent eigene Dateien
 

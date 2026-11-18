@@ -1,0 +1,37 @@
+---
+// Select. First option can be an empty prompt ("Bitte wählen").
+import type { HTMLAttributes } from 'astro/types';
+import FeldFehler from './FeldFehler.astro';
+import { describedBy, feldIds } from './feld.ts';
+
+interface Props extends Omit<HTMLAttributes<'select'>, 'class' | 'name' | 'id'> {
+  name: string;
+  label: string;
+  optionen: { wert: string; text: string }[];
+  leerText?: string;
+  wert?: string;
+  hinweis?: string;
+  fehler?: string;
+  id?: string;
+  class?: string;
+}
+const { name, label, optionen, leerText = 'Bitte wählen', wert, hinweis, fehler, id, required, class: className, ...rest } = Astro.props;
+const ids = feldIds(name, id);
+---
+<div class:list={['feld', className]}>
+  <label class="feld-label" for={ids.id}>{label}{required && <span class="feld-pflicht"> (Pflichtfeld)</span>}</label>
+  {hinweis && <p class="feld-hinweis" id={ids.hinweis}>{hinweis}</p>}
+  <select
+    class="feld-auswahl"
+    id={ids.id}
+    name={name}
+    required={required}
+    aria-invalid={fehler ? 'true' : undefined}
+    aria-describedby={describedBy(ids, hinweis, fehler)}
+    {...rest}
+  >
+    <option value="" selected={!wert}>{leerText}</option>
+    {optionen.map((o) => <option value={o.wert} selected={o.wert === wert}>{o.text}</option>)}
+  </select>
+  <FeldFehler id={ids.fehler} text={fehler} />
+</div>

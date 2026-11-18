@@ -1,0 +1,335 @@
+---
+// Site header. Desktop: logo, navigation on one line, call to action. Mobile: menu as native popover
+// (no JavaScript; Esc and outside click close it, the browser sets aria-expanded on the toggle).
+import Button from '../base/Button.astro';
+import Icon from '../base/Icon.astro';
+import Logo from '../base/Logo.astro';
+import { ANFRAGE, HAUPTNAVIGATION, istAktiv, nurVorhandene, type NavEintrag } from './navigation.ts';
+
+interface Props {
+  /** Override entries (styleguide preview). Default: all existing pages from navigation.ts. */
+  eintraege?: NavEintrag[];
+  anfrage?: NavEintrag | null;
+}
+const pfad = Astro.url.pathname;
+const eintraege = Astro.props.eintraege ?? nurVorhandene(HAUPTNAVIGATION);
+const anfrage = Astro.props.anfrage !== undefined ? Astro.props.anfrage : nurVorhandene([ANFRAGE])[0] ?? null;
+const hatMenue = eintraege.length > 0 || anfrage;
+const menueId = 'hauptmenue';
+---
+<header class="kopf">
+  <div class="container kopf-inner">
+    <a href="/" class="kopf-logo" aria-label="RAUMSTROM, zur Startseite" aria-current={pfad === '/' ? 'page' : undefined}>
+      <Logo variante="quer" label="" />
+    </a>
+
+    {
+      hatMenue && (
+        <>
+          <button class="kopf-toggle" type="button" popovertarget={menueId} popovertargetaction="show">
+            <Icon name="menu-2" />
+            <span>Menü</span>
+          </button>
+
+          <nav class="kopf-nav flaeche-graphit" id={menueId} aria-label="Hauptnavigation" popover>
+            <div class="menue-kopf">
+              <Logo variante="quer-negativ" label="" class="menue-logo" />
+              <button class="menue-schliessen" type="button" popovertarget={menueId} popovertargetaction="hide">
+                <Icon name="x" />
+                <span>Schließen</span>
+              </button>
+            </div>
+            <ul class="nav-liste" role="list">
+              {eintraege.map((e) => (
+                <li>
+                  <a href={e.href} class="nav-link" aria-current={istAktiv(e.href, pfad) ? 'page' : undefined}>
+                    {e.text}
+                  </a>
+                </li>
+              ))}
+            </ul>
+            {anfrage && (
+              <Button href={anfrage.href} class="kopf-anfrage" icon="arrow-right">
+                {anfrage.text}
+              </Button>
+            )}
+          </nav>
+        </>
+      )
+    }
+  </div>
+</header>
+
+<style>
+  .kopf {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-header);
+    background: var(--color-kalk);
+    color: var(--color-graphit);
+    view-transition-name: kopf;
+  }
+
+  /* Hairline appears once the page scrolls (scroll-driven, no JS). */
+  @supports (animation-timeline: scroll()) {
+    .kopf {
+      animation: kopf-linie linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 6rem;
+    }
+
+    @keyframes kopf-linie {
+      from {
+        box-shadow: 0 1px 0 rgb(21 25 30 / 0);
+      }
+      to {
+        box-shadow: 0 1px 0 rgb(21 25 30 / 0.14);
+      }
+    }
+  }
+
+  @supports not (animation-timeline: scroll()) {
+    .kopf {
+      box-shadow: 0 1px 0 var(--line);
+    }
+  }
+
+  .kopf-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-5);
+    min-height: var(--header-h);
+  }
+
+  .kopf-logo {
+    --logo-h: 1.75rem;
+    display: inline-flex;
+    padding-block: var(--space-2);
+  }
+
+  .kopf-toggle,
+  .menue-schliessen {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 2.75rem;
+    padding: 0 var(--space-3);
+    margin-right: calc(var(--space-3) * -1);
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font-weight: var(--weight-ui);
+    font-stretch: var(--wdth-ui);
+  }
+
+  .nav-liste {
+    list-style: none;
+  }
+
+  .nav-link {
+    text-decoration: none;
+  }
+
+  /* Mobile: full-screen menu on Graphit, the cable runs down the left with a node per entry */
+  @media (max-width: 71.999em) {
+    .kopf-nav {
+      inset: 0;
+      width: 100%;
+      height: 100dvh;
+      max-width: none;
+      max-height: none;
+      margin: 0;
+      padding: 0 var(--gutter) var(--space-7);
+      border: 0;
+      overflow-y: auto;
+      background: var(--surface);
+      color: var(--text);
+      opacity: 0;
+      transform: translateY(calc(-0.75rem * var(--motion)));
+      transition:
+        opacity var(--dur-base) var(--ease-out),
+        transform var(--dur-base) var(--ease-out),
+        overlay var(--dur-base) allow-discrete,
+        display var(--dur-base) allow-discrete;
+    }
+
+    .kopf-nav:popover-open {
+      display: flex;
+      flex-direction: column;
+      opacity: 1;
+      transform: none;
+    }
+
+    @starting-style {
+      .kopf-nav:popover-open {
+        opacity: 0;
+        transform: translateY(calc(-0.75rem * var(--motion)));
+      }
+    }
+
+    .kopf-nav::backdrop {
+      background: rgb(21 25 30 / 0.4);
+    }
+
+    .menue-kopf {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: var(--header-h);
+      margin-bottom: var(--space-6);
+    }
+
+    .menue-kopf :global(.menue-logo) {
+      --logo-h: 1.75rem;
+    }
+
+    .nav-liste {
+      position: relative;
+      display: grid;
+      gap: var(--space-1);
+      padding: 0 0 0 var(--space-6);
+      margin: 0 0 var(--space-7);
+      list-style: none;
+    }
+
+    .nav-liste::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0.3125rem;
+      width: var(--leitung-w);
+      background: var(--leitung);
+      box-shadow: 0 0 10px var(--leitung-glow);
+    }
+
+    .nav-link {
+      position: relative;
+      display: block;
+      padding-block: var(--space-2);
+      color: var(--text);
+      font-size: var(--step-3);
+      font-weight: var(--weight-display);
+      font-stretch: var(--wdth-display);
+      letter-spacing: var(--tracking-display);
+      line-height: 1.15;
+      text-decoration: none;
+    }
+
+    .nav-link::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: calc(var(--space-6) * -1);
+      width: 0.75rem;
+      height: 0.75rem;
+      margin-top: -0.375rem;
+      border-radius: var(--radius-punkt);
+      background: var(--surface);
+      box-shadow: inset 0 0 0 2px var(--leitung);
+    }
+
+    .nav-link[aria-current='page']::before,
+    .nav-link:hover::before {
+      background: var(--accent-surface);
+      box-shadow: 0 0 12px 2px var(--leitung-glow);
+    }
+
+    .kopf-nav :global(.kopf-anfrage) {
+      align-self: flex-start;
+    }
+  }
+
+  /* Desktop: inline navigation, one line */
+  @media (min-width: 72em) {
+    .kopf-toggle,
+    .menue-kopf {
+      display: none;
+    }
+
+    .kopf-nav,
+    .kopf-nav:popover-open {
+      position: static;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: var(--space-6);
+      width: auto;
+      height: auto;
+      padding: 0;
+      overflow: visible;
+      opacity: 1;
+      transform: none;
+      transition: none;
+      background: transparent;
+      color: var(--color-graphit);
+      /* Back to light tokens inside the header */
+      --text: var(--color-graphit);
+      --text-muted: var(--color-grau-text);
+      --accent-text: var(--color-kabelgruen);
+      --line: rgb(21 25 30 / 0.14);
+      --surface: var(--color-kalk);
+      --leitung: var(--color-kabelgruen);
+      --accent-surface: var(--color-strom);
+      --focus: var(--color-graphit);
+      --focus-glow: rgb(197 240 30 / 0.85);
+      --button-bg: var(--color-graphit);
+      --button-text: var(--color-kalk);
+      color-scheme: light;
+    }
+
+    .nav-liste {
+      display: flex;
+      gap: var(--space-5);
+      padding: 0;
+      margin: 0;
+    }
+
+    .nav-liste::before {
+      display: none;
+    }
+
+    .nav-link {
+      padding-block: var(--space-3);
+      font-size: var(--step-0);
+      font-weight: var(--weight-ui);
+      font-stretch: var(--wdth-ui);
+      letter-spacing: 0;
+      white-space: nowrap;
+    }
+
+    /* Active/hover: the node sits under the label like a cable endpoint */
+    .nav-link::before {
+      top: auto;
+      bottom: 0.2rem;
+      left: 50%;
+      width: 0.4375rem;
+      height: 0.4375rem;
+      margin: 0 0 0 -0.21875rem;
+      background: transparent;
+      box-shadow: none;
+      transition:
+        background-color var(--dur-base) var(--ease-strom),
+        box-shadow var(--dur-base) var(--ease-strom);
+    }
+
+    .nav-link[aria-current='page']::before {
+      background: var(--color-kabelgruen);
+      box-shadow: none;
+    }
+
+    .nav-link:hover::before {
+      background: var(--color-graphit);
+      box-shadow: none;
+    }
+
+    .kopf-nav :global(.kopf-anfrage) {
+      align-self: auto;
+    }
+
+    .kopf-logo {
+      --logo-h: 2rem;
+    }
+  }
+</style>

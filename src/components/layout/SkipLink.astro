@@ -1,0 +1,29 @@
+---
+// First focusable element: jumps to <main id="inhalt">.
+---
+<a class="skiplink" href="#inhalt">Zum Inhalt springen</a>
+
+<style>
+  .skiplink {
+    position: fixed;
+    top: var(--space-3);
+    left: var(--space-3);
+    z-index: var(--z-skip);
+    padding: var(--space-3) var(--space-4);
+    background: var(--color-strom);
+    color: var(--color-graphit);
+    font-weight: var(--weight-ui);
+    text-decoration: none;
+    border-radius: var(--radius-s);
+    transform: translateY(calc(-100% - var(--space-4)));
+    transition: transform var(--dur-fast) var(--ease-out);
+  }
+
+  .skiplink:focus-visible,
+  .skiplink:focus {
+    transform: none;
+    outline: 2px solid var(--color-graphit);
+    outline-offset: 2px;
+    box-shadow: none;
+  }
+</style>

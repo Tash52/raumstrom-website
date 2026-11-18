@@ -1,0 +1,405 @@
+---
+// Styleguide (design-system). noindex, not linked, not in the sitemap. Only for acceptance and reference.
+import tokensCss from '../../styles/tokens.css?raw';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import AuswahlFeld from '../../components/base/AuswahlFeld.astro';
+import Blueprint from '../../components/base/Blueprint.astro';
+import Button from '../../components/base/Button.astro';
+import Checkbox from '../../components/base/Checkbox.astro';
+import DateiFeld from '../../components/base/DateiFeld.astro';
+import Feldgruppe from '../../components/base/Feldgruppe.astro';
+import Icon from '../../components/base/Icon.astro';
+import { ICON_NAMES } from '../../components/base/icons.ts';
+import Karte from '../../components/base/Karte.astro';
+import Logo from '../../components/base/Logo.astro';
+import MonoLabel from '../../components/base/MonoLabel.astro';
+import Section from '../../components/base/Section.astro';
+import TextBereich from '../../components/base/TextBereich.astro';
+import TextFeld from '../../components/base/TextFeld.astro';
+import TextLink from '../../components/base/TextLink.astro';
+import { pruefePaare } from '../../styles/kontrast.ts';
+import { ANFRAGE, HAUPTNAVIGATION } from '../../components/layout/navigation.ts';
+
+const paare = pruefePaare(tokensCss);
+// Header preview with the real labels (navigation.ts); links point to the sections of this page.
+const ziele = ['#farben', '#typografie', '#logo', '#bedienelemente', '#karten', '#formular'];
+const vorschauNav = HAUPTNAVIGATION.map((e, i) => ({ text: e.text, href: ziele[i] ?? '#einleitung' }));
+const farben = [
+  { klasse: 'kalk', name: 'Kalk', hex: '#F4F1EB', rolle: 'Grundfläche, ca. 60 %' },
+  { klasse: 'graphit', name: 'Graphit', hex: '#15191E', rolle: 'Schrift, Technik, dunkle Flächen, ca. 30 %' },
+  { klasse: 'strom', name: 'Strom', hex: '#C5F01E', rolle: 'Energie-Akzent, nur Fläche und Glow. Nie Text auf Hell.' },
+  { klasse: 'kabelgruen', name: 'Kabelgrün', hex: '#3D6300', rolle: 'Grüne Schrift und Links auf Hell' },
+  { klasse: 'kalk-tief', name: 'Kalk tief', hex: '#E8E3D8', rolle: 'Zweitfläche auf Hell' },
+  { klasse: 'graphit-2', name: 'Graphit 2', hex: '#232A31', rolle: 'Zweitfläche auf Dunkel' },
+];
+const skala = [
+  { klasse: 't-display', token: '--step-5', text: 'Renoviert bis in die Leitung.' },
+  { klasse: 't-h1', token: '--step-4', text: 'Wohnung gekauft? Wir machen sie bezugsfertig.' },
+  { klasse: 't-h2', token: '--step-3', text: 'Hinter der Wand beginnt die Renovierung' },
+  { klasse: 't-h3', token: '--step-1', text: 'Elektro-Modernisierung im Altbau' },
+  { klasse: 't-lead', token: '--step-1 · 300', text: 'Elektrik, Trockenbau, Boden und Wände aus einer Hand.' },
+  { klasse: 't-body', token: '--step-0', text: 'Wir planen die Leitungen zuerst und schließen die Wände danach. So halten Oberflächen, und Sie haben einen Ansprechpartner für alle Gewerke.' },
+];
+---
+<BaseLayout
+  title="Styleguide · RAUMSTROM"
+  description="Design-Tokens und Basis-Komponenten der RAUMSTROM-Website (nur zur Abnahme)."
+  noindex
+  navigation={vorschauNav}
+  anfrage={{ href: '#formular', text: ANFRAGE.text }}
+>
+  <Section id="einleitung" titel="Styleguide" ebene={1} leitung>
+    <p slot="einleitung" class="t-lead">Tokens und Basis-Komponenten im Markendesign. Diese Seite ist nicht verlinkt und nicht indexiert.</p>
+    <dl class="sg-meta">
+      <div><dt><MonoLabel>Schrift</MonoLabel></dt><dd>Archivo variabel, Breite 100 bis 125 %, Stärke 300 bis 900</dd></div>
+      <div><dt><MonoLabel>Technik</MonoLabel></dt><dd>IBM Plex Mono 400 und 500</dd></div>
+      <div><dt><MonoLabel>Radien</MonoLabel></dt><dd>Flächen 0, Bedienelemente und Karten 2 px, Punkte rund</dd></div>
+    </dl>
+  </Section>
+
+  <Section id="farben" titel="Farben und Kontrast" leitung>
+    <ul class="sg-farben" role="list">
+      {
+        farben.map((f) => (
+          <li class="sg-farbe">
+            <span class:list={['sg-muster', `sg-muster-${f.klasse}`]} aria-hidden="true" />
+            <strong>{f.name}</strong>
+            <MonoLabel ton="text">{f.hex}</MonoLabel>
+            <span class="t-muted">{f.rolle}</span>
+          </li>
+        ))
+      }
+    </ul>
+    <h3 class="sg-unter">Geprüfte Paare (WCAG 2.2 AA)</h3>
+    <p class="t-muted sg-hinweis">Berechnet beim Build aus <code>tokens.css</code>, gleiche Prüfung wie im Unit-Test.</p>
+    <div class="sg-tabelle-rahmen" tabindex="0" role="region" aria-label="Kontrastpaare">
+      <table class="sg-tabelle">
+        <thead>
+          <tr><th scope="col">Kontext</th><th scope="col">Zweck</th><th scope="col">Farben</th><th scope="col">Kontrast</th><th scope="col">Mindestwert</th></tr>
+        </thead>
+        <tbody>
+          {
+            paare.map((p) => (
+              <tr>
+                <td>{p.kontext === 'hell' ? 'Hell' : 'Dunkel'}</td>
+                <td>{p.zweck}</td>
+                <td><MonoLabel>{p.vorneHex} / {p.hintenHex}</MonoLabel></td>
+                <td><MonoLabel ton="text">{p.ratio.toFixed(2).replace('.', ',')} : 1</MonoLabel></td>
+                <td><MonoLabel>{String(p.min).replace('.', ',')} : 1 {p.ok ? 'erfüllt' : 'NICHT erfüllt'}</MonoLabel></td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+  </Section>
+
+  <Section id="typografie" titel="Typografie" leitung>
+    <div class="sg-skala">
+      {
+        skala.map((s) => (
+          <div class="sg-skala-zeile">
+            <MonoLabel>{s.token}</MonoLabel>
+            <p class:list={['sg-probe', s.klasse]}>{s.text}</p>
+          </div>
+        ))
+      }
+      <div class="sg-skala-zeile">
+        <MonoLabel>Plex Mono</MonoLabel>
+        <p class="sg-probe cluster">
+          <MonoLabel ton="text">11 kW</MonoLabel>
+          <MonoLabel ton="text">DGUV V3</MonoLabel>
+          <MonoLabel ton="akzent">Prüfung bestanden</MonoLabel>
+          <MonoLabel variante="marke" ton="text">Illustration</MonoLabel>
+        </p>
+      </div>
+      <div class="sg-skala-zeile">
+        <MonoLabel>Bemaßung</MonoLabel>
+        <div class="sg-probe sg-bemassung"><MonoLabel variante="bemassung" ton="text">3,40 m</MonoLabel></div>
+      </div>
+    </div>
+  </Section>
+
+  <Section id="logo" titel="Logo" leitung>
+    <div class="sg-logos">
+      <div class="sg-logo-feld"><Logo variante="quer" class="sg-logo-gross" /><MonoLabel>quer</MonoLabel></div>
+      <div class="sg-logo-feld"><Logo variante="gestapelt" class="sg-logo-gestapelt" /><MonoLabel>gestapelt</MonoLabel></div>
+      <div class="sg-logo-feld"><Logo variante="zeichen" class="sg-logo-zeichen" /><MonoLabel>Zeichen</MonoLabel></div>
+      <div class="sg-logo-feld flaeche-graphit"><Logo variante="quer-negativ" class="sg-logo-gross" /><MonoLabel>quer negativ</MonoLabel></div>
+      <div class="sg-logo-feld flaeche-graphit"><Logo variante="zeichen-negativ" class="sg-logo-zeichen" /><MonoLabel>Zeichen negativ</MonoLabel></div>
+    </div>
+  </Section>
+
+  <Section id="bedienelemente" titel="Bedienelemente" leitung>
+    <div class="sg-zwei">
+      <div class="stack">
+        <h3 class="sg-unter">Auf Kalk</h3>
+        <div class="cluster">
+          <Button href="#formular" icon="arrow-right">Anfrage stellen</Button>
+          <Button variante="sekundaer" href="#karten">Leistungen ansehen</Button>
+          <Button variante="text" href="#logo" icon="arrow-right">Mehr erfahren</Button>
+        </div>
+        <div class="cluster">
+          <Button groesse="l" href="#formular" icon="arrow-right">Raum planen</Button>
+          <Button variante="sekundaer" icon="phone" iconVorne>Rückruf</Button>
+          <Button disabled>Nicht verfügbar</Button>
+        </div>
+        <p>Ein Link im Fließtext: <TextLink href="#typografie">zur Typografie</TextLink>, extern: <TextLink href="https://www.gesetze-im-internet.de/hwo/">Handwerksordnung</TextLink>.</p>
+      </div>
+      <div class="stack sg-dunkel flaeche-graphit">
+        <h3 class="sg-unter">Auf Graphit</h3>
+        <div class="cluster">
+          <Button href="#formular" icon="arrow-right">Anfrage stellen</Button>
+          <Button variante="sekundaer" href="#karten">Leistungen ansehen</Button>
+        </div>
+        <p>Grüne Schrift ist auf Dunkel Strom: <TextLink href="#farben">zu den Farben</TextLink>.</p>
+        <p class="cluster"><MonoLabel ton="akzent">22 kW</MonoLabel><MonoLabel>Wallbox, Typ 2</MonoLabel></p>
+      </div>
+    </div>
+    <h3 class="sg-unter">Icons (Tabler, Strichstärke 1,75)</h3>
+    <ul class="sg-icons" role="list">
+      {ICON_NAMES.map((n) => <li><Icon name={n} size="l" /><MonoLabel>{n}</MonoLabel></li>)}
+    </ul>
+  </Section>
+
+  <Section id="karten" titel="Karten und Platzhalter" leitung>
+    <div class="sg-karten">
+      <Karte titel="Modernisieren" href="#karten">
+        <MonoLabel slot="label" ton="text">Säule 1</MonoLabel>
+        Komplettrenovierung mit Elektrik, Trockenbau, Boden, Wänden und Bad.
+      </Karte>
+      <Karte titel="Elektrifizieren" href="#karten">
+        <MonoLabel slot="label" ton="text">Säule 2</MonoLabel>
+        Wallbox, Elektro-Modernisierung, Zählerschrank und Unterverteilung.
+      </Karte>
+      <Karte titel="Sicher betreiben" href="#karten" variante="flaeche">
+        <MonoLabel slot="label" ton="text">Säule 3</MonoLabel>
+        Wiederkehrende Prüfung von Ladesäulen, Wallboxen und Ladekabeln.
+        <MonoLabel slot="fuss">DGUV V3</MonoLabel>
+      </Karte>
+    </div>
+    <div class="sg-blueprints">
+      <Blueprint variante="team" name="Christian Maul" alt="Illustration als Platzhalter für das Foto von Christian Maul" beschriftung="Organisation, Trockenbau" />
+      <Blueprint variante="team" name="Jernar Kassimov" alt="Illustration als Platzhalter für das Foto von Jernar Kassimov" beschriftung="Elektrik" />
+      <Blueprint variante="referenz" name="Altbau" alt="Grundriss-Skizze einer Altbauwohnung" beschriftung="Wohnung, 3 Zimmer" class="sg-blueprint-breit" />
+    </div>
+  </Section>
+
+  <Section id="flaeche" titel="Fläche Graphit: hinter der Wand" flaeche="graphit" leitung>
+    <p slot="einleitung" class="t-lead">Dunkle Abschnitte schalten die semantischen Tokens um. Die Leitung leuchtet in Strom.</p>
+    <div class="sg-karten">
+      <Karte titel="Leitungen" href="#flaeche">Schlitze, Dosen und Verteilung, bevor die Wand geschlossen wird.</Karte>
+      <Karte titel="Unterverteilung" href="#flaeche" variante="flaeche">Neue Stromkreise mit Fehlerstromschutz.</Karte>
+    </div>
+  </Section>
+
+  <Section id="formular" titel="Formularfelder" flaeche="kalk-tief" leitung>
+    <form class="sg-formular" action="#formular" method="get" novalidate>
+      <TextFeld name="name" label="Name" autocomplete="name" required />
+      <TextFeld name="email" typ="email" label="E-Mail" autocomplete="email" required fehler="Bitte geben Sie eine E-Mail-Adresse im Format name@beispiel.de ein." value="name@" />
+      <TextFeld name="telefon" typ="tel" label="Telefon" autocomplete="tel" hinweis="Für Rückfragen zum Termin. Freiwillig." />
+      <AuswahlFeld
+        name="leistung"
+        label="Worum geht es?"
+        optionen={[
+          { wert: 'modernisieren', text: 'Modernisieren' },
+          { wert: 'elektrifizieren', text: 'Elektrifizieren' },
+          { wert: 'sicher-betreiben', text: 'Sicher betreiben' },
+        ]}
+      />
+      <TextBereich name="nachricht" label="Ihre Nachricht" hinweis="Raum, Größe, gewünschter Zeitraum." required />
+      <DateiFeld name="fotos" label="Fotos" hinweis="Bis zu 5 Bilder (JPG, PNG, HEIC), je höchstens 10 MB." accept="image/jpeg,image/png,image/heic" multiple />
+      <Feldgruppe legende="Wie dürfen wir Sie erreichen?" name="kanal">
+        <Checkbox name="kanal" typ="radio" value="telefon" checked>Telefon</Checkbox>
+        <Checkbox name="kanal" typ="radio" value="email">E-Mail</Checkbox>
+      </Feldgruppe>
+      <Checkbox name="datenschutz" required>Ich habe die Datenschutzhinweise gelesen.</Checkbox>
+      <div class="cluster">
+        <Button type="submit" icon="arrow-right">Anfrage senden</Button>
+      </div>
+    </form>
+  </Section>
+
+  <Section id="bewegung" titel="Bewegung" leitung>
+    <dl class="sg-meta">
+      <div><dt><MonoLabel>--dur-fast</MonoLabel></dt><dd>140 ms, Hover und Fokus</dd></div>
+      <div><dt><MonoLabel>--dur-base</MonoLabel></dt><dd>240 ms, Zustandswechsel</dd></div>
+      <div><dt><MonoLabel>--dur-slow</MonoLabel></dt><dd>520 ms, Knoten auf der Leitung</dd></div>
+      <div><dt><MonoLabel>--dur-draw</MonoLabel></dt><dd>1400 ms, Leitung zeichnen</dd></div>
+      <div><dt><MonoLabel>--motion</MonoLabel></dt><dd>1, bei reduzierter Bewegung 0 (Wege werden damit multipliziert)</dd></div>
+    </dl>
+  </Section>
+</BaseLayout>
+
+<style>
+  .sg-meta {
+    display: grid;
+    gap: var(--space-4);
+  }
+
+  .sg-meta > div {
+    display: grid;
+    gap: var(--space-1);
+  }
+
+  .sg-unter {
+    margin-block: var(--space-7) var(--space-4);
+  }
+
+  .sg-hinweis {
+    margin-bottom: var(--space-4);
+  }
+
+  .sg-farben {
+    display: grid;
+    gap: var(--space-5);
+    padding: 0;
+    list-style: none;
+  }
+
+  .sg-farbe {
+    display: grid;
+    gap: var(--space-1);
+  }
+
+  .sg-muster {
+    height: 5rem;
+    margin-bottom: var(--space-2);
+    border: 1px solid var(--line);
+  }
+
+  .sg-muster-kalk { background: var(--color-kalk); }
+  .sg-muster-graphit { background: var(--color-graphit); }
+  .sg-muster-strom { background: var(--color-strom); box-shadow: var(--glow-strom); }
+  .sg-muster-kabelgruen { background: var(--color-kabelgruen); }
+  .sg-muster-kalk-tief { background: var(--color-kalk-tief); }
+  .sg-muster-graphit-2 { background: var(--color-graphit-2); }
+
+  .sg-tabelle-rahmen {
+    overflow-x: auto;
+  }
+
+  .sg-tabelle {
+    width: 100%;
+    min-width: 44rem;
+    border-collapse: collapse;
+    font-size: var(--step--1);
+  }
+
+  .sg-tabelle th,
+  .sg-tabelle td {
+    padding: var(--space-2) var(--space-3) var(--space-2) 0;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .sg-tabelle thead th {
+    border-bottom: 2px solid var(--text);
+  }
+
+  .sg-tabelle tbody tr:nth-child(13) td {
+    border-top: 2px solid var(--text);
+  }
+
+  .sg-skala {
+    display: grid;
+    gap: var(--space-6);
+  }
+
+  .sg-skala-zeile {
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  .sg-probe {
+    max-width: 30ch;
+  }
+
+  .t-h1 { font-size: var(--step-4); font-weight: var(--weight-display); font-stretch: var(--wdth-display); letter-spacing: var(--tracking-display); line-height: var(--leading-tight); }
+  .t-h2 { font-size: var(--step-3); font-weight: var(--weight-display); font-stretch: var(--wdth-display); letter-spacing: var(--tracking-display); line-height: var(--leading-heading); }
+  .t-h3 { font-size: var(--step-1); font-weight: var(--weight-strong); font-stretch: var(--wdth-ui); line-height: 1.2; }
+  .t-body { max-width: var(--measure); }
+
+  .sg-bemassung {
+    max-width: 20rem;
+  }
+
+  .sg-logos {
+    display: grid;
+    gap: var(--space-4);
+  }
+
+  .sg-logo-feld {
+    display: grid;
+    justify-items: start;
+    gap: var(--space-4);
+    padding: var(--space-6);
+    border: 1px solid var(--line);
+  }
+
+  .sg-logo-feld :global(.sg-logo-gross) { --logo-h: 3rem; max-width: 100%; }
+  .sg-logo-feld :global(.sg-logo-gestapelt) { --logo-h: 6rem; max-width: 100%; }
+  .sg-logo-feld :global(.sg-logo-zeichen) { --logo-h: 4rem; }
+
+  .sg-zwei {
+    display: grid;
+    gap: var(--space-6);
+  }
+
+  .sg-dunkel {
+    padding: var(--space-6);
+  }
+
+  .sg-dunkel > :first-child {
+    margin-top: 0;
+  }
+
+  .sg-icons {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+    gap: var(--space-4);
+    padding: 0;
+    list-style: none;
+  }
+
+  .sg-icons li {
+    display: grid;
+    justify-items: start;
+    gap: var(--space-2);
+  }
+
+  .sg-karten {
+    display: grid;
+    gap: var(--space-7) var(--space-6);
+  }
+
+  .sg-blueprints {
+    display: grid;
+    gap: var(--space-5);
+    margin-top: var(--space-8);
+  }
+
+  .sg-formular {
+    display: grid;
+    gap: var(--space-5);
+    max-width: 36rem;
+  }
+
+  @media (min-width: 48em) {
+    .sg-farben { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .sg-meta { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .sg-logos { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .sg-blueprints { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .sg-blueprints :global(.sg-blueprint-breit) { grid-column: 1 / -1; }
+    .sg-skala-zeile { grid-template-columns: 9rem 1fr; align-items: baseline; }
+  }
+
+  @media (min-width: 64em) {
+    .sg-zwei { grid-template-columns: 1fr 1fr; }
+    .sg-karten { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .sg-blueprints { grid-template-columns: 1fr 1fr 2fr; }
+    .sg-blueprints :global(.sg-blueprint-breit) { grid-column: auto; align-self: stretch; }
+    .sg-logos { grid-template-columns: 2fr 1.4fr 1fr; }
+    .sg-probe { max-width: 34ch; }
+  }
+</style>

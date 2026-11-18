@@ -1,0 +1,197 @@
+---
+// Site footer on Graphit. Firm data only via getFirma(); placeholder values are not shown.
+// The cable that runs through the page ends here in a point (logo idea).
+import Logo from '../base/Logo.astro';
+import MonoLabel from '../base/MonoLabel.astro';
+import { getFirma, isPlaceholder } from '../../lib/content/index.ts';
+import { HAUPTNAVIGATION, RECHTLICHES, ANFRAGE, nurVorhandene } from './navigation.ts';
+
+const firma = await getFirma();
+const zeige = (v: string | undefined | null): v is string => Boolean(v) && !isPlaceholder(v);
+const adresse = [firma.adresse.strasse, `${firma.adresse.plz} ${firma.adresse.ort}`].filter((t) => zeige(t) && !/\[\[/.test(t));
+const telefon = zeige(firma.kontakt.telefon) && zeige(firma.kontakt.telefon_anzeige) ? firma.kontakt : null;
+const email = zeige(firma.kontakt.email) ? firma.kontakt.email : null;
+const zeiten = firma.erreichbarkeit.filter((e) => zeige(e.zeiten));
+// Only confirmed places (bestaetigt: true); the description if it is filled in.
+const gebiet = zeige(firma.einzugsgebiet.beschreibung) ? firma.einzugsgebiet.beschreibung : null;
+const orte = firma.einzugsgebiet.orte.filter((o) => o.bestaetigt).map((o) => o.name);
+const navigation = nurVorhandene([...HAUPTNAVIGATION, ANFRAGE]);
+const rechtliches = nurVorhandene(RECHTLICHES);
+const jahr = new Date().getFullYear();
+---
+<footer class="fuss flaeche-graphit">
+  <div class="container fuss-inner">
+    <div class="fuss-claim">
+      <span class="fuss-leitung" aria-hidden="true"><span class="fuss-punkt" data-leitung-ende></span></span>
+      <p class="fuss-claim-text">{firma.claim}</p>
+    </div>
+
+    <div class="fuss-raster">
+      <div class="fuss-marke">
+        <Logo variante="quer-negativ" class="fuss-logo" />
+        {adresse.length > 0 && (
+          <address class="fuss-adresse">
+            {firma.name}
+            {adresse.map((z) => <><br />{z}</>)}
+          </address>
+        )}
+      </div>
+
+      {(telefon || email || zeiten.length > 0) && (
+        <div class="fuss-spalte">
+          <h2 class="fuss-titel">Kontakt</h2>
+          <ul role="list">
+            {telefon && <li><a href={`tel:${telefon.telefon}`}>{telefon.telefon_anzeige}</a></li>}
+            {email && <li><a href={`mailto:${email}`}>{email}</a></li>}
+            {zeiten.map((z) => <li class="t-muted">{z.tage}: {z.zeiten}</li>)}
+          </ul>
+        </div>
+      )}
+
+      {(gebiet || orte.length > 0) && (
+        <div class="fuss-spalte">
+          <h2 class="fuss-titel">Einsatzgebiet</h2>
+          {gebiet && <p class="t-muted">{gebiet}</p>}
+          {orte.length > 0 && <p class="t-muted">{orte.join(', ')}</p>}
+        </div>
+      )}
+
+      {navigation.length > 0 && (
+        <nav class="fuss-spalte" aria-label="Seiten">
+          <h2 class="fuss-titel">Seiten</h2>
+          <ul role="list">{navigation.map((n) => <li><a href={n.href}>{n.text}</a></li>)}</ul>
+        </nav>
+      )}
+
+      {rechtliches.length > 0 && (
+        <nav class="fuss-spalte" aria-label="Rechtliches">
+          <h2 class="fuss-titel">Rechtliches</h2>
+          <ul role="list">{rechtliches.map((n) => <li><a href={n.href}>{n.text}</a></li>)}</ul>
+        </nav>
+      )}
+    </div>
+
+    <div class="fuss-unten">
+      <MonoLabel>{`© ${jahr} ${firma.name}`}</MonoLabel>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .fuss {
+    padding-block: 0 var(--space-6);
+    view-transition-name: fuss;
+  }
+
+  .fuss-inner {
+    position: relative;
+  }
+
+  .fuss-claim {
+    padding: var(--space-9) 0 var(--space-8);
+  }
+
+  /* The page's cable comes down and ends in the point next to the claim */
+  .fuss-leitung {
+    position: absolute;
+    top: 0;
+    /* same x as the section cable (components/base/Section.astro) */
+    left: calc(var(--gutter) * 0.5 - var(--leitung-w) / 2);
+    height: calc(var(--space-9) + var(--step-5) * 0.52);
+    width: var(--leitung-w);
+    background: var(--leitung);
+    box-shadow: 0 0 10px var(--leitung-glow);
+  }
+
+  .fuss-punkt {
+    position: absolute;
+    bottom: -0.5rem;
+    left: 50%;
+    width: 1rem;
+    height: 1rem;
+    margin-left: -0.5rem;
+    border-radius: var(--radius-punkt);
+    background: var(--accent-surface);
+    box-shadow: var(--glow-strom);
+  }
+
+  .fuss-claim-text {
+    max-width: 16ch;
+    font-size: var(--step-5);
+    font-weight: var(--weight-display);
+    font-stretch: var(--wdth-display);
+    letter-spacing: var(--tracking-display);
+    line-height: var(--leading-tight);
+    text-wrap: balance;
+    hyphens: manual;
+  }
+
+  .fuss-raster {
+    display: grid;
+    gap: var(--space-6);
+    padding-block: var(--space-7);
+    border-top: 1px solid var(--line);
+  }
+
+  .fuss-marke :global(.fuss-logo) {
+    --logo-h: 2rem;
+    margin-bottom: var(--space-4);
+  }
+
+  .fuss-adresse {
+    font-style: normal;
+    color: var(--text-muted);
+  }
+
+  .fuss-titel {
+    margin-bottom: var(--space-3);
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    font-weight: 500;
+    font-stretch: normal;
+    letter-spacing: var(--tracking-mono);
+    color: var(--text-muted);
+  }
+
+  .fuss-spalte ul {
+    display: grid;
+    gap: var(--space-2);
+    padding: 0;
+    list-style: none;
+  }
+
+  .fuss a {
+    color: var(--text);
+    text-decoration-line: underline;
+    text-decoration-color: rgb(244 241 235 / 0.35);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.25em;
+  }
+
+  .fuss a:hover {
+    text-decoration-color: var(--accent-text);
+    text-decoration-thickness: 2px;
+  }
+
+  .fuss-unten {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--line);
+  }
+
+  @media (min-width: 48em) {
+    .fuss-raster {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 64em) {
+    .fuss-raster {
+      grid-template-columns: 1.4fr repeat(4, minmax(0, 1fr));
+      column-gap: var(--space-7);
+    }
+  }
+</style>

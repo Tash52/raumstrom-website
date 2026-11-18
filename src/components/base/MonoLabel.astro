@@ -1,0 +1,70 @@
+---
+// Technical label in IBM Plex Mono: values, units, test data, dimensions. Not an eyebrow above every heading.
+// wert: plain value ("11 kW", "DGUV V3") · bemassung: dimension line |-- 3,40 m --| · marke: framed tag ("Illustration")
+interface Props {
+  variante?: 'wert' | 'bemassung' | 'marke';
+  ton?: 'muted' | 'text' | 'akzent';
+  as?: 'span' | 'p' | 'dt' | 'dd' | 'div' | 'figcaption';
+  class?: string;
+}
+const { variante = 'wert', ton = 'muted', as: Tag = 'span', class: className } = Astro.props;
+---
+<Tag class:list={['mono', `mono-${variante}`, `mono-${ton}`, className]}><slot /></Tag>
+
+<style>
+  .mono {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    font-weight: 400;
+    line-height: 1.35;
+    letter-spacing: var(--tracking-mono);
+    font-variant-numeric: tabular-nums slashed-zero;
+  }
+
+  .mono-muted {
+    color: var(--text-muted);
+  }
+
+  .mono-text {
+    color: var(--text);
+  }
+
+  .mono-akzent {
+    color: var(--accent-text);
+    font-weight: 500;
+  }
+
+  /* Dimension line as on a construction drawing: tick, line, value, line, tick */
+  .mono-bemassung {
+    display: flex;
+    width: 100%;
+    white-space: nowrap;
+  }
+
+  .mono-bemassung::before,
+  .mono-bemassung::after {
+    content: '';
+    flex: 1 1 1.5rem;
+    min-width: 1rem;
+    height: 0.75em;
+    border-block-end: 1px solid currentColor;
+    transform: translateY(-0.375em);
+  }
+
+  .mono-bemassung::before {
+    border-inline-start: 1px solid currentColor;
+  }
+
+  .mono-bemassung::after {
+    border-inline-end: 1px solid currentColor;
+  }
+
+  .mono-marke {
+    padding: 0.1875rem 0.5rem;
+    border: 1px solid currentColor;
+    border-radius: var(--radius-s);
+  }
+</style>

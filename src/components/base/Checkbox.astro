@@ -1,0 +1,32 @@
+---
+// Checkbox or radio with label to the right. Label text via slot (may contain a link).
+import type { HTMLAttributes } from 'astro/types';
+import FeldFehler from './FeldFehler.astro';
+import { describedBy, feldIds } from './feld.ts';
+
+interface Props extends Omit<HTMLAttributes<'input'>, 'class' | 'type' | 'name' | 'id'> {
+  name: string;
+  typ?: 'checkbox' | 'radio';
+  hinweis?: string;
+  fehler?: string;
+  id?: string;
+  class?: string;
+}
+const { name, typ = 'checkbox', hinweis, fehler, id, value, required, class: className, ...rest } = Astro.props;
+const ids = feldIds(typ === 'radio' ? `${name}-${String(value ?? '')}` : name, id);
+---
+<div class:list={['feld-check', className]}>
+  <input
+    id={ids.id}
+    type={typ}
+    name={name}
+    value={value}
+    required={required}
+    aria-invalid={fehler ? 'true' : undefined}
+    aria-describedby={describedBy(ids, hinweis, fehler)}
+    {...rest}
+  />
+  <label for={ids.id}><slot />{required && <span class="feld-pflicht"> (Pflichtfeld)</span>}</label>
+  {hinweis && <p class="feld-hinweis" id={ids.hinweis}>{hinweis}</p>}
+  {typ === 'checkbox' && <FeldFehler id={ids.fehler} text={fehler} />}
+</div>

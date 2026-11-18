@@ -1,0 +1,33 @@
+---
+// Icons: Tabler Icons (MIT, @tabler/icons), outline, inlined at build time. No hand-drawn icons.
+// Decorative by default (aria-hidden). Pass `label` for a meaningful standalone icon.
+import { ICONS, type IconName } from './icons.ts';
+
+export type { IconName };
+
+interface Props {
+  name: IconName;
+  /** Accessible name; omit for decorative icons next to visible text. */
+  label?: string;
+  size?: 's' | 'm' | 'l';
+  class?: string;
+}
+const { name, label, size = 'm', class: className } = Astro.props;
+const Svg = ICONS[name];
+---
+<Svg class:list={['icon', `icon-${size}`, className]} stroke-width="1.75" focusable="false" role={label ? 'img' : undefined} aria-label={label || undefined} aria-hidden={label ? undefined : 'true'} />
+
+<style>
+  /* Global: the SVG component does not carry Astro's scope attribute. */
+  :global(.icon) {
+    flex: none;
+    width: var(--icon-size, 1.25em);
+    height: var(--icon-size, 1.25em);
+  }
+  :global(.icon-s) {
+    --icon-size: 1em;
+  }
+  :global(.icon-l) {
+    --icon-size: 1.75rem;
+  }
+</style>

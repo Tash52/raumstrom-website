@@ -5,7 +5,6 @@ import { FALLBACK_CSP } from './csp.mjs';
 const PERMISSIONS_POLICY = [
   'accelerometer=()',
   'autoplay=()',
-  'bluetooth=()',
   'camera=()',
   'display-capture=()',
   'encrypted-media=()',

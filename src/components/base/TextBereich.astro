@@ -1,0 +1,31 @@
+---
+// Multi-line text field.
+import type { HTMLAttributes } from 'astro/types';
+import FeldFehler from './FeldFehler.astro';
+import { describedBy, feldIds } from './feld.ts';
+
+interface Props extends Omit<HTMLAttributes<'textarea'>, 'class' | 'name' | 'id'> {
+  name: string;
+  label: string;
+  hinweis?: string;
+  fehler?: string;
+  id?: string;
+  class?: string;
+}
+const { name, label, hinweis, fehler, id, required, class: className, ...rest } = Astro.props;
+const ids = feldIds(name, id);
+---
+<div class:list={['feld', className]}>
+  <label class="feld-label" for={ids.id}>{label}{required && <span class="feld-pflicht"> (Pflichtfeld)</span>}</label>
+  {hinweis && <p class="feld-hinweis" id={ids.hinweis}>{hinweis}</p>}
+  <textarea
+    class="feld-input"
+    id={ids.id}
+    name={name}
+    required={required}
+    aria-invalid={fehler ? 'true' : undefined}
+    aria-describedby={describedBy(ids, hinweis, fehler)}
+    {...rest}
+  ><slot /></textarea>
+  <FeldFehler id={ids.fehler} text={fehler} />
+</div>

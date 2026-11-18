@@ -1,0 +1,104 @@
+---
+// Page section. Surfaces: kalk (default), kalk-tief, graphit, graphit-2 (switch the semantic tokens).
+// leitung: draws the cable line along the left edge with a node at the heading. The line is static here;
+// motion-3d can animate elements with [data-leitung] / [data-leitung-knoten] (Phase 3).
+import type { HTMLAttributes } from 'astro/types';
+
+interface Props extends Omit<HTMLAttributes<'section'>, 'class'> {
+  id?: string;
+  titel?: string;
+  ebene?: 1 | 2 | 3;
+  flaeche?: 'kalk' | 'kalk-tief' | 'graphit' | 'graphit-2';
+  leitung?: boolean;
+  breite?: 'voll' | 'text';
+  /** Visually hidden title (still announced and used as the section name). */
+  titelVersteckt?: boolean;
+  class?: string;
+}
+const {
+  id,
+  titel,
+  ebene = 2,
+  flaeche = 'kalk',
+  leitung = false,
+  breite = 'voll',
+  titelVersteckt = false,
+  class: className,
+  ...rest
+} = Astro.props;
+const H = `h${ebene}` as 'h1' | 'h2' | 'h3';
+const titelId = titel ? `${id ?? 'abschnitt'}-titel` : undefined;
+---
+<section
+  id={id}
+  class:list={['section', flaeche !== 'kalk' && `flaeche-${flaeche}`, leitung && 'section-leitung', className]}
+  aria-labelledby={titelId}
+  {...rest}
+>
+  <div class:list={['container', 'section-inner', breite === 'text' && 'container-text']}>
+    {leitung && <span class="leitung" data-leitung aria-hidden="true"></span>}
+    {
+      titel && (
+        <header class:list={['section-kopf', titelVersteckt && 'visually-hidden']}>
+          <H id={titelId} class="section-titel">
+            {leitung && <span class="leitung-knoten" data-leitung-knoten aria-hidden="true" />}
+            {titel}
+          </H>
+          <slot name="einleitung" />
+        </header>
+      )
+    }
+    <slot />
+  </div>
+</section>
+
+<style>
+  .section {
+    position: relative;
+    padding-block: var(--section-y);
+    background: var(--surface);
+    color: var(--text);
+  }
+
+  .section-inner {
+    position: relative;
+    display: flow-root; /* keeps child margins inside, so the cable reaches the section edges */
+  }
+
+  .section-kopf {
+    max-width: 44rem;
+    margin-bottom: var(--space-7);
+  }
+
+  .section-kopf > :global(* + *) {
+    margin-top: var(--space-4);
+  }
+
+  .section-titel {
+    position: relative;
+  }
+
+  /* The cable: runs through the whole section in the left gutter */
+  .leitung {
+    position: absolute;
+    inset-block: calc(var(--section-y) * -1) calc(var(--section-y) * -1);
+    left: calc(var(--gutter) * 0.5 - var(--leitung-w) * 0.5);
+    width: var(--leitung-w);
+    background: var(--leitung);
+    box-shadow: 0 0 10px 0 var(--leitung-glow);
+    transform-origin: top;
+  }
+
+  .leitung-knoten {
+    position: absolute;
+    top: 0.45em;
+    left: calc(var(--gutter) * -0.5 - 0.3125rem);
+    width: 0.625rem;
+    height: 0.625rem;
+    border-radius: var(--radius-punkt);
+    background: var(--accent-surface);
+    box-shadow:
+      0 0 0 2px var(--surface),
+      0 0 0 3.5px var(--leitung);
+  }
+</style>

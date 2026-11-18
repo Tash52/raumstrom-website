@@ -1,11 +1,50 @@
 ---
-// STUB (architect, Phase 1a). Owned by page-builder.
+// STUB (Phase 1b, design-system: uses the base layout and components). Owned by page-builder, replaced in Phase 2.
 import BaseLayout from '../layouts/BaseLayout.astro';
+import Karte from '../components/base/Karte.astro';
+import MonoLabel from '../components/base/MonoLabel.astro';
+import Section from '../components/base/Section.astro';
 import { getFirma } from '../lib/content/index.ts';
 
 const firma = await getFirma();
 ---
 <BaseLayout title={`${firma.name} · ${firma.claim}`} description={`${firma.name}: ${firma.claim}`}>
-  <h1>{firma.name}</h1>
-  <p>{firma.claim}</p>
+  <Section id="start" titel={firma.claim} ebene={1} leitung class="stub-hero">
+    <p slot="einleitung" class="t-lead">Modernisierung aus einer Hand. Jede Renovierung beginnt bei der Elektrik.</p>
+  </Section>
+  <Section id="saeulen" titel="Drei Säulen" flaeche="graphit" leitung>
+    <div class="stub-saeulen">
+      <Karte titel="Modernisieren">
+        <MonoLabel slot="label" ton="akzent">Säule 1</MonoLabel>
+        Komplettrenovierung: Elektrik, Trockenbau, Boden, Wände, Fliesen und Bad, Malerarbeiten.
+      </Karte>
+      <Karte titel="Elektrifizieren">
+        <MonoLabel slot="label" ton="akzent">Säule 2</MonoLabel>
+        Wallbox-Installation, Elektro-Modernisierung, Zählerschrank und Unterverteilung.
+      </Karte>
+      <Karte titel="Sicher betreiben">
+        <MonoLabel slot="label" ton="akzent">Säule 3</MonoLabel>
+        Wiederkehrende Prüfung von Ladesäulen, Wallboxen und Ladekabeln nach DGUV V3.
+      </Karte>
+    </div>
+  </Section>
 </BaseLayout>
+
+<style>
+  .stub-hero :global(h1) {
+    font-size: var(--step-5);
+    max-width: 14ch;
+  }
+
+  .stub-saeulen {
+    display: grid;
+    gap: var(--space-7);
+  }
+
+  @media (min-width: 64em) {
+    .stub-saeulen {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-6);
+    }
+  }
+</style>

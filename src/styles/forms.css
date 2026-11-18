@@ -1,0 +1,171 @@
+/*
+ * Form field styles (global on purpose: Astro components in components/base/ and React islands
+ * use the same classes). Label above the field, hint below the label, error below the field.
+ *   .feld > .feld-label + .feld-hinweis + (.feld-input | .feld-auswahl | .feld-datei) + .feld-fehler
+ *   .feld-check > input + label   ·   fieldset.feldgruppe > legend
+ */
+.feld {
+  display: grid;
+  gap: var(--space-2);
+  max-width: 36rem;
+}
+
+.feld-label,
+.feldgruppe > legend {
+  font-weight: var(--weight-ui);
+  font-stretch: var(--wdth-ui);
+  line-height: 1.3;
+}
+
+.feld-pflicht {
+  color: var(--text-muted);
+  font-weight: var(--weight-text);
+}
+
+.feld-hinweis {
+  margin-top: calc(var(--space-1) * -1);
+  color: var(--text-muted);
+  font-size: var(--step--1);
+  line-height: 1.45;
+}
+
+.feld-input,
+.feld-auswahl,
+.feld-datei {
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.75rem 0.875rem;
+  background: var(--surface-field);
+  color: var(--text);
+  border: var(--border) solid var(--line-strong);
+  border-bottom-width: var(--border-strong);
+  border-radius: var(--radius-s);
+  line-height: 1.4;
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+}
+
+textarea.feld-input {
+  min-height: 9rem;
+  resize: vertical;
+}
+
+.feld-input::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+}
+
+.feld-input:hover,
+.feld-auswahl:hover,
+.feld-datei:hover {
+  border-color: var(--text);
+}
+
+.feld-input:focus-visible,
+.feld-auswahl:focus-visible,
+.feld-datei:focus-visible {
+  border-color: var(--focus);
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.feld-auswahl {
+  appearance: none;
+  padding-right: 2.75rem;
+  background-image:
+    linear-gradient(45deg, transparent 50%, currentColor 50%),
+    linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position:
+    calc(100% - 1.3rem) 52%,
+    calc(100% - 0.95rem) 52%;
+  background-size: 0.35rem 0.35rem;
+  background-repeat: no-repeat;
+}
+
+.feld-datei {
+  padding: 0.5rem;
+  cursor: pointer;
+}
+
+.feld-datei::file-selector-button {
+  margin-right: var(--space-3);
+  min-height: 2.25rem;
+  padding: 0.4rem 0.9rem;
+  border: var(--border-strong) solid var(--text);
+  border-radius: var(--radius-s);
+  background: transparent;
+  color: var(--text);
+  font-weight: var(--weight-ui);
+  cursor: pointer;
+}
+
+.feld-fehler {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+  color: var(--error);
+  font-size: var(--step--1);
+  font-weight: var(--weight-ui);
+  line-height: 1.45;
+}
+
+.feld-fehler:empty {
+  display: none;
+}
+
+.feld-fehler .icon {
+  margin-top: 0.1em;
+}
+
+[aria-invalid='true'].feld-input,
+[aria-invalid='true'].feld-auswahl,
+[aria-invalid='true'].feld-datei {
+  border-color: var(--error);
+  border-bottom-width: 3px;
+}
+
+/* Checkbox / radio: native control, enlarged, accent from tokens */
+.feld-check {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: var(--space-3);
+  align-items: start;
+  max-width: 40rem;
+}
+
+.feld-check > input {
+  width: 1.375rem;
+  height: 1.375rem;
+  margin: 0.1rem 0 0;
+  accent-color: var(--color-graphit);
+  cursor: pointer;
+}
+
+.flaeche-graphit .feld-check > input,
+.flaeche-graphit-2 .feld-check > input {
+  accent-color: var(--color-strom);
+}
+
+.feld-check > label {
+  cursor: pointer;
+}
+
+.feld-check > .feld-hinweis,
+.feld-check > .feld-fehler {
+  grid-column: 2;
+  margin-top: var(--space-1);
+}
+
+.feldgruppe {
+  display: grid;
+  gap: var(--space-3);
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.feldgruppe > legend {
+  padding: 0;
+  margin-bottom: var(--space-2);
+}

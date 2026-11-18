@@ -1,7 +1,180 @@
-/* STUB (architect, Phase 1a). Owned by design-system: design tokens go here. */
+/*
+ * RAUMSTROM design tokens (design-system). Single source for colour, type, space, shape, motion.
+ *
+ * Rules
+ * - Components use the semantic tokens (--text, --surface, --accent-text ...), never raw brand hex.
+ * - Strom (#C5F01E) is surface/glow only on light ground. Green text on light = Kabelgrün.
+ *   tests/unit/contrast.test.ts checks every semantic pair (WCAG 2.2 AA) and that no light
+ *   text token resolves to Strom.
+ * - Dark areas: add class `flaeche-graphit` (or `flaeche-graphit-2`); the semantic tokens switch.
+ * - Shape rule: surfaces 0, interactive and cards --radius-s (2px), dots/nodes --radius-punkt.
+ */
 :root {
+  /* Brand palette (Briefing Abschnitt 1, verbindlich) */
   --color-kalk: #f4f1eb;
   --color-graphit: #15191e;
   --color-strom: #c5f01e;
   --color-kabelgruen: #3d6300;
+
+  /* Derived neutrals (same warm/cool axis as the brand pair) */
+  --color-kalk-tief: #e8e3d8; /* secondary light surface */
+  --color-kalk-hell: #fbfaf7; /* form field surface */
+  --color-graphit-2: #232a31; /* raised dark surface */
+  --color-grau-text: #535a62; /* muted text on light, 6.2:1 on Kalk */
+  --color-grau-linie: #7a7f85; /* component borders on light, 3.6:1 */
+  --color-grau-text-dunkel: #a3a9af; /* muted text on dark, 7.4:1 on Graphit */
+  --color-grau-linie-dunkel: #7c848c; /* component borders on dark, >= 3:1 */
+  --color-fehler: #b42318; /* error on light, 5.8:1 */
+  --color-fehler-dunkel: #ff8b7b; /* error on dark, 7.8:1 */
+
+  /* Semantic tokens: light (default, Kalk ground) */
+  --surface: var(--color-kalk);
+  --surface-2: var(--color-kalk-tief);
+  --surface-field: var(--color-kalk-hell);
+  --text: var(--color-graphit);
+  --text-muted: var(--color-grau-text);
+  --accent-text: var(--color-kabelgruen);
+  --accent-surface: var(--color-strom); /* fill only, text on it = --on-accent */
+  --on-accent: var(--color-graphit);
+  --line: rgb(21 25 30 / 0.14); /* decorative hairline */
+  --line-strong: var(--color-grau-linie); /* borders that must be perceivable (3:1) */
+  --leitung: var(--color-kabelgruen); /* the cable line motif on light */
+  --leitung-glow: rgb(197 240 30 / 0);
+  --focus: var(--color-graphit);
+  --focus-glow: rgb(197 240 30 / 0.85);
+  --error: var(--color-fehler);
+  --button-bg: var(--color-graphit);
+  --button-text: var(--color-kalk);
+
+  /* Type */
+  --font-sans: var(--font-archivo, Arial, sans-serif);
+  --font-mono: var(--font-plex-mono, ui-monospace, monospace);
+  --wdth-text: 100%;
+  --wdth-display: 125%; /* Archivo Expanded for display type */
+  --wdth-ui: 108%;
+  --weight-light: 300;
+  --weight-text: 400;
+  --weight-ui: 560;
+  --weight-strong: 680;
+  --weight-display: 800;
+
+  /* Fluid scale (≈ 1.2 at 360 px to ≈ 1.333 at 1440 px) */
+  --step--1: clamp(0.8125rem, 0.79rem + 0.1vw, 0.875rem);
+  --step-0: clamp(1rem, 0.97rem + 0.15vw, 1.0625rem);
+  --step-1: clamp(1.1875rem, 1.1rem + 0.4vw, 1.4375rem);
+  --step-2: clamp(1.4375rem, 1.26rem + 0.8vw, 1.9375rem);
+  --step-3: clamp(1.75rem, 1.43rem + 1.45vw, 2.625rem);
+  --step-4: clamp(2.125rem, 1.6rem + 2.4vw, 3.5rem);
+  --step-5: clamp(2.5rem, 1.7rem + 3.8vw, 4.75rem);
+  --leading-tight: 1.04;
+  --leading-heading: 1.12;
+  --leading-text: 1.6;
+  --tracking-display: -0.02em;
+  --tracking-mono: 0.01em;
+  --measure: 68ch;
+
+  /* Space (4 px base) */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+  --space-9: 6rem;
+  --space-10: 8rem;
+  --section-y: clamp(4rem, 2.8rem + 5vw, 7rem);
+  --gutter: clamp(1.25rem, 0.6rem + 3vw, 3rem);
+  --container: 88rem;
+  --container-text: 46rem;
+  --header-h: 4rem;
+
+  /* Shape */
+  --radius-0: 0;
+  --radius-s: 2px;
+  --radius-punkt: 50%;
+  --border: 1px;
+  --border-strong: 2px;
+  --leitung-w: 2px;
+
+  /* Elevation (tinted with Graphit, never pure black) */
+  --shadow-1: 0 1px 0 rgb(21 25 30 / 0.06), 0 2px 6px -2px rgb(21 25 30 / 0.12);
+  --shadow-2: 0 2px 0 rgb(21 25 30 / 0.05), 0 18px 40px -18px rgb(21 25 30 / 0.35);
+  --glow-strom: 0 0 0 1px rgb(197 240 30 / 0.9), 0 0 22px 2px rgb(197 240 30 / 0.45);
+
+  /* Layers */
+  --z-base: 0;
+  --z-raised: 1;
+  --z-header: 50;
+  --z-skip: 100;
+
+  /* Motion. --motion is 1 normally, 0 with reduced motion (multiply distances with it). */
+  --motion: 1;
+  --dur-instant: 80ms;
+  --dur-fast: 140ms;
+  --dur-base: 240ms;
+  --dur-slow: 520ms;
+  --dur-draw: 1400ms; /* line drawing (Leitung) */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-strom: cubic-bezier(0.7, 0, 0.2, 1); /* current "switching on" */
+}
+
+/* Dark areas ("hinter der Wand"): semantic tokens switch, components stay the same. */
+.flaeche-graphit,
+.flaeche-graphit-2 {
+  --surface: var(--color-graphit);
+  --surface-2: var(--color-graphit-2);
+  --surface-field: var(--color-graphit-2);
+  --text: var(--color-kalk);
+  --text-muted: var(--color-grau-text-dunkel);
+  --accent-text: var(--color-strom); /* allowed: Strom on dark ground */
+  --accent-surface: var(--color-strom);
+  --on-accent: var(--color-graphit);
+  --line: rgb(244 241 235 / 0.14);
+  --line-strong: var(--color-grau-linie-dunkel);
+  --leitung: var(--color-strom);
+  --leitung-glow: rgb(197 240 30 / 0.5);
+  --focus: var(--color-strom);
+  --focus-glow: rgb(197 240 30 / 0.35);
+  --error: var(--color-fehler-dunkel);
+  --button-bg: var(--color-strom);
+  --button-text: var(--color-graphit);
+}
+
+.flaeche-graphit-2 {
+  --surface: var(--color-graphit-2);
+  --surface-2: var(--color-graphit);
+  --surface-field: var(--color-graphit);
+}
+
+.flaeche-kalk-tief {
+  --surface: var(--color-kalk-tief);
+  --surface-2: var(--color-kalk);
+}
+
+/* Reduced motion: durations collapse, distances multiply by 0. Also settable via data-motion="reduce" on <html>. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion: 0;
+    --dur-fast: 0.01ms;
+    --dur-base: 0.01ms;
+    --dur-slow: 0.01ms;
+    --dur-draw: 0.01ms;
+  }
+}
+
+:root[data-motion='reduce'] {
+  --motion: 0;
+  --dur-fast: 0.01ms;
+  --dur-base: 0.01ms;
+  --dur-slow: 0.01ms;
+  --dur-draw: 0.01ms;
+}
+
+@media (min-width: 64em) {
+  :root {
+    --header-h: 4.5rem;
+  }
 }

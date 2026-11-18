@@ -1,0 +1,23 @@
+---
+// Inline text link (running text). Kabelgrün on light, Strom on dark. External links get rel + hint.
+import type { HTMLAttributes } from 'astro/types';
+import Icon from './Icon.astro';
+
+type Props = HTMLAttributes<'a'> & { href: string };
+const { href, class: className, ...rest } = Astro.props;
+const extern = /^https?:\/\//.test(href);
+---
+<a
+  href={href}
+  class:list={['textlink', className]}
+  {...(extern ? { rel: 'noopener noreferrer external' } : {})}
+  {...rest}
+><slot />{extern && <><Icon name="arrow-up-right" size="s" class="textlink-extern" /><span class="visually-hidden"> (externer Link)</span></>}</a>
+
+<style>
+  .textlink :global(.textlink-extern) {
+    display: inline-block;
+    margin-left: 0.15em;
+    vertical-align: -0.1em;
+  }
+</style>

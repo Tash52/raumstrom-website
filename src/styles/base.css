@@ -1,8 +1,293 @@
-/* STUB (architect, Phase 1a). Owned by design-system. */
+/* RAUMSTROM base styles (design-system): reset, typography, focus, layout helpers. Mobile first. */
 @import './tokens.css';
+@import './forms.css';
+
+/* Native cross-document view transitions (no ClientRouter, CSP-safe). Motion-3d adds the line animation. */
+@view-transition {
+  navigation: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @view-transition {
+    navigation: none;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+}
 
 html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  color-scheme: light;
   background: var(--color-kalk);
+  scroll-padding-top: calc(var(--header-h) + var(--space-4));
+  hanging-punctuation: first last;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html:not([data-motion='reduce']) {
+    scroll-behavior: smooth;
+  }
+}
+
+body {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: var(--step-0);
+  font-weight: var(--weight-text);
+  font-stretch: var(--wdth-text);
+  line-height: var(--leading-text);
+  font-kerning: normal;
+  font-variant-numeric: lining-nums proportional-nums;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+main {
+  flex: 1 0 auto;
+}
+
+img,
+picture,
+svg,
+video,
+canvas {
+  display: block;
+  max-width: 100%;
+}
+
+img,
+video {
+  height: auto;
+}
+
+input,
+button,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+p,
+li,
+dd,
+figcaption {
+  text-wrap: pretty;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+/* Headings: Archivo Expanded, heavy, tight. Sizes via classes (.t-display, .t-h1 ...) or defaults below. */
+h1,
+h2,
+h3,
+h4 {
+  font-weight: var(--weight-display);
+  font-stretch: var(--wdth-display);
+  line-height: var(--leading-heading);
+  letter-spacing: var(--tracking-display);
+  text-wrap: balance;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+h1 {
+  font-size: var(--step-4);
+  line-height: var(--leading-tight);
+}
+
+h2 {
+  font-size: var(--step-3);
+}
+
+h3 {
+  font-size: var(--step-1);
+  font-weight: var(--weight-strong);
+  letter-spacing: -0.01em;
+}
+
+h4 {
+  font-size: var(--step-0);
+  font-weight: var(--weight-strong);
+  letter-spacing: 0;
+}
+
+.t-display {
+  font-size: var(--step-5);
+  line-height: var(--leading-tight);
+  font-weight: var(--weight-display);
+  font-stretch: var(--wdth-display);
+  letter-spacing: var(--tracking-display);
+}
+
+.t-lead {
+  font-size: var(--step-1);
+  line-height: 1.45;
+  font-weight: var(--weight-light);
+  max-width: 38ch;
+  hyphens: manual;
+}
+
+.t-muted {
+  color: var(--text-muted);
+}
+
+.t-mono {
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+  letter-spacing: var(--tracking-mono);
+  font-variant-numeric: tabular-nums slashed-zero;
+}
+
+strong,
+b {
+  font-weight: var(--weight-strong);
+}
+
+small {
+  font-size: var(--step--1);
+}
+
+/* Inline links in running text (component: components/base/TextLink.astro) */
+a {
+  color: inherit;
+}
+
+.prose a,
+a.textlink {
+  color: var(--accent-text);
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.22em;
+  transition: text-decoration-thickness var(--dur-fast) var(--ease-out);
+}
+
+.prose a:hover,
+a.textlink:hover {
+  text-decoration-thickness: 2px;
+}
+
+.prose > * + * {
+  margin-top: var(--space-4);
+}
+
+.prose {
+  max-width: var(--measure);
+}
+
+.prose :is(h2, h3) {
+  margin-top: var(--space-7);
+}
+
+.prose ul,
+.prose ol {
+  padding-left: 1.25em;
+}
+
+.prose li + li {
+  margin-top: var(--space-2);
+}
+
+.prose li::marker {
+  color: var(--accent-text);
+}
+
+::selection {
+  background: var(--color-strom);
   color: var(--color-graphit);
-  font-family: system-ui, sans-serif;
+}
+
+/* Focus: always visible on keyboard focus. Graphit ring with Strom glow on light, Strom ring on dark. */
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 6px var(--focus-glow);
+  border-radius: var(--radius-s);
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+@media (forced-colors: active) {
+  :focus-visible {
+    outline: 3px solid CanvasText;
+    box-shadow: none;
+  }
+}
+
+/* Layout helpers */
+.container {
+  width: 100%;
+  max-width: var(--container);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.container-text {
+  max-width: calc(var(--container-text) + 2 * var(--gutter));
+}
+
+.stack > * + * {
+  margin-top: var(--stack-gap, var(--space-4));
+}
+
+.cluster {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--cluster-gap, var(--space-3));
+  align-items: center;
+}
+
+.visually-hidden:not(:focus):not(:active) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Surfaces: set background and text from the (switched) semantic tokens */
+.flaeche-graphit,
+.flaeche-graphit-2,
+.flaeche-kalk-tief {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.flaeche-graphit,
+.flaeche-graphit-2 {
+  color-scheme: dark;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

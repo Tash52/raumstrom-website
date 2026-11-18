@@ -1,0 +1,145 @@
+---
+// Card for Leistungen, Referenzen, Ratgeber. Open by default (top cable line, no box);
+// variante="flaeche" adds a surface. With href the whole card is clickable (stretched title link).
+// Hover/focus: the line "carries current" (colour) and the node moves to its end.
+import Icon from './Icon.astro';
+
+interface Props {
+  titel: string;
+  href?: string;
+  ebene?: 2 | 3 | 4;
+  variante?: 'offen' | 'flaeche';
+  class?: string;
+}
+const { titel, href, ebene = 3, variante = 'offen', class: className } = Astro.props;
+const H = `h${ebene}` as 'h2' | 'h3' | 'h4';
+---
+<article class:list={['karte', `karte-${variante}`, href && 'karte-link', className]}>
+  <span class="karte-linie" aria-hidden="true"><span class="karte-knoten"></span></span>
+  {Astro.slots.has('medien') && <div class="karte-medien"><slot name="medien" /></div>}
+  {Astro.slots.has('label') && <div class="karte-label"><slot name="label" /></div>}
+  <H class="karte-titel">
+    {href ? <a href={href}>{titel}</a> : titel}
+  </H>
+  <div class="karte-text"><slot /></div>
+  {Astro.slots.has('fuss') && <div class="karte-fuss"><slot name="fuss" /></div>}
+  {href && <Icon name="arrow-right" class="karte-pfeil" />}
+</article>
+
+<style>
+  .karte {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding-top: var(--space-5);
+    color: var(--text);
+  }
+
+  .karte-flaeche {
+    padding: var(--space-6) var(--space-5) var(--space-5);
+    background: var(--surface-2);
+    border-radius: var(--radius-s);
+  }
+
+  .karte-linie {
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: var(--leitung-w);
+    background: var(--text);
+    transition: background-color var(--dur-base) var(--ease-strom);
+  }
+
+  .karte-knoten {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 0.625rem;
+    height: 0.625rem;
+    margin-top: -0.3125rem;
+    border-radius: var(--radius-punkt);
+    background: var(--text);
+    transition:
+      transform var(--dur-slow) var(--ease-strom),
+      background-color var(--dur-base) var(--ease-strom),
+      box-shadow var(--dur-base) var(--ease-strom);
+  }
+
+  .karte-titel {
+    font-size: var(--step-1);
+    font-weight: var(--weight-strong);
+    font-stretch: var(--wdth-ui);
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+  }
+
+  .karte-titel a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  /* Stretched link: whole card is the target, focus ring drawn on the card */
+  .karte-link .karte-titel a::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+
+  .karte-link .karte-titel a:focus-visible {
+    outline: none;
+    box-shadow: none;
+  }
+
+  .karte-link:has(.karte-titel a:focus-visible) {
+    outline: 2px solid var(--focus);
+    outline-offset: 6px;
+    box-shadow: 0 0 0 10px var(--focus-glow);
+    border-radius: var(--radius-s);
+  }
+
+  .karte-text {
+    color: var(--text-muted);
+    max-width: 52ch;
+  }
+
+  .karte-medien {
+    order: -1;
+    margin-bottom: var(--space-2);
+  }
+
+  .karte-fuss {
+    margin-top: auto;
+    padding-top: var(--space-3);
+  }
+
+  .karte :global(.karte-pfeil) {
+    margin-top: auto;
+    transition: transform var(--dur-base) var(--ease-out);
+  }
+
+  .karte-link:is(:hover, :focus-within) .karte-linie {
+    background: var(--leitung);
+  }
+
+  .karte-link:is(:hover, :focus-within) .karte-knoten {
+    transform: translateX(calc((var(--karte-breite, 100cqi) - 0.625rem) * var(--motion)));
+    background: var(--accent-surface);
+    box-shadow: 0 0 0 2px var(--leitung), 0 0 14px 2px rgb(197 240 30 / 0.55);
+  }
+
+  .karte-link:is(:hover, :focus-within) :global(.karte-pfeil) {
+    transform: translateX(calc(4px * var(--motion)));
+  }
+
+  .karte-link {
+    container-type: inline-size;
+  }
+
+  @media (forced-colors: active) {
+    .karte-linie,
+    .karte-knoten {
+      background: CanvasText;
+    }
+  }
+</style>

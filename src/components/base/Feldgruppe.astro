@@ -1,0 +1,22 @@
+---
+// fieldset + legend for radio groups and related checkboxes.
+import FeldFehler from './FeldFehler.astro';
+import { feldIds } from './feld.ts';
+
+interface Props {
+  legende: string;
+  name: string;
+  hinweis?: string;
+  fehler?: string;
+  class?: string;
+}
+const { legende, name, hinweis, fehler, class: className } = Astro.props;
+const ids = feldIds(`gruppe-${name}`);
+const described = [hinweis && ids.hinweis, fehler && ids.fehler].filter(Boolean).join(' ') || undefined;
+---
+<fieldset class:list={['feldgruppe', className]} aria-describedby={described}>
+  <legend>{legende}</legend>
+  {hinweis && <p class="feld-hinweis" id={ids.hinweis}>{hinweis}</p>}
+  <slot />
+  <FeldFehler id={ids.fehler} text={fehler} />
+</fieldset>

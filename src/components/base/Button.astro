@@ -1,0 +1,149 @@
+---
+// Button / button-styled link. <a> with href, otherwise <button>. Min. 44 px target.
+// primaer: Graphit on Kalk, Strom on Graphit (switches with the surface). The dot is the
+// cable endpoint from the logo; it "switches on" on hover/focus (feedback, no idle motion).
+import type { HTMLAttributes } from 'astro/types';
+import Icon from './Icon.astro';
+import type { IconName } from './icons.ts';
+
+type Common = {
+  variante?: 'primaer' | 'sekundaer' | 'text';
+  groesse?: 'm' | 'l';
+  icon?: IconName;
+  /** Leading icon instead of trailing. */
+  iconVorne?: boolean;
+  class?: string;
+};
+type Props = Common &
+  (({ href: string } & Omit<HTMLAttributes<'a'>, 'class'>) | ({ href?: undefined } & Omit<HTMLAttributes<'button'>, 'class'>));
+
+const { variante = 'primaer', groesse = 'm', icon, iconVorne = false, class: className, href, ...rest } = Astro.props;
+const Tag = href ? 'a' : 'button';
+const attrs: Record<string, unknown> = href ? { href, ...rest } : { type: 'button', ...rest };
+const classes = ['btn', `btn-${variante}`, `btn-${groesse}`, className];
+---
+<Tag class:list={classes} {...attrs}>
+  {variante === 'primaer' && <span class="btn-punkt" aria-hidden="true"></span>}
+  {icon && iconVorne && <Icon name={icon} />}
+  <span class="btn-label"><slot /></span>
+  {icon && !iconVorne && <Icon name={icon} class="btn-icon-nach" />}
+</Tag>
+
+<style>
+  .btn {
+    --btn-pad-y: 0.75rem;
+    --btn-pad-x: 1.25rem;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.625rem;
+    min-height: 2.75rem;
+    padding: var(--btn-pad-y) var(--btn-pad-x);
+    border: var(--border-strong) solid transparent;
+    border-radius: var(--radius-s);
+    font-family: var(--font-sans);
+    font-size: var(--step-0);
+    font-weight: var(--weight-ui);
+    font-stretch: var(--wdth-ui);
+    line-height: 1.2;
+    letter-spacing: 0.005em;
+    text-decoration: none;
+    white-space: nowrap;
+    transition:
+      background-color var(--dur-base) var(--ease-out),
+      color var(--dur-base) var(--ease-out),
+      border-color var(--dur-base) var(--ease-out),
+      transform var(--dur-instant) var(--ease-out);
+  }
+
+  .btn-l {
+    --btn-pad-y: 1rem;
+    --btn-pad-x: 1.625rem;
+    min-height: 3.25rem;
+    font-size: var(--step-1);
+  }
+
+  .btn:active {
+    transform: translateY(calc(1px * var(--motion)));
+  }
+
+  .btn-primaer {
+    background: var(--button-bg);
+    color: var(--button-text);
+    border-color: var(--button-bg);
+  }
+
+  .btn-punkt {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: var(--radius-punkt);
+    background: var(--button-text);
+    opacity: 0.55;
+    transition:
+      background-color var(--dur-base) var(--ease-strom),
+      box-shadow var(--dur-base) var(--ease-strom),
+      opacity var(--dur-base) var(--ease-strom);
+  }
+
+  /* On light ground the dot turns Strom (surface use, on Graphit). On dark it stays Graphit. */
+  .btn-primaer:is(:hover, :focus-visible) .btn-punkt {
+    opacity: 1;
+    background: var(--color-strom);
+    box-shadow: 0 0 0 3px rgb(197 240 30 / 0.25), 0 0 12px 2px rgb(197 240 30 / 0.6);
+  }
+
+  :global(.flaeche-graphit) .btn-primaer:is(:hover, :focus-visible) .btn-punkt,
+  :global(.flaeche-graphit-2) .btn-primaer:is(:hover, :focus-visible) .btn-punkt {
+    background: var(--color-graphit);
+    box-shadow: none;
+  }
+
+  .btn-sekundaer {
+    background: transparent;
+    color: var(--text);
+    border-color: var(--text);
+  }
+
+  .btn-sekundaer:hover {
+    background: var(--text);
+    color: var(--surface);
+  }
+
+  .btn-label {
+    min-width: 0;
+  }
+
+  .btn.btn-text {
+    --btn-pad-x: 0.25rem;
+    background: transparent;
+    color: var(--text);
+    text-decoration-line: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.3em;
+  }
+
+  .btn.btn-text:hover {
+    text-decoration-thickness: 2px;
+  }
+
+  .btn-icon-nach {
+    transition: transform var(--dur-base) var(--ease-out);
+  }
+
+  .btn:hover .btn-icon-nach {
+    transform: translateX(calc(3px * var(--motion)));
+  }
+
+  .btn:disabled,
+  .btn[aria-disabled='true'] {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+
+  @media (forced-colors: active) {
+    .btn {
+      border-color: ButtonText;
+    }
+  }
+</style>
