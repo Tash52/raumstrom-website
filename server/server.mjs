@@ -5,7 +5,7 @@ import http from 'node:http';
 import path from 'node:path';
 import { existsSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { parseEnv } from './env.mjs';
+import { loadDotEnv, parseEnv } from './env.mjs';
 import { applySecurityHeaders } from './headers.mjs';
 import { loadPagePolicies, resolveStatic, routeKey, sendFile } from './static.mjs';
 
@@ -13,6 +13,8 @@ const ROOT = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 const DIST = process.env.RAUMSTROM_DIST ? path.resolve(process.env.RAUMSTROM_DIST) : path.join(ROOT, 'dist');
 const CLIENT = path.join(DIST, 'client');
 
+// .env in the project root (or RAUMSTROM_ENV_FILE); real environment variables take precedence.
+loadDotEnv(process.env.RAUMSTROM_ENV_FILE ? path.resolve(process.env.RAUMSTROM_ENV_FILE) : path.join(ROOT, '.env'));
 const parsed = parseEnv();
 if (!parsed.ok) {
   console.error('Start abgebrochen (fail-secure). Fehlende oder ungültige Umgebungsvariablen:');

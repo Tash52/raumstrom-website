@@ -29,6 +29,28 @@ function keystaticDevOnly() {
   };
 }
 
+// Acceptance-only pages: in dev and `npm run build:staging`, removed from the production build
+// (`npm run build`). Tested in tests/unit/staging-pages.test.ts.
+const STAGING_ONLY = ['/styleguide/'];
+const keepStagingPages = process.env.RAUMSTROM_STAGING === '1';
+
+/** @returns {import('astro').AstroIntegration} */
+function stagingOnlyPages() {
+  return {
+    name: 'raumstrom:staging-only-pages',
+    hooks: {
+      'astro:build:done': async ({ dir, logger }) => {
+        if (keepStagingPages) return;
+        const { rm } = await import('node:fs/promises');
+        for (const route of STAGING_ONLY) {
+          await rm(new URL(`.${route}`, dir), { recursive: true, force: true });
+          logger.info(`${route} nicht im Produktions-Build (nur dev/staging)`);
+        }
+      },
+    },
+  };
+}
+
 // Fonts (design-system): local files only, no font CDN. Sources and licences: src/assets/fonts/README.md.
 // Unicode ranges = the subsets the files were cut to (Archivo) or IBM's own split (Plex Mono).
 const ARCHIVO_LATIN = 'U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2190-2199, U+2212, U+2215, U+2264-2265, U+FEFF, U+FFFD';
@@ -84,7 +106,7 @@ export default defineConfig({
   prefetch: false,
   devToolbar: { enabled: false },
   // /styleguide/ is noindex (acceptance only) and stays out of the sitemap.
-  integrations: [react(), sitemap({ filter: (page) => !new URL(page).pathname.startsWith('/styleguide/') }), keystaticDevOnly()],
+  integrations: [react(), sitemap({ filter: (page) => !new URL(page).pathname.startsWith('/styleguide/') }), keystaticDevOnly(), stagingOnlyPages()],
   // Cast: the config type cannot infer provider options from a variable (runtime validated by Astro).
   fonts: /** @type {any} */ (FONTS),
   image: { remotePatterns: [], domains: [] },

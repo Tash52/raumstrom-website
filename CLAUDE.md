@@ -1,10 +1,11 @@
 # RAUMSTROM-Website · Projektwissen für Agenten (max. 80 Zeilen, Pflege: `architect`)
 
-Astro 7.4 (statisch) + Node-Server nur für `/api/*`, React-Inseln, zod 4, Keystatic (nur dev). Node ≥ 22.23.4. Regeln: `docs/AGENTEN-REGELN.md`.
+Astro 7.4 (statisch) + Node-Server nur für `/api/*`, React-Inseln, zod 4, Keystatic (nur dev). Node ≥ 22.23.4. Regeln: `docs/AGENTEN-REGELN.md`. Freigegebener Plan (Phasen, Agenten-Briefings, Entscheidungen): `docs/UMSETZUNGSPLAN.md`.
+Cloud-Umgebung: Netz nur npm/PyPI/GitHub (lesen) plus 15 freigegebene Hosts (Plan Abschnitt 6, Frage 2): docs.astro.build, threejs.org, r3f.docs.pmnd.rs, drei.docs.pmnd.rs, keystatic.com, altcha.org, gsap.com, docs.mistral.ai, www.gesetze-im-internet.de, ambientcg.com, api.polyhaven.com, dl.polyhaven.org, rdap.denic.de, rdap.verisign.com, cloudflare-dns.com.
 
 ## Befehle
 - `npm ci` · `npm run dev` (http://localhost:4321, Keystatic unter `/keystatic`)
-- `npm run build:staging` (Platzhalter erlaubt) · `npm run build` (bricht ab, solange `check:launch` offen ist) · `npm start` (dist + Header, braucht `.env`)
+- `npm run build:staging` (Platzhalter erlaubt, enthält `/styleguide/`; `npm run build` entfernt ihn) · `npm run build` (bricht ab, solange `check:launch` offen ist) · `npm start` (dist + Header; liest `.env` im Projektstamm, echte Umgebungsvariablen haben Vorrang, wie beim Launch-Check)
 - `npm test` (Vitest + Hook-Test) · `npm run test:e2e` (Playwright gegen `dist`, vorher `build:staging`) · `npm run check` (Typen)
 - `npm run check:launch` · `npm run platzhalter` (schreibt `PLATZHALTER.md`, nach Inhaltsänderungen ausführen, Test prüft Aktualität)
 - `npm run scan:wording` · `npm run licenses [-- --check]` · `npm run trend-schema [-- --check]` · `npm run audit`
@@ -33,7 +34,7 @@ Astro 7.4 (statisch) + Node-Server nur für `/api/*`, React-Inseln, zod 4, Keyst
 
 ## Schnittstellen
 - `import { getFirma, getFeatures, getGewerke, getGewerk, partnerHinweis, isPlaceholder } from '<rel>/lib/content/index.ts'`. Firmendaten (Impressum, Footer, Kontakt, Schema.org, Mails) nur hierüber.
-- `partnerHinweis(ids)` → „Ausführung durch unseren Meister-Partnerbetrieb" oder null; unbekannte IDs brechen den Build.
+- `partnerHinweis(ids)` → „Ausführung durch unseren Meister-Partnerbetrieb" oder null, `getPartnerGewerke(ids)` nennt die Gewerke; unbekannte IDs brechen den Build. Pflicht an jeder Leistung mit Partner-Gewerk.
 - Schemas: `import { leistungSchema, … } from '<rel>/lib/schemas/index.ts'` (Client und Server gleich). Bilder: `teamSchema(image())`.
 - API-Routen: `src/pages/api/*.ts` mit `export const prerender = false`. Secrets: `getServerEnv()` aus `server/env.mjs` (ALTCHA_HMAC_KEY, CSRF_SECRET, SMTP_*, MAIL_FROM; `.env.example`). Ohne Pflicht-Secrets startet der Server nicht.
 - Header/CSP: `server/headers.mjs`, `server/csp.mjs`. Astro schreibt die Seiten-CSP (Hashes) nach `dist/_headers.json`, der Server sendet sie als Header.
@@ -46,9 +47,9 @@ Astro 7.4 (statisch) + Node-Server nur für `/api/*`, React-Inseln, zod 4, Keyst
 - Seitenübergänge: native View Transitions (`@view-transition { navigation: auto; }`), kein `<ClientRouter />`.
 - Astro 7: Rust-Compiler verlangt gültiges HTML; `compressHTML: 'jsx'` entfernt Leerraum zwischen Elementen, nötige Leerzeichen als `{" "}`.
 - URLs mit Schrägstrich am Ende (`/leistungen/trockenbau/`), der Server leitet um. Keine Daten-URIs (CSP `img-src 'self'`).
-- Platzhalter: `[[PLATZHALTER: Beschreibung]]`. Wording: nur „Meister-Partnerbetrieb", kein Meister/Innung/Fachbetrieb/Sicherheitstechnik/Kameras/Superlative/Festpreis-Garantie (`scan:wording` bricht den Build ab).
+- Platzhalter: `[[PLATZHALTER: Beschreibung]]`. Wording: nur „Meister-Partnerbetrieb", kein Meister/Innung/Fachbetrieb/Sicherheitstechnik/Alarm/Kamera (im Planer „Ansicht")/Superlative („beste", Nr. 1, Top)/Festpreis- oder Preisgarantie (`scan:wording` bricht den Build ab; Regeln `scripts/lib/wording.mjs`).
 - Strom-Grün `#C5F01E` nie als Text auf hellem Grund; grüne Schrift = Kabelgrün `#3D6300`.
-- Abhängigkeiten exakt pinnen (`.npmrc` save-exact, ignore-scripts), nur MIT/Apache/BSD/ISC, Ausnahmen in `scripts/licenses.mjs` → `THIRD-PARTY-LICENSES.md`. Audit-Ausnahmen mit Ablaufdatum in `scripts/audit-allowlist.json`.
+- Abhängigkeiten exakt pinnen (`.npmrc` save-exact, ignore-scripts), nur MIT/Apache/BSD/ISC. Ausnahmen (`scripts/licenses.mjs` → `THIRD-PARTY-LICENSES.md`): freigegeben GSAP, libheif/heic-to (LGPL), sharp/libvips (LGPL), axe-core (MPL, nur Tests); vorläufig, Freigabe Betreiber offen: lightningcss (MPL, Vite-Build), y-provider (ohne Lizenz, Keystatic dev). Weitere nur nach Freigabe. Audit-Ausnahmen mit Ablaufdatum in `scripts/audit-allowlist.json`.
 
 ## Agenten-Setup
 - 17 Agenten in `.claude/agents/`, geprüfte Skill-Kopien in `.claude/skills/` (frontend-design, 12× threejs-*, je `QUELLE.md`), Audit: `docs/SKILL-AUDIT.md`.

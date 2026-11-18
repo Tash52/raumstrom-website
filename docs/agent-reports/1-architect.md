@@ -71,3 +71,20 @@ astro 7.4.12, @astrojs/node 11.1.13, @astrojs/react 7.1.9, @astrojs/sitemap 3.7.
 - E2E läuft gegen die Ausgabe von `build:staging`. Der Astro-Build ist identisch mit `build`, nur der Launch-Check ist gelockert.
 - `npm run dev` ohne Terminal (Agenten, CI) startet Astro 7 als Hintergrund-Daemon; stoppen mit `node node_modules/astro/bin/astro.mjs dev stop`.
 - Keystatic-Formulare validieren weniger streng als zod (z. B. Hex-Farben, Pflichttexte in verschachtelten Objekten). Fehler fallen beim Build mit klarer Meldung auf, nicht beim Speichern.
+
+---
+
+## Nacharbeit aus der QA-Abnahme (`docs/agent-reports/1-qa-verifier.md`), Stand bfb65a7
+
+| Befund | Änderung | Test |
+|---|---|---|
+| **B2** `npm start` liest `.env` nicht | `server/env.mjs`: `readDotEnv()` (Nodes eigener Parser `util.parseEnv`, gleiche Regeln wie `node --env-file`) und `loadDotEnv()`. Der Server lädt `.env` aus dem Projektstamm bzw. `RAUMSTROM_ENV_FILE`, echte Umgebungsvariablen haben Vorrang. Der Launch-Check nutzt jetzt dieselbe Funktion (eigener Parser entfernt). `CLAUDE.md` angepasst. | `tests/unit/env-file.test.ts` (Parser, Vorrang, Launch-Check sieht dieselben Werte); `tests/unit/production-build.test.ts` startet den Server nur mit Secrets aus einer `.env` |
+| **B4** Lücken im Wording-Scan | `scripts/lib/wording.mjs`: jedes „…kamera…" (auch im Planer; dort „Ansicht"), Videoüberwachung, CCTV, Alarm…, Sicherheitssystem…, Einbruch…; Superlative auch ohne Artikel („Bester", „beste Qualität", „bestes"), ausgenommen „am/aufs/zum besten", dazu erstklassig, unschlagbar, konkurrenzlos, unübertroffen, einzigartig, „höchste Qualität", „Top 1/Top-Anbieter"; Festpreis: Preisgarantie, „garantierter Festpreis", „Festpreis (mit/inkl.) Garantie", „Festpreis garantiert". „Meister-Partnerbetrieb" und „meisterpflichtig" bleiben erlaubt. | `tests/unit/wording.test.ts`: 13 erlaubte und 31 verbotene Beispiele (u. a. alle QA-Beispiele außer „Top 1 Anbieter" jetzt ebenfalls erkannt), Repo-Scan sauber |
+| **B5** Paketliste picomatch-Ausnahme | `scripts/audit-allowlist.json`: picomatch@4.0.7 über astro, vite, vitest, tinyglobby, fdir, @astrojs/internal-helpers (→ @astrojs/node, @astrojs/react) und picomatch@2.3.2 über astro → unstorage → anymatch; Begründung um den Laufzeit-Trace ergänzt. | `npm run audit` ok |
+| **B3** (architect-Teil) Test `partnerHinweis` | Reine Funktionen in `src/lib/content/gewerke.ts` (`findGewerk`, `partnerGewerke`, `kennzeichnung`); `partnerHinweis()` nutzt sie, neu `getPartnerGewerke()` für die Nennung der Gewerke. | `tests/unit/gewerke.test.ts` (Wortlaut, Partner/eigen, Umstellen in der Matrix, unbekannte IDs brechen ab) |
+| **B3** Styleguide im Produktions-Build | `scripts/astro.mjs` kennt `--staging` (setzt `RAUMSTROM_STAGING=1`), `build:staging` nutzt es. Integration `stagingOnlyPages()` in `astro.config.mjs` löscht `/styleguide/` nach jedem Build ohne `--staging`. Dev und Staging (und damit die E2E-Tests von design-system) behalten ihn. `src/pages/styleguide/` unverändert. | `tests/unit/production-build.test.ts`: echter Build ohne `--staging` nach `.astro/prod-build-test`, Datei fehlt, Server liefert `/styleguide/` 404 und `/` 200 |
+| **B7** `CLAUDE.md` | Verweis auf `docs/UMSETZUNGSPLAN.md`, Netz der Cloud-Umgebung mit den 15 freigegebenen Hosts, Kurzliste der Lizenz-Ausnahmen (freigegeben: GSAP, libheif/heic-to, sharp/libvips, axe-core; vorläufig: lightningcss, y-provider). Einen Satz zu `UEBERGABE.md` enthielt `CLAUDE.md` nicht (er stand nur in diesem Bericht, Punkt „Offen 6"; erledigt durch den Orchestrator). 58 Zeilen. | `wc -l` |
+
+Ergebnisse: `npm test` 148/148 (10 Dateien) + Hook 7/7 · `npm run build:staging` ok (mit `/styleguide/`) · `npm run build` Exit 1 (Launch-Check) · `npm run test:e2e` 44 passed, 2 skipped (gewollt, design-system) · `npm run check` 0/0/0 · `npm run audit` ok · `npm run licenses -- --check` ok.
+
+Hinweis: Der Produktions-Build-Test baut einmal vollständig (etwa 3 s) und belegt Port 4398. Den Wortlaut „Kamera" dürfen auch Planer-Oberflächen nicht verwenden (Code-Bezeichner wie `camera` sind englisch und nicht betroffen).

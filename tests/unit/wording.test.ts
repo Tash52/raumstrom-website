@@ -12,7 +12,12 @@ describe('Wording-Scan', () => {
     'Am besten rufen Sie uns an.',
     'Bestellen Sie den Prüfservice für Ihre Ladesäule.',
     'Sicher betreiben: Prüfservice nach DGUV V3',
-    'Die Kamera im Raumplaner lässt sich drehen.',
+    'Die Ansicht im Raumplaner lässt sich drehen.',
+    'Am besten rufen Sie uns vorher an.',
+    'Wir beraten Sie bestens und bestätigen den Termin.',
+    'Gewährleistung nach BGB',
+    'Ein verbindliches Angebot erhalten Sie nach der Besichtigung.',
+    'Meister-Partnerbetrieb für Elektroinstallation',
     'Ein Ansprechpartner für Ihre gesamte Renovierung.',
   ])('erlaubt: %s', (t) => expect(rules(t)).toEqual([]));
 
@@ -31,6 +36,22 @@ describe('Wording-Scan', () => {
     ['Nr. 1 in Unterfranken', 'superlativ'],
     ['Mit Festpreis-Garantie', 'festpreisgarantie'],
     ['Festpreisgarantie', 'festpreisgarantie'],
+    ['Garantierter Festpreis für Ihr Bad', 'festpreisgarantie'],
+    ['Festpreis garantiert', 'festpreisgarantie'],
+    ['Festpreis mit Garantie', 'festpreisgarantie'],
+    ['Preisgarantie', 'festpreisgarantie'],
+    ['Kamera-Installation', 'kamera'],
+    ['Wir montieren Kameras', 'kamera'],
+    ['Die Kamera im Raumplaner lässt sich drehen.', 'kamera'],
+    ['Einbruchschutz und Sicherheitssysteme', 'sicherheitstechnik'],
+    ['Alarm bei Stromausfall', 'alarmanlage'],
+    ['Bester Service in Schweinfurt', 'superlativ'],
+    ['beste Qualität zum fairen Preis', 'superlativ'],
+    ['Unser bestes Angebot', 'superlativ'],
+    ['Top 1 Anbieter', 'superlativ'],
+    ['Höchste Qualität seit Jahren', 'superlativ'],
+    ['unschlagbare Preise', 'superlativ'],
+    ['Meister-Partnerbetrieb und Meisterqualität', 'meister'],
   ])('verbietet: %s', (t, rule) => expect(rules(t)).toContain(rule));
 
   it('meldet Zeile und Spalte', () => {

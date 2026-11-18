@@ -1,8 +1,8 @@
 [
   {
     "id": "GHSA-fc5q-39xc-vjpf",
-    "paket": "picomatch <=4.0.7 (über astro, vite, tinyglobby, @astrojs/*)",
-    "grund": "ReDoS nur bei angreiferkontrollierten Glob-Mustern. Es gibt keine gepatchte Version (Stand 18.11.2026). picomatch läuft nur im Build und Dev-Server mit Mustern aus unserem Code; server/server.mjs nutzt kein picomatch und gibt keine Nutzereingaben an Glob-Funktionen weiter.",
+    "paket": "picomatch@4.0.7 (über astro, vite, vitest, tinyglobby, fdir, @astrojs/internal-helpers → @astrojs/node, @astrojs/react) und picomatch@2.3.2 (über astro → unstorage → anymatch); Stand npm ls picomatch --all am 18.11.2026",
+    "grund": "ReDoS nur bei angreiferkontrollierten Glob-Mustern. Es gibt keine gepatchte Version (Stand 18.11.2026). picomatch läuft nur im Build und Dev-Server mit Mustern aus unserem Code; server/server.mjs lädt zur Laufzeit weder picomatch noch anymatch, tinyglobby oder unstorage (Modul-Trace, session: false) und gibt keine Nutzereingaben an Glob-Funktionen weiter.",
     "geprueft": "2026-11-18",
     "bis": "2026-12-31"
   }

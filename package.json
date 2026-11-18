@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "node scripts/astro.mjs dev",
     "build": "npm run scan:wording && node scripts/check-launch.mjs && node scripts/astro.mjs build",
-    "build:staging": "npm run scan:wording && node scripts/check-launch.mjs --allow-placeholders && node scripts/astro.mjs build",
+    "build:staging": "npm run scan:wording && node scripts/check-launch.mjs --allow-placeholders && node scripts/astro.mjs build --staging",
     "start": "node server/server.mjs",
     "check": "node scripts/astro.mjs check",
     "check:launch": "node scripts/check-launch.mjs",

@@ -2,7 +2,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { parse as parseYaml } from 'yaml';
-import { parseEnv } from '../../server/env.mjs';
+import { parseEnv, readDotEnv } from '../../server/env.mjs';
 import {
   LEGAL_SEITEN,
   featuresSchema,
@@ -127,17 +127,6 @@ function categorize(file, text, firmaKey) {
   if (file.startsWith('src/content/legal/')) return 'Rechtliches';
   if (/foto|bild|logo|grafik/i.test(text) || file.startsWith('src/assets/')) return 'Fotos';
   return 'Texte';
-}
-
-/** Minimal KEY=VALUE reader; values are only checked, never printed. */
-function readDotEnv(file) {
-  if (!existsSync(file)) return {};
-  const out = {};
-  for (const line of readFileSync(file, 'utf8').split(/\r?\n/)) {
-    const m = /^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/.exec(line);
-    if (m && !line.trimStart().startsWith('#')) out[m[1]] = m[2].replace(/^(['"])(.*)\1$/, '$2');
-  }
-  return out;
 }
 
 /** Markdown checklist for PLATZHALTER.md, grouped by category. */

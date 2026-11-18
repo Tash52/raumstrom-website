@@ -12,19 +12,24 @@ export const RULES = [
     re: /zertifiziert\w*\s+(?:\w+\s+)?(?:betrieb|unternehmen|elektriker|handwerker|firma)\w*/gi,
     hint: 'keine Zertifizierungs-Behauptung für RAUMSTROM',
   },
-  { id: 'sicherheitstechnik', re: /sicherheitstechnik\w*/gi, hint: 'keine Sicherheitstechnik im Angebot (Säule 3 = „Sicher betreiben"/„Prüfservice")' },
-  { id: 'alarmanlage', re: /alarm(?:anlage|technik|system)\w*/gi, hint: 'keine Alarmanlagen im Angebot' },
+  { id: 'sicherheitstechnik', re: /sicherheitstechnik\w*|sicherheitssystem\w*|einbruch\w*/gi, hint: 'keine Sicherheitstechnik im Angebot (Säule 3 = „Sicher betreiben"/„Prüfservice")' },
+  { id: 'alarmanlage', re: /alarm\w*/gi, hint: 'keine Alarmanlagen im Angebot' },
   {
     id: 'kamera',
-    re: /(?:überwachungs|sicherheits|video|ip-)kamera\w*|videoüberwachung\w*|kameraüberwachung\w*|kamerasystem\w*/gi,
-    hint: 'keine Kameras/Videoüberwachung im Angebot',
+    // Every "Kamera…" (also in the planner UI: use „Ansicht"/„Blickwinkel" instead).
+    re: /\w*kamera\w*|\w*videoüberwachung\w*|\bcctv\b/gi,
+    hint: 'keine Kameras/Videoüberwachung im Angebot (im Planer „Ansicht" statt „Kamera")',
   },
   {
     id: 'superlativ',
-    re: /\b(?:günstigst|billigst|preiswertest|schnellst|zuverlässigst)\w*|\b(?:der|die|das|den|dem|des|unser\w*)\s+beste[nrms]?\b|\bnr\.?\s*1\b|\bnummer\s+(?:1|eins)\b|marktführer\w*|\bführende[nrms]?\b/gi,
+    re: /\b(?:günstigst|billigst|preiswertest|schnellst|zuverlässigst|erstklassig|unschlagbar|konkurrenzlos|unübertroffen|einzigartig)\w*|(?<!\bam\s)(?<!\baufs\s)(?<!\bzum\s)\bbeste[nrms]?\b|\bhöchste[nrms]?\s+(?:qualität|standard|niveau)\w*|\bnr\.?\s*1\b|\bnummer\s+(?:1|eins)\b|\btop[\s-]?(?:1|eins|anbieter|qualität)\b|marktführer\w*|\bführende[nrms]?\b/gi,
     hint: 'keine unbelegten Superlative',
   },
-  { id: 'festpreisgarantie', re: /festpreis[-\s]?garantie\w*/gi, hint: 'kein „Festpreis-Garantie"' },
+  {
+    id: 'festpreisgarantie',
+    re: /(?:fest)?preis[-\s]?garantie\w*|garantiert\w*\s+(?:fest)?preis\w*|festpreis\w*\s+(?:mit\s+|inkl\.?\s+|inklusive\s+)?garantie\w*|festpreis\w*\s+garantiert/gi,
+    hint: 'kein „Festpreis-Garantie" / „garantierter Festpreis"',
+  },
 ];
 
 function blankAllowed(line) {

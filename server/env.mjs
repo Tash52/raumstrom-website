@@ -1,5 +1,7 @@
 // Fail-secure environment check. The server refuses to start if a required
 // secret is missing or still a placeholder. Values are never logged.
+import { existsSync, readFileSync } from 'node:fs';
+import { parseEnv as parseDotEnv } from 'node:util';
 import { z } from 'zod';
 
 const PLACEHOLDER_HINTS = /PLATZHALTER|change[-_]?me|example|xxx|todo/i;
@@ -60,4 +62,26 @@ export function getServerEnv() {
   if (!r.ok) throw new Error('Server-Konfiguration unvollständig');
   cached = r.env;
   return cached;
+}
+
+/**
+ * Reads a .env file with Node's own parser (same rules as `node --env-file`).
+ * Used by the server and the launch check, so both see the same values. Missing file = {}.
+ * @param {string} file
+ * @returns {Record<string, string>}
+ */
+export function readDotEnv(file) {
+  if (!existsSync(file)) return {};
+  return /** @type {Record<string, string>} */ (parseDotEnv(readFileSync(file, 'utf8')));
+}
+
+/**
+ * Fills process.env from the .env file. Variables already set in the environment win
+ * (same precedence as the launch check).
+ * @param {string} file
+ */
+export function loadDotEnv(file, target = process.env) {
+  for (const [k, v] of Object.entries(readDotEnv(file))) {
+    if (target[k] === undefined) target[k] = v;
+  }
 }
