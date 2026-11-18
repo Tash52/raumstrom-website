@@ -1,6 +1,6 @@
 // Production build (without --staging) served by server/server.mjs with secrets from a .env file.
 import { spawn, spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -61,6 +61,17 @@ describe('Produktions-Build', () => {
   it('enthält den Styleguide nicht (nur dev/staging)', () => {
     expect(existsSync(path.join(out, 'client/index.html'))).toBe(true);
     expect(existsSync(path.join(out, 'client/styleguide'))).toBe(false);
+  });
+
+  it('Sitemap enthält keine noindex-Seiten (generisch)', () => {
+    const xml = readFileSync(path.join(out, 'client/sitemap-0.xml'), 'utf8');
+    const locs = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => new URL(m[1]!).pathname);
+    expect(locs).toContain('/');
+    for (const p of ['/kontakt/danke/', '/kontakt/fehler/', '/styleguide/', '/404/']) expect(locs).not.toContain(p);
+    for (const p of locs) {
+      const html = readFileSync(path.join(out, 'client', p, 'index.html'), 'utf8');
+      expect(html, p).not.toMatch(/name="robots" content="[^"]*noindex/);
+    }
   });
 
   it('Server liest Secrets aus .env, Umgebung hat Vorrang (PORT)', async () => {

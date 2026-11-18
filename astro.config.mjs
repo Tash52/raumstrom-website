@@ -6,6 +6,8 @@ import react from '@astrojs/react';
 import sitemap from '@astrojs/sitemap';
 import { parse } from 'yaml';
 import { CSP_DIRECTIVES } from './server/csp.mjs';
+import { siteConfig } from './server/site.mjs';
+import { indexierbar } from './scripts/lib/noindex.mjs';
 
 // Single source for the domain: src/content/settings/firma.yaml
 const { domain } = parse(readFileSync(new URL('./src/content/settings/firma.yaml', import.meta.url), 'utf8'));
@@ -33,6 +35,25 @@ function keystaticDevOnly() {
 // (`npm run build`). Tested in tests/unit/staging-pages.test.ts.
 const STAGING_ONLY = ['/styleguide/'];
 const keepStagingPages = process.env.RAUMSTROM_STAGING === '1';
+
+// Origin from firma.yaml (SITE_URL may override, e.g. staging host). Staging adds localhost for E2E.
+const SITE = siteConfig({ domain, siteUrl: process.env.SITE_URL, staging: keepStagingPages });
+if (SITE.problems.length) throw new Error(`Website-Adresse ungültig: ${SITE.problems.join('; ')}`);
+
+// Sitemap: pages whose HTML has robots noindex are left out (generic, no path list).
+/** @type {URL | undefined} */
+let clientDir;
+/** @returns {import('astro').AstroIntegration} */
+function noindexAwareSitemap() {
+  return {
+    name: 'raumstrom:noindex-sitemap',
+    hooks: {
+      'astro:config:done': ({ config }) => {
+        clientDir = config.build.client;
+      },
+    },
+  };
+}
 
 /** @returns {import('astro').AstroIntegration} */
 function stagingOnlyPages() {
@@ -93,7 +114,7 @@ const FONTS = [
 ];
 
 export default defineConfig({
-  site: `https://${domain}`,
+  site: SITE.site,
   output: 'static', // pages are prerendered; only src/pages/api/* sets `export const prerender = false`
   // 'ignore' because Keystatic's dev routes have no trailing slash; server/server.mjs redirects
   // page URLs to the canonical form with slash (308).
@@ -105,8 +126,14 @@ export default defineConfig({
   session: false, // no cookies in v1
   prefetch: false,
   devToolbar: { enabled: false },
-  // /styleguide/ is noindex (acceptance only) and stays out of the sitemap.
-  integrations: [react(), sitemap({ filter: (page) => !new URL(page).pathname.startsWith('/styleguide/') }), keystaticDevOnly(), stagingOnlyPages()],
+  // noindex pages (styleguide, /kontakt/danke/, drafts …) stay out of the sitemap.
+  integrations: [
+    noindexAwareSitemap(),
+    react(),
+    sitemap({ filter: (page) => (clientDir ? indexierbar(clientDir, page) : false) }),
+    keystaticDevOnly(),
+    stagingOnlyPages(),
+  ],
   // Cast: the config type cannot infer provider options from a variable (runtime validated by Astro).
   fonts: /** @type {any} */ (FONTS),
   image: { remotePatterns: [], domains: [] },
@@ -114,6 +141,7 @@ export default defineConfig({
   markdown: { syntaxHighlight: false },
   security: {
     checkOrigin: true,
+    allowedDomains: SITE.allowedDomains,
     // CSP via hashes. staticHeaders: Astro writes the per-page policy to dist/client/_headers.json
     // instead of a <meta> tag; server/server.mjs sends it as a real header.
     csp: {

@@ -52,3 +52,26 @@ Dev-Server gestartet. Mit Playwright `impressum`, `datenschutz`, `agb`, `widerru
 
 ## Ergebnisse
 `npm test` 181/181 (11 Dateien) + Hook 7/7 · `npm run build:staging` ok · `npm run test:e2e` 49 passed, 3 skipped (gewollt) · `npm run check` 0/0/0 · `npm run scan:wording` 0 Funde · `PLATZHALTER.md` neu erzeugt (3 neue Register-Punkte). `CLAUDE.md` 59 Zeilen (Register, Plural-Regel, Rechtstext-Renderer, Keystatic-Hinweis).
+
+---
+
+## Nacharbeit (Stand dae69c6): Sitemap ohne noindex, allowedDomains
+
+1. **Sitemap generisch:**
+   - `scripts/lib/noindex.mjs` (`isNoindexHtml`, `htmlFileFor`, `indexierbar`). Der Sitemap-Filter in `astro.config.mjs` liest das gebaute HTML jeder Seite und lässt alles mit `<meta name="robots" content="…noindex…">` weg. Seiten, deren HTML fehlt (z. B. der im Produktions-Build entfernte Styleguide), fallen ebenfalls heraus.
+   - Das Build-Verzeichnis liefert eine kleine Integration (`astro:config:done` → `config.build.client`).
+   - Die frühere Pfadregel für `/styleguide/` ist entfallen.
+   - Ergebnis `build:staging`: 20 Einträge. Nicht enthalten sind `/kontakt/danke/`, `/kontakt/fehler/`, `/styleguide/`, 404 und die Rechtstexte, die als Entwurf auf noindex stehen.
+2. **allowedDomains:**
+   - `server/site.mjs` (`siteConfig`) leitet `site` und `security.allowedDomains` aus `firma.domain` ab (`https`, plus `www.`). Die Build-Variable `SITE_URL` überschreibt das, etwa für einen Staging-Host. Nur Staging-Builds (`--staging`) erlauben zusätzlich `localhost`/`127.0.0.1` (http), damit E2E über 127.0.0.1 läuft.
+   - Ungültige Adressen brechen den Astro-Build ab. Der Launch-Check meldet sie als „Domain": nicht https, localhost, Pfad im Wert, ungültiger Host.
+   - `SITE_URL` liest der Launch-Check nur aus der echten Umgebung, nicht aus `.env`, weil Astro sie dort auch nicht liest. Das ist in `.env.example` dokumentiert.
+   - Folge für den Betrieb: Der Reverse-Proxy des Hosters muss `Host: raumstrom.de` und `X-Forwarded-Proto: https` setzen. Sonst baut Astro die URL weiter als `localhost` (unsicherer Fallback bleibt aus) und Safari < 16.4 bekommt 403. Das gehört in `docs/DEPLOYMENT.md`.
+   - Astro vertraut danach `X-Forwarded-For` für `clientAddress`; das Rate-Limit nutzt weiter das eigene `TRUST_PROXY`.
+
+Tests:
+- `tests/unit/site.test.ts` (siteConfig, noindex-Erkennung, Filter), `tests/unit/launch-check.test.ts` (Domain).
+- `tests/unit/production-build.test.ts`: Sitemap des Produktions-Builds ohne noindex-Seiten, generisch über alle Einträge geprüft.
+- `tests/e2e/security.spec.ts`: POST `/api/contact` mit eigener Origin ohne `Sec-Fetch-Site` wird nicht von Astro abgewiesen (vorher 403 „Cross-site POST…", jetzt 303 vom Endpunkt), fremde Origin weiter 403.
+
+Ergebnisse: `npm test` 226/226 (13 Dateien) + Hook 7/7 · `build:staging` ok · `build` Exit 1 (Launch-Check, gewollt) · `test:e2e` 157 passed, 3 skipped · `check` 0/0/0 · `scan:wording` 0 Funde. `CLAUDE.md` 64 Zeilen.

@@ -10,6 +10,7 @@ import {
   gewerkeSchema,
 } from '../../src/lib/schemas/index.ts';
 import { BLOCK_RE, bedingungErfuellt, renderMitFirma, wendeBloeckeAn } from '../../src/lib/content/rechtstext.ts';
+import { siteConfig } from '../../server/site.mjs';
 import { listFiles, rel } from './files.mjs';
 
 export const KATEGORIEN = ['Rechtliches', 'Kontaktdaten', 'Fotos', 'Texte', 'Technik'];
@@ -104,6 +105,15 @@ export function runLaunchCheck({ root, env = process.env }) {
   for (const o of data.firma?.einzugsgebiet.orte ?? []) {
     if (!o.bestaetigt) {
       findings.push({ kategorie: 'Kontaktdaten', art: 'Einzugsgebiet', datei: 'src/content/settings/firma.yaml', text: `${o.name}: bestätigen, dass der Ort bedient wird (bestaetigt: true)` });
+    }
+  }
+
+  // 5b. Public domain (site, sitemap, canonical, Astro allowedDomains). SITE_URL only from the real
+  // build environment (astro.config.mjs does not read .env either).
+  if (data.firma) {
+    const { problems } = siteConfig({ domain: data.firma.domain, siteUrl: env.SITE_URL });
+    for (const p of problems) {
+      findings.push({ kategorie: 'Technik', art: 'Domain', datei: 'src/content/settings/firma.yaml', text: p });
     }
   }
 

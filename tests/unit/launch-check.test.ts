@@ -164,3 +164,14 @@ describe('Launch-Check und bedingte Blöcke', () => {
     expect(f.some((x) => x.fatal && x.art === 'Marker')).toBe(true);
   });
 });
+
+describe('Launch-Check Domain', () => {
+  it('meldet ungültige SITE_URL, akzeptiert die Domain aus firma.yaml', () => {
+    const root = fixture();
+    makeReady(root);
+    expect(runLaunchCheck({ root, env: GOOD_ENV })).toEqual([]);
+    const f = runLaunchCheck({ root, env: { ...GOOD_ENV, SITE_URL: 'http://localhost:4321' } });
+    expect(new Set(f.map((x) => x.art))).toEqual(new Set(['Domain']));
+    expect(f.map((x) => x.text).join(' ')).toMatch(/https.*localhost/);
+  });
+});

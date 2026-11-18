@@ -123,3 +123,22 @@ test('Nur GET/HEAD auf statische Seiten', async ({ request }) => {
   const res = await request.post('/', { data: 'x' });
   expect(res.status()).toBe(405);
 });
+
+test('Origin-Check: Browser ohne Sec-Fetch-Site werden nicht von Astro abgewiesen (allowedDomains)', async ({ request, baseURL }) => {
+  const res = await request.post('/api/contact', {
+    headers: { Origin: new URL(baseURL!).origin, 'Content-Type': 'application/x-www-form-urlencoded' },
+    data: 'name=x',
+    maxRedirects: 0,
+  });
+  expect(res.status()).not.toBe(403);
+  expect(await res.text()).not.toMatch(/Cross-site/i);
+});
+
+test('Origin-Check: fremde Origin wird abgewiesen', async ({ request }) => {
+  const res = await request.post('/api/contact', {
+    headers: { Origin: 'https://evil.example', 'Content-Type': 'application/x-www-form-urlencoded' },
+    data: 'name=x',
+    maxRedirects: 0,
+  });
+  expect(res.status()).toBe(403);
+});
