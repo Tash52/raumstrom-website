@@ -15,8 +15,8 @@ Projektregel: nur MIT, Apache-2.0, BSD, ISC (und gleich oder freizügigere Lizen
 | `heic-to` | LGPL-3.0 | HEIC-Decoder im Raumplaner (Phase 4) | freigegeben |
 | `axe-core` | MPL-2.0 | nur Testwerkzeug, wird nicht ausgeliefert | freigegeben |
 | `@axe-core/*` | MPL-2.0 | nur Testwerkzeug, wird nicht ausgeliefert | freigegeben |
-| `lightningcss*` | MPL-2.0 | CSS-Werkzeug von Vite 8, nur im Build, unverändert, wird nicht ausgeliefert | **Freigabe offen** |
-| `y-provider` | keine Angabe | Abhängigkeit von Keystatic (nur Entwicklung, lokal), wird nicht ausgeliefert | **Freigabe offen** |
+| `lightningcss*` | MPL-2.0 | CSS-Werkzeug von Vite 8, nur im Build, unverändert, wird nicht ausgeliefert | freigegeben |
+| `y-provider` | keine Angabe | Abhängigkeit von Keystatic (nur Entwicklung, lokal), wird nicht ausgeliefert | freigegeben |
 
 LGPL-Bibliotheken werden unverändert und als austauschbare Einheit genutzt (dynamisch gelinkt bzw. eigener Chunk). MPL-2.0-Werkzeuge werden unverändert genutzt und nicht ausgeliefert.
 

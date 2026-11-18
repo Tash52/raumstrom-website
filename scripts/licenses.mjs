@@ -15,7 +15,7 @@ export const ALLOWED = new Set([
 ]);
 
 /**
- * Documented exceptions. `freigegeben` = approved by the operator (Plan Frage 4, 18.11.2026).
+ * Documented exceptions. `freigegeben` = approved by the operator (Plan Frage 4, 18.11.2026; lightningcss und y-provider ebenfalls 18.11.2026).
  * Match by package name (exact) or prefix ending in "*".
  */
 export const EXCEPTIONS = [
@@ -26,8 +26,8 @@ export const EXCEPTIONS = [
   { match: 'heic-to', lizenz: 'LGPL-3.0', grund: 'HEIC-Decoder im Raumplaner (Phase 4)', freigegeben: true },
   { match: 'axe-core', lizenz: 'MPL-2.0', grund: 'nur Testwerkzeug, wird nicht ausgeliefert', freigegeben: true },
   { match: '@axe-core/*', lizenz: 'MPL-2.0', grund: 'nur Testwerkzeug, wird nicht ausgeliefert', freigegeben: true },
-  { match: 'lightningcss*', lizenz: 'MPL-2.0', grund: 'CSS-Werkzeug von Vite 8, nur im Build, unverändert, wird nicht ausgeliefert', freigegeben: false },
-  { match: 'y-provider', lizenz: 'keine Angabe', grund: 'Abhängigkeit von Keystatic (nur Entwicklung, lokal), wird nicht ausgeliefert', freigegeben: false },
+  { match: 'lightningcss*', lizenz: 'MPL-2.0', grund: 'CSS-Werkzeug von Vite 8, nur im Build, unverändert, wird nicht ausgeliefert', freigegeben: true },
+  { match: 'y-provider', lizenz: 'keine Angabe', grund: 'Abhängigkeit von Keystatic (nur Entwicklung, lokal), wird nicht ausgeliefert', freigegeben: true },
 ];
 
 const nameOf = (key) => key.slice(key.lastIndexOf('node_modules/') + 'node_modules/'.length);

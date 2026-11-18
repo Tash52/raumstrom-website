@@ -49,7 +49,7 @@ Cloud-Umgebung: Netz nur npm/PyPI/GitHub (lesen) plus 15 freigegebene Hosts (Pla
 - URLs mit Schrägstrich am Ende (`/leistungen/trockenbau/`), der Server leitet um. Keine Daten-URIs (CSP `img-src 'self'`).
 - Platzhalter: `[[PLATZHALTER: Beschreibung]]`. Wording: nur „Meister-Partnerbetrieb", kein Meister/Innung/Fachbetrieb/Sicherheitstechnik/Alarm/Kamera (im Planer „Ansicht")/Superlative („beste", Nr. 1, Top)/Festpreis- oder Preisgarantie (`scan:wording` bricht den Build ab; Regeln `scripts/lib/wording.mjs`).
 - Strom-Grün `#C5F01E` nie als Text auf hellem Grund; grüne Schrift = Kabelgrün `#3D6300`.
-- Abhängigkeiten exakt pinnen (`.npmrc` save-exact, ignore-scripts), nur MIT/Apache/BSD/ISC. Ausnahmen (`scripts/licenses.mjs` → `THIRD-PARTY-LICENSES.md`): freigegeben GSAP, libheif/heic-to (LGPL), sharp/libvips (LGPL), axe-core (MPL, nur Tests); vorläufig, Freigabe Betreiber offen: lightningcss (MPL, Vite-Build), y-provider (ohne Lizenz, Keystatic dev). Weitere nur nach Freigabe. Audit-Ausnahmen mit Ablaufdatum in `scripts/audit-allowlist.json`.
+- Abhängigkeiten exakt pinnen (`.npmrc` save-exact, ignore-scripts), nur MIT/Apache/BSD/ISC. Ausnahmen (`scripts/licenses.mjs` → `THIRD-PARTY-LICENSES.md`): freigegeben GSAP, libheif/heic-to (LGPL), sharp/libvips (LGPL), axe-core (MPL, nur Tests), lightningcss (MPL, Vite-Build), y-provider (ohne Lizenz, Keystatic dev). Weitere nur nach Freigabe. Audit-Ausnahmen mit Ablaufdatum in `scripts/audit-allowlist.json`.
 
 ## Agenten-Setup
 - 17 Agenten in `.claude/agents/`, geprüfte Skill-Kopien in `.claude/skills/` (frontend-design, 12× threejs-*, je `QUELLE.md`), Audit: `docs/SKILL-AUDIT.md`.
