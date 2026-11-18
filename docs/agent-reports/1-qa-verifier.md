@@ -109,3 +109,50 @@ Vermutungen (nicht als Befund gewertet): keine.
 ## Screenshots (eigene)
 
 `docs/agent-reports/screenshots/1-qa/`: `qa-start-390.png`, `qa-start-1440.png`, `qa-styleguide-390.png`, `qa-styleguide-1440.png`, `qa-menue-390.png`, `qa-skiplink-390.png`, `qa-fokus-1-1440.png`, `qa-fokus-3-1440.png`, `qa-fokus-7-1440.png`, `qa-fokus-Modernisieren-1440.png`, `qa-fokus-Unterverteilung-1440.png`, `qa-fokus-Leistungen-ansehen-1440.png`, `qa-fokus-feld-name-1440.png`.
+
+---
+
+## Nachprüfung · Stand `f21c95b` · 18.11.2026
+
+Frischer Klon `/tmp/qa1b`. Neue Commits seit `bfb65a7`: `a333656` (architect), `05b6e16` (Lizenzen), `f21c95b` (design-system). Server: `npm start` nur mit `.env` (Staging, Port 4430). Den Produktions-Build habe ich ohne `--staging` erzeugt (`node scripts/astro.mjs build`, das ist der Schritt, den `npm run build` nach dem Launch-Check ausführt) und mit `RAUMSTROM_DIST=dist-prod npm start` ausgeliefert (Port 4431).
+
+**Gesamturteil: Phase 1 bestanden.** B1 bis B8 sind erledigt. Es bleibt ein neuer Hinweis (N1, niedrig).
+
+### Befehle
+
+| Befehl | Exit | Kernausgabe |
+|---|---|---|
+| `npm ci` | 0 | – |
+| `npm run build` | 1 (soll) | `Launch-Check: 56 offene(r) Punkt(e), 0 Fehler.` · `Produktions-Build abgebrochen. …` |
+| `npm run build:staging` | 0 | Routen `/404.html`, `/styleguide/index.html`, `/index.html` · `[build] Complete!` |
+| `npm test` | 0 | `Test Files  10 passed (10)` · `Tests  148 passed (148)` · Hook `# pass 7` `# fail 0` |
+| `npm run test:e2e` | 0 | `3 skipped` · `49 passed (11.2s)` (übersprungen: je das Mobil- oder Desktop-Gegenstück, `design-system.spec.ts:82,96,125`) |
+| `npm run check` | 0 | `- 0 errors` `- 0 warnings` |
+| `npm run audit` | 0 | `npm audit: critical 0, high 17, …` · `Audit ok (keine High/Critical außer dokumentierten Ausnahmen).` |
+| `npm run licenses -- --check` | 0 | `Lizenzen ok (560 Pakete).` (keine „wartet auf Freigabe"-Hinweise mehr) |
+| `npm run scan:wording` | 0 | `Wording-Scan: keine verbotenen Begriffe gefunden.` |
+| Lighthouse Mobile `/` (Produktions-Build) | – | 100 / 100 / 100 / 100, LCP 1,2 s |
+
+### Befunde
+
+| Nr. | Urteil | Beleg |
+|---|---|---|
+| B1 Popover-Rahmen Desktop-Nav | **behoben** | berechneter Stil bei 1152 und 1440 px: `border: 0px none`. Screenshot `screenshots/1-qa/nachpruefung/qa-nav-1440.png` (und `-1152`) zeigt keinen Rahmen. Neuer E2E-Test `design-system.spec.ts:125` |
+| B2 `.env` für `npm start` | **behoben** | `npm start` mit nur `.env` (ohne exportierte Variablen) → `RAUMSTROM läuft auf http://127.0.0.1:4430`. `server/server.mjs:17` `loadDotEnv(…)`, Launch-Check nutzt denselben Parser (`server/env.mjs` `readDotEnv`). Tests `tests/unit/env-file.test.ts`, `production-build.test.ts:66` |
+| B3 Partner-Gewerke mit Hinweis | **behoben** | `/`: Hero „Ausführung durch unseren Meister-Partnerbetrieb: Elektroinstallation". Säule 1 nennt nur die Partner-Gewerke (Elektroinstallation, Putz und Stuck, Fliesen und Bad, Malerarbeiten), Trockenbau und Boden (eigen) richtigerweise nicht. Säule 2: Wallbox, Elektro, Zählerschrank. Säule 3 (eigen): kein Hinweis, richtig. Komponente `src/components/base/GewerkeHinweis.astro`, Daten nur aus `gewerke.yaml`, Icon über `--accent-text` (hell Kabelgrün). Unit-Test `tests/unit/gewerke.test.ts` (6 Fälle). Styleguide-Texte entschärft. Screenshot `nachpruefung/qa-start-1440.png` |
+| B3 `/styleguide/` im Produktions-Build | **behoben** | Produktions-Build: `dist-prod/client` ohne `styleguide/`, Sitemap ohne Styleguide. curl Port 4431: `/styleguide/` 404, `/styleguide` 404, `/styleguide/index.html` 404, `/` 200, `/keystatic` 404, `/api/keystatic` 404, CSP ohne `unsafe-inline`. Staging (4430): `/styleguide/` 200, wie gewollt. Test `production-build.test.ts:61,71`. Mechanik: `--staging` → `RAUMSTROM_STAGING=1` (`scripts/astro.mjs:12`, `astro.config.mjs:34-45`) |
+| B4 Wording-Lücken | **behoben** | Alle 6 Beispiele aus dem Erstbericht werden jetzt erkannt. Weiterhin erlaubt: „Meister-Partnerbetrieb", „Am besten rufen Sie an", „Festpreis-Angebot nach Vor-Ort-Termin" |
+| B5 Paketangabe Audit-Ausnahme | **behoben** | `audit-allowlist.json` nennt jetzt picomatch@4.0.7 (inkl. vitest, fdir, @astrojs/*) und picomatch@2.3.2 (unstorage → anymatch) |
+| B6 Lizenz-Ausnahmen | **behoben (technisch)** | `scripts/licenses.mjs:29-30` `freigegeben: true`, `CLAUDE.md:52` aufgeführt, Check ohne Hinweise. Die Betreiber-Freigabe selbst kann ich nicht prüfen. Ich habe nur den Eintrag im Commit `05b6e16` gesehen, die Freigabe ist laut Auftrag des Orchestrators erfolgt. |
+| B7 CLAUDE.md | **behoben** | 58 Zeilen. Plan-Verweis (`:3`), 15 Hosts (`:4`), Lizenz-Ausnahmen (`:52`), Projektregel lokal (`:45`). Offen bleibt nur das Löschen von `docs/UEBERGABE.md` (Orchestrator, laut eigenem Text nach Phase 1) |
+| B8 Abstand Knoten/Überschrift 390 px | **behoben** | Überschriften beginnen jetzt bei 30 px (vorher ca. 22 px), Abstand zum Knoten ca. 11 px. `nachpruefung/qa-knoten-390.png` |
+
+Gegenprobe: axe (wcag2a/aa, 21aa, 22aa, best-practice) auf `/` und `/styleguide/` bei 390 und 1440 px ergibt 0 Verstöße, 0 Fremd-Requests, 0 Konsolenfehler, 0 px horizontales Scrollen. Strom-Grün als Text nur auf Graphit.
+
+### Neu
+
+| Nr. | Schwere | Befund (belegt) | Ort | Zuständig |
+|---|---|---|---|---|
+| N1 | niedrig | Die erweiterten Regeln erzeugen falsch-positive Treffer, die den Build abbrechen würden. `scanText('beste Grüße')` → Treffer (`superlativ`). Das ist eine übliche Grußformel, z. B. in Mail-Vorlagen unter `src/lib/mail/` (Phase 2, wird gescannt, `SCAN_DIRS = ['src', 'public']`). „Kamera" wird jetzt in jeder Form gesperrt, auch „Die Kamera des Smartphones für Fotos". Das ist im Code bewusst so begründet (`wording.mjs:19`), betrifft aber künftige Upload-Hinweise. Vorschlag: `ALLOWED` um `/beste[nr]? grüße/gi` ergänzen, Kamera-Regel so lassen und content-writer bzw. backend-api informieren. | `scripts/lib/wording.mjs:4,24` | architect |
+
+Screenshots der Nachprüfung: `docs/agent-reports/screenshots/1-qa/nachpruefung/` (`qa-start-{390,1440}.png`, `qa-styleguide-{390,1440}.png`, `qa-nav-{1152,1440}.png`, `qa-knoten-390.png`, `qa-fokus-*.png`).

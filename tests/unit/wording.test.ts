@@ -19,6 +19,8 @@ describe('Wording-Scan', () => {
     'Ein verbindliches Angebot erhalten Sie nach der Besichtigung.',
     'Meister-Partnerbetrieb für Elektroinstallation',
     'Ein Ansprechpartner für Ihre gesamte Renovierung.',
+    'Mit besten Grüßen, Ihr RAUMSTROM-Team',
+    'Beste Grüße aus Schweinfurt',
   ])('erlaubt: %s', (t) => expect(rules(t)).toEqual([]));
 
   it.each([

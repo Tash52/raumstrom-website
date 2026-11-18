@@ -1,7 +1,7 @@
 // Wording rules (Briefing Abschnitt 1, rechtlich relevant). Used by scripts/wording-scan.mjs and tests.
 
 /** Allowed phrases are blanked out before the rules run (columns stay intact). */
-export const ALLOWED = [/Meister-Partnerbetrieb\w*/gi, /meisterpflichtig\w*/gi];
+export const ALLOWED = [/Meister-Partnerbetrieb\w*/gi, /meisterpflichtig\w*/gi, /(?:mit\s+)?(?:den\s+)?besten?\s+Grü(?:ß|ss)en?/gi];
 
 export const RULES = [
   { id: 'meister', re: /meister\w*/gi, hint: '„Meister" nur als „Meister-Partnerbetrieb" (oder „meisterpflichtig")' },
