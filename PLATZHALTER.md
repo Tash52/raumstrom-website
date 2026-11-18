@@ -11,7 +11,7 @@ Automatisch erzeugt mit `npm run platzhalter` am 2026-11-18. Nicht von Hand bear
 - [ ] Gewerke-Matrix: Ausführung eigen/partner je Gewerk (`src/content/settings/gewerke.yaml`)
 - [ ] Server-Secrets auf dem Server in `.env` gesetzt (Vorlage `.env.example`; `npm run check:launch` prüft sie)
 
-## Rechtliches (49)
+## Rechtliches (48)
 
 - [ ] Vertragsmodell festlegen: RAUMSTROM als Vertragspartner mit Meister-Partnerbetrieben als Nachunternehmer (dieser Entwurf) oder Direktvertrag zwischen Kunde und Partnerbetrieb; danach Abschnitt „Ausführung durch Meister-Partnerbetriebe“ anpassen · `src/content/legal/agb.md:11`
 - [ ] Bindefrist für Angebote, z. B. 30 Tage · `src/content/legal/agb.md:27`
@@ -26,9 +26,8 @@ Automatisch erzeugt mit `npm run platzhalter` am 2026-11-18. Nicht von Hand bear
 - [ ] beim Hoster klären, ob er oder ein vorgeschalteter Reverse-Proxy Zugriffsprotokolle führt; falls nein, die Absätze zu Logfiles und Speicherdauer anpassen · `src/content/legal/datenschutz.md:52`
 - [ ] Löschfrist für Anfragen ohne Auftrag, z. B. 6 Monate · `src/content/legal/datenschutz.md:78`
 - [ ] Name und Anschrift des SMTP-Anbieters und Serverstandort (EU); falls das Postfach, in dem Anfragen eingehen, bei einem anderen Anbieter liegt, auch diesen nennen · `src/content/legal/datenschutz.md:116`
-- [ ] backend-api bestätigt, dass abgelaufene Prüfwerte und Kennungen nach Ende des Zeitfensters tatsächlich aus dem Arbeitsspeicher gelöscht werden · `src/content/legal/datenschutz.md:136`
-- [ ] Weitergabe an Partnerbetriebe bestätigen: erst nach Ihrer Zustimmung im Angebotsgespräch oder bereits bei der Kalkulation? Rechtliche Einordnung (eigene Verantwortliche, Auftragsverarbeitung) mit dem Rechtstexte-Service klären. · `src/content/legal/datenschutz.md:148`
-- [ ] Anschrift und Website des BayLDA aus der Behördenseite übernehmen (am 18.11.2026 nicht geprüft) · `src/content/legal/datenschutz.md:173`
+- [ ] Weitergabe an Partnerbetriebe bestätigen: erst nach Ihrer Zustimmung im Angebotsgespräch oder bereits bei der Kalkulation? Rechtliche Einordnung (eigene Verantwortliche, Auftragsverarbeitung) mit dem Rechtstexte-Service klären. · `src/content/legal/datenschutz.md:146`
+- [ ] Anschrift und Website des BayLDA aus der Behördenseite übernehmen (am 18.11.2026 nicht geprüft) · `src/content/legal/datenschutz.md:171`
 - [ ] vollständiger Name der Gesellschaft laut Gesellschaftsvertrag · `src/content/settings/firma.yaml:6`
 - [ ] vollständiger Name Gesellschafter 1 (Christian Maul?) · `src/content/settings/firma.yaml:9`
 - [ ] vollständiger Name Gesellschafter 2 (Jernar Kassimov?) · `src/content/settings/firma.yaml:11`

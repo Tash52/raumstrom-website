@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { crc32 } from 'node:zlib';
 import sharp from 'sharp';
 import { parse } from 'yaml';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { solveChallenge } from 'altcha-lib';
 import { deriveKey } from 'altcha-lib/algorithms/pbkdf2';
 import type { SendMailOptions } from 'nodemailer';
@@ -15,7 +15,8 @@ import { istGleicherUrsprung } from '../../src/lib/security/herkunft.ts';
 import { empfaenger, verarbeiteKontakt } from '../../src/lib/security/kontakt-ablauf.ts';
 import { MELDUNG, pruefeDateiLimits, validiere, zerlege } from '../../src/lib/security/kontakt-validierung.ts';
 import { ableiten, clientAdresse, netzKennung } from '../../src/lib/security/schluessel.ts';
-import { EinmalSpeicher, Parallelitaet, RateLimiter } from '../../src/lib/security/speicher.ts';
+import { BEREINIGUNG_MS, EinmalSpeicher, MAX_AUFBEWAHRUNG_MS, Parallelitaet, RateLimiter } from '../../src/lib/security/speicher.ts';
+import { LIMITS as API_LIMITS } from '../../src/lib/security/api.ts';
 import { anfrageMail, anzeigeName, bestaetigungMail } from '../../src/lib/mail/kontakt-mails.ts';
 import { erzeugeTransport } from '../../src/lib/mail/transport.ts';
 import { BildFehler, kodiereNeu } from '../../src/lib/uploads/bild.ts';
@@ -168,6 +169,42 @@ describe('Rate-Limit und Replay-Speicher', () => {
     const r = new Request('http://x/', { headers: { 'x-forwarded-for': '198.51.100.7, 203.0.113.9' } });
     expect(clientAdresse(r, '10.0.0.1', false)).toBe('10.0.0.1');
     expect(clientAdresse(r, '10.0.0.1', true)).toBe('203.0.113.9');
+  });
+});
+
+describe('Zeitbasierte Löschung (spätestens nach 24 h, Fake-Timer)', () => {
+  afterEach(() => vi.useRealTimers());
+  it('Timer räumt abgelaufene Einträge auch ohne weitere Zugriffe', () => {
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'] });
+    const rl = new RateLimiter(2, 23 * 60 * 60 * 1000);
+    const es = new EinmalSpeicher();
+    rl.pruefe('hmac-der-adresse');
+    es.markiere('nonce', Date.now() + 10 * 60 * 1000);
+    expect([rl.groesse, es.groesse]).toEqual([1, 1]);
+    vi.advanceTimersByTime(15 * 60 * 1000);
+    expect(es.groesse).toBe(0);
+    expect(rl.groesse).toBe(1);
+    vi.advanceTimersByTime(MAX_AUFBEWAHRUNG_MS - 15 * 60 * 1000);
+    expect(rl.groesse).toBe(0);
+  });
+  it('Ablaufzeiten über 24 h werden gekappt, zu lange Fenster abgelehnt', () => {
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'] });
+    const es = new EinmalSpeicher();
+    es.markiere('x', Date.now() + 7 * MAX_AUFBEWAHRUNG_MS);
+    vi.advanceTimersByTime(MAX_AUFBEWAHRUNG_MS);
+    expect(es.groesse).toBe(0);
+    expect(() => new RateLimiter(1, MAX_AUFBEWAHRUNG_MS)).toThrow();
+  });
+  it('Bereinigung auch beim Zugriff (höchstens alle 5 min), eigene Uhr', () => {
+    let t = 0;
+    const rl = new RateLimiter(1, 60_000, 1000, () => t);
+    for (let i = 0; i < 10; i++) rl.pruefe(`k${i}`);
+    t = BEREINIGUNG_MS;
+    rl.pruefe('neu');
+    expect(rl.groesse).toBe(1);
+  });
+  it('API-Limits halten Fenster plus Bereinigungsintervall unter 24 h', () => {
+    for (const l of Object.values(API_LIMITS)) expect(l.fensterMs + BEREINIGUNG_MS).toBeLessThanOrEqual(MAX_AUFBEWAHRUNG_MS);
   });
 });
 

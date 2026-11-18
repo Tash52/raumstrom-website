@@ -48,8 +48,11 @@ export const LIMITS = {
   kontaktGesamt: new RateLimiter(60, 60 * MIN),
   csrf: new RateLimiter(30, 10 * MIN),
   altcha: new RateLimiter(30, 10 * MIN),
-  /** Confirmation mails per recipient address (hash), against mail bombing third parties. */
-  bestaetigung: new RateLimiter(2, 24 * 60 * MIN),
+  /**
+   * Confirmation mails per recipient address (hash), against mail bombing third parties.
+   * 23 h so that the hash is deleted within 24 h (window + cleanup interval, see speicher.ts).
+   */
+  bestaetigung: new RateLimiter(2, 23 * 60 * MIN),
 };
 export const EINMAL = new EinmalSpeicher();
 export const PARALLEL = new Parallelitaet(4);

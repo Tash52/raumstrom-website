@@ -92,7 +92,9 @@ async function handle(req, res) {
 
 const server = http.createServer((req, res) => {
   handle(req, res).catch((err) => {
-    console.error('Interner Fehler:', err instanceof Error ? err.message : 'unbekannt');
+    // Only class and code: messages can contain request data (paths, header values, user input).
+    const code = typeof err?.code === 'string' && /^[A-Z0-9_]{2,40}$/.test(err.code) ? ` ${err.code}` : '';
+    console.error(`Interner Fehler: ${err instanceof Error ? err.name : 'unbekannt'}${code}`);
     if (!res.headersSent) plain(res, 500, 'Interner Fehler');
     else res.destroy();
   });

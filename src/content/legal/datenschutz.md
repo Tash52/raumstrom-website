@@ -131,9 +131,7 @@ Damit das Kontaktformular nicht durch automatisierte Programme oder untergeschob
 
 **Begrenzung der Anfragen:** Damit niemand in kurzer Zeit sehr viele Anfragen senden kann, zählt unser Server, wie oft von einem Internetanschluss aus das Formular gesendet oder eine Rechenaufgabe abgerufen wird (für das Formular höchstens 5 Anfragen in 15 Minuten). Dafür bildet er aus Ihrer IP-Adresse (bei IPv6 nur aus dem Netzpräfix) mit einem geheimen Schlüssel einen Prüfwert, aus dem sich die IP-Adresse nicht zurückrechnen lässt. Gespeichert wird nur dieser Prüfwert mit einem Zähler, nicht die IP-Adresse. Für die Begrenzung der Eingangsbestätigungen (siehe „E-Mail-Versand“) bildet der Server auf die gleiche Weise einen Prüfwert aus Ihrer E-Mail-Adresse. Die Prüfwerte liegen nur im Arbeitsspeicher, werden nicht protokolliert und nicht weitergegeben. Sie werden nach Ablauf des jeweiligen Zeitfensters gelöscht (höchstens 24 Stunden), bei einem Neustart des Servers sofort.
 
-<!-- OFFEN (Befund an backend-api, 18.11.2026): src/lib/security/speicher.ts löscht abgelaufene Einträge (RateLimiter und EinmalSpeicher, jeweils #aufraeumen) erst, wenn 20 000 bzw. 50 000 Einträge erreicht sind. Bei geringem Verkehr bleiben Prüfwerte bis zum Neustart im Speicher, also länger als oben zugesagt (Art. 5 Abs. 1 lit. e DSGVO). Platzhalter entfernen, sobald abgelaufene Einträge regelmäßig gelöscht werden. -->
-
-[[PLATZHALTER: backend-api bestätigt, dass abgelaufene Prüfwerte und Kennungen nach Ende des Zeitfensters tatsächlich aus dem Arbeitsspeicher gelöscht werden]]
+Abgelaufene Prüfwerte und Kennungen löschen wir automatisch aus dem Arbeitsspeicher, spätestens 24 Stunden nach ihrem Entstehen und in jedem Fall bei einem Neustart des Servers.
 
 ## Speicherung im Browser
 

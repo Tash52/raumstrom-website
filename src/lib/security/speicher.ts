@@ -1,29 +1,54 @@
 // In-memory stores with TTL and a hard size cap. Nothing is persisted; a restart forgets everything.
 // Keys are opaque (hashes, nonces). Never store IP addresses or e-mail addresses in clear text here.
+// Time-based deletion: expired entries are removed on access (at most every BEREINIGUNG_MS) and by an
+// unref'd timer every BEREINIGUNG_MS even without traffic. No entry lives longer than
+// MAX_AUFBEWAHRUNG_MS (24 h): expiries are capped so that expiry + one cleanup interval stays below it.
 
 export interface Uhr {
   (): number;
 }
 const jetzt: Uhr = () => Date.now();
 
+export const MAX_AUFBEWAHRUNG_MS = 24 * 60 * 60 * 1000;
+export const BEREINIGUNG_MS = 5 * 60 * 1000;
+/** Latest expiry an entry may have, counted from its creation. */
+export const MAX_GUELTIG_MS = MAX_AUFBEWAHRUNG_MS - BEREINIGUNG_MS;
+
+/** Periodic cleanup per store; unref'd, so it never keeps the process alive (tests, shutdown). */
+function registriere(s: { raeume(): void }) {
+  const timer = setInterval(() => s.raeume(), BEREINIGUNG_MS);
+  timer.unref?.();
+}
+
 /** Single-use markers (CSRF token ids, ALTCHA nonces) until their expiry. */
 export class EinmalSpeicher {
   readonly #eintraege = new Map<string, number>();
   readonly maxEintraege: number;
   readonly uhr: Uhr;
+  #letzteBereinigung: number;
   constructor(maxEintraege = 50_000, uhr: Uhr = jetzt) {
     this.maxEintraege = maxEintraege;
     this.uhr = uhr;
+    this.#letzteBereinigung = uhr();
+    registriere(this);
   }
 
   /** true if the key was unused and is now marked; false if it was used before (replay). */
   markiere(key: string, gueltigBisMs: number): boolean {
     const now = this.uhr();
+    if (now - this.#letzteBereinigung >= BEREINIGUNG_MS) this.raeume();
     const bis = this.#eintraege.get(key);
     if (bis !== undefined && bis > now) return false;
     this.#aufraeumen(now);
-    this.#eintraege.set(key, gueltigBisMs);
+    this.#eintraege.set(key, Math.min(gueltigBisMs, now + MAX_GUELTIG_MS));
     return true;
+  }
+
+  /** Removes every expired entry. */
+  raeume() {
+    const now = this.uhr();
+    this.#letzteBereinigung = now;
+    for (const [k, bis] of this.#eintraege) if (bis <= now) this.#eintraege.delete(k);
   }
 
   get groesse() {
@@ -56,15 +81,31 @@ export class RateLimiter {
   readonly fensterMs: number;
   readonly maxSchluessel: number;
   readonly uhr: Uhr;
+  #letzteBereinigung: number;
   constructor(max: number, fensterMs: number, maxSchluessel = 20_000, uhr: Uhr = jetzt) {
+    if (fensterMs > MAX_GUELTIG_MS) throw new Error('Rate-Limit-Fenster länger als die maximale Aufbewahrung');
     this.max = max;
     this.fensterMs = fensterMs;
     this.maxSchluessel = maxSchluessel;
     this.uhr = uhr;
+    this.#letzteBereinigung = uhr();
+    registriere(this);
+  }
+
+  get groesse() {
+    return this.#fenster.size;
+  }
+
+  /** Removes every window that has ended. */
+  raeume() {
+    const now = this.uhr();
+    this.#letzteBereinigung = now;
+    for (const [k, f] of this.#fenster) if (now - f.start >= this.fensterMs) this.#fenster.delete(k);
   }
 
   pruefe(key: string): LimitErgebnis {
     const now = this.uhr();
+    if (now - this.#letzteBereinigung >= BEREINIGUNG_MS) this.raeume();
     let f = this.#fenster.get(key);
     if (!f || now - f.start >= this.fensterMs) {
       this.#aufraeumen(now);

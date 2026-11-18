@@ -40,7 +40,7 @@ export function anfrageMail(daten: KontaktDaten, bilder: NeuesBild[], k: Anfrage
     daten.nachricht,
     '',
     bilder.length ? `Fotos: ${bilder.length} im Anhang (vom Server neu kodiert, Metadaten entfernt).` : 'Fotos: keine',
-    'Einwilligung in die Verarbeitung laut Datenschutzerklärung: ja',
+    'Datenschutzhinweise zur Kenntnis genommen: ja',
     '',
     'Antworten Sie direkt auf diese E-Mail, um der anfragenden Person zu schreiben.',
     'Bitte löschen Sie die Anfrage, sobald sie erledigt ist und keine Aufbewahrungspflicht besteht.',
