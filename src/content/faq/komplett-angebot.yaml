@@ -1,0 +1,5 @@
+frage: Was enthält das Angebot?
+antwort: "Das Angebot beschreibt die Leistungen je Gewerk, benennt, ob RAUMSTROM oder ein Meister-Partnerbetrieb ausführt, und enthält den Zeitplan. [[PLATZHALTER: Angebotsform und Preisbindung laut AGB, von legal-compliance zu bestätigen]]"
+leistungen:
+  - komplettrenovierung
+reihenfolge: 9
