@@ -1,0 +1,32 @@
+---
+// Direct contact line (phone / e-mail) from firma.yaml; placeholders are not shown. Renders nothing if neither exists.
+import { getFirma, isPlaceholder } from '../../lib/content/index.ts';
+
+interface Props {
+  /** Text before the contact options. */
+  einleitung?: string;
+  class?: string;
+}
+const { einleitung = 'Sie erreichen uns auch direkt', class: className } = Astro.props;
+const firma = await getFirma();
+const zeige = (v: string) => Boolean(v) && !isPlaceholder(v);
+const telefon = zeige(firma.kontakt.telefon) && zeige(firma.kontakt.telefon_anzeige) ? firma.kontakt : null;
+const email = zeige(firma.kontakt.email) ? firma.kontakt.email : null;
+---
+{
+  (telefon || email) && (
+    <p class:list={['direkt', className]}>
+      {einleitung}
+      {telefon && <>{" "}per Telefon unter <a href={`tel:${telefon.telefon}`}>{telefon.telefon_anzeige}</a></>}
+      {telefon && email && " oder"}
+      {email && <>{" "}per E-Mail an <a href={`mailto:${email}`}>{email}</a></>}.
+    </p>
+  )
+}
+
+<style>
+  .direkt a {
+    color: inherit;
+    text-underline-offset: 0.2em;
+  }
+</style>

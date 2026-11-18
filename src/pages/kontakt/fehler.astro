@@ -1,39 +1,30 @@
 ---
 // Target of the native form POST without JavaScript when the request was rejected (303 from /api/contact).
-// Minimal page by backend-api; texts may move to src/content/pages/. noindex, not linked.
-// Without JavaScript the spam protection (ALTCHA) cannot run, so the direct contact options matter here.
+// noindex, not linked. Without JavaScript the spam protection (ALTCHA) cannot run, so direct contact matters here.
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Button from '../../components/base/Button.astro';
+import Icon from '../../components/base/Icon.astro';
+import KontaktDirekt from '../../components/sections/KontaktDirekt.astro';
 import Seitenkopf from '../../components/sections/Seitenkopf.astro';
-import { getFirma, isPlaceholder } from '../../lib/content/index.ts';
-
-const firma = await getFirma();
-const zeige = (v: string) => Boolean(v) && !isPlaceholder(v);
-const telefon = zeige(firma.kontakt.telefon) && zeige(firma.kontakt.telefon_anzeige) ? firma.kontakt : null;
-const email = zeige(firma.kontakt.email) ? firma.kontakt.email : null;
 ---
 <BaseLayout title="Anfrage nicht gesendet | RAUMSTROM" description="Ihre Anfrage konnte nicht gesendet werden." noindex>
   <Seitenkopf titel="Anfrage nicht gesendet" lead="Ihre Anfrage konnte leider nicht übermittelt werden. Ihre Angaben wurden nicht gespeichert." />
   <section class="rueckmeldung" aria-labelledby="gruende-titel">
     <div class="container container-text">
+      <p class="status" role="alert">
+        <Icon name="alert-circle" class="status-icon" />
+        <span>Bitte versuchen Sie es erneut.</span>
+      </p>
       <h2 id="gruende-titel" class="gruende-titel">Mögliche Gründe</h2>
       <ul class="gruende">
         <li>Der Spam-Schutz des Formulars benötigt JavaScript. Bitte aktivieren Sie JavaScript in Ihrem Browser und senden Sie das Formular erneut.</li>
         <li>Eine Angabe fehlte oder ein Foto war zu groß oder in einem anderen Format als JPG, PNG, WebP oder HEIC.</li>
         <li>Es wurden in kurzer Zeit mehrere Anfragen gesendet. Bitte versuchen Sie es in einigen Minuten erneut.</li>
       </ul>
-      {
-        (telefon || email) && (
-          <p class="direkt">
-            Sie erreichen uns auch direkt
-            {telefon && <>{" "}per Telefon unter <a href={`tel:${telefon.telefon}`}>{telefon.telefon_anzeige}</a></>}
-            {telefon && email && " oder"}
-            {email && <>{" "}per E-Mail an <a href={`mailto:${email}`}>{email}</a></>}.
-          </p>
-        )
-      }
+      <KontaktDirekt class="direkt-block" />
       <div class="cluster aktionen">
         <Button href="/kontakt/" icon="arrow-right">Zurück zum Formular</Button>
+        <Button href="/" variante="sekundaer">Zur Startseite</Button>
       </div>
     </div>
   </section>
@@ -44,7 +35,22 @@ const email = zeige(firma.kontakt.email) ? firma.kontakt.email : null;
     padding-bottom: var(--section-y);
   }
 
+  .status {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    font-weight: 600;
+    color: var(--error);
+  }
+
+  .status-icon {
+    flex: none;
+    width: 1.5em;
+    height: 1.5em;
+  }
+
   .gruende-titel {
+    margin-top: var(--space-6);
     font-size: var(--step-1);
   }
 
@@ -56,13 +62,8 @@ const email = zeige(firma.kontakt.email) ? firma.kontakt.email : null;
     gap: var(--space-2);
   }
 
-  .direkt {
+  .rueckmeldung :global(.direkt-block) {
     margin-top: var(--space-5);
-  }
-
-  .direkt a {
-    color: inherit;
-    text-underline-offset: 0.2em;
   }
 
   .aktionen {

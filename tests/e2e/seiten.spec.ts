@@ -151,3 +151,24 @@ test.describe('Kontaktformular (UI)', () => {
     await expect(page.locator('#kontakt-formular')).toBeHidden();
   });
 });
+
+test.describe('Kontakt-Rueckmeldeseiten (ohne JavaScript)', () => {
+  for (const [pfad, h1] of [['/kontakt/danke/', 'Anfrage gesendet'], ['/kontakt/fehler/', 'Anfrage nicht gesendet']] as const) {
+    test(`${pfad}: noindex, eine H1, Link zurueck, axe`, async ({ page }) => {
+      await page.goto(pfad);
+      await expect(page.locator('h1')).toHaveText(h1);
+      await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/);
+      await expect(page.locator('main a[href="/"]').first()).toBeVisible();
+      const r = await new AxeBuilder({ page }).withTags(AXE_TAGS).analyze();
+      expect(r.violations.map((v) => v.id)).toEqual([]);
+    });
+  }
+
+  test.describe('ohne JavaScript', () => {
+    test.use({ javaScriptEnabled: false });
+    test('Formular: noscript-Hinweis zum Spam-Schutz', async ({ page }) => {
+      await page.goto('/kontakt/');
+      await expect(page.locator('[data-altcha-platz] .noscript-hinweis')).toContainText('benötigt JavaScript');
+    });
+  });
+});
