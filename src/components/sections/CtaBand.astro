@@ -1,0 +1,25 @@
+---
+// Call to action: Raumplaner and Anfrage. One pair of labels site-wide.
+import Button from '../base/Button.astro';
+import Section from '../base/Section.astro';
+
+interface Props {
+  titel?: string;
+  text?: string;
+  id?: string;
+}
+const {
+  titel = 'Ihr Vorhaben besprechen',
+  text = 'Skizzieren Sie Ihren Raum vorab im Raumplaner oder schildern Sie uns Ihr Vorhaben direkt.',
+  id = 'anfrage',
+} = Astro.props;
+---
+<Section {id} {titel} flaeche="graphit-2" leitung>
+  <Fragment slot="einleitung">
+    <p class="t-lead">{text}</p>
+  </Fragment>
+  <div class="cluster">
+    <Button href="/kontakt/" groesse="l" icon="arrow-right">Anfrage stellen</Button>
+    <Button href="/raumplaner/" variante="sekundaer" groesse="l" icon="cube-3d-sphere">Raumplaner öffnen</Button>
+  </div>
+</Section>

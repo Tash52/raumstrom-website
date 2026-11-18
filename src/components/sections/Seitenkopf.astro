@@ -1,0 +1,68 @@
+---
+// Head of an inner page: breadcrumbs, the page's only H1, lead text, optional notice/actions (slot).
+// The cable motif: a short line that ends in a point under the heading.
+import Breadcrumbs from './Breadcrumbs.astro';
+
+interface Props {
+  titel: string;
+  lead?: string;
+  pfad?: { text: string; href?: string }[];
+  flaeche?: 'kalk' | 'kalk-tief';
+}
+const { titel, lead, pfad = [], flaeche = 'kalk' } = Astro.props;
+---
+<header class:list={['kopf-seite', flaeche === 'kalk-tief' && 'flaeche-kalk-tief']}>
+  <div class="container">
+    {pfad.length > 0 && <Breadcrumbs {pfad} />}
+    <h1 class="kopf-titel">{titel}</h1>
+    <span class="kopf-kabel" aria-hidden="true"><span class="kopf-punkt"></span></span>
+    {lead && <p class="t-lead kopf-lead">{lead}</p>}
+    {Astro.slots.has('default') && <div class="kopf-extra"><slot /></div>}
+  </div>
+</header>
+
+<style>
+  .kopf-seite {
+    padding-block: var(--space-7) var(--space-8);
+    background: var(--surface);
+    color: var(--text);
+  }
+
+  .kopf-titel {
+    margin-top: var(--space-6);
+    max-width: 20ch;
+    font-size: var(--step-4);
+  }
+
+  .kopf-kabel {
+    position: relative;
+    display: block;
+    width: min(14rem, 50%);
+    height: var(--leitung-w);
+    margin-top: var(--space-5);
+    background: var(--leitung);
+  }
+
+  .kopf-punkt {
+    position: absolute;
+    right: -0.3125rem;
+    top: 50%;
+    width: 0.625rem;
+    height: 0.625rem;
+    margin-top: -0.3125rem;
+    border-radius: var(--radius-punkt);
+    background: var(--accent-surface);
+    box-shadow: 0 0 0 2px var(--surface), 0 0 0 3.5px var(--leitung);
+  }
+
+  .kopf-lead {
+    margin-top: var(--space-5);
+    max-width: 52ch;
+  }
+
+  .kopf-extra {
+    margin-top: var(--space-5);
+    display: grid;
+    gap: var(--space-4);
+  }
+</style>

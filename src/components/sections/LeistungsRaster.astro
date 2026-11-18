@@ -1,0 +1,47 @@
+---
+// Cards for Leistungen (optionally filtered by Säule / Zielgruppe). Each card names the partner notice.
+import Karte from '../base/Karte.astro';
+import GewerkeHinweis from '../base/GewerkeHinweis.astro';
+import { getLeistungen } from './seiten.ts';
+
+interface Props {
+  saeule?: 'modernisieren' | 'elektrifizieren' | 'sicher-betreiben';
+  zielgruppe?: 'zuhause' | 'unternehmen';
+  ebene?: 3 | 4;
+  /** Leistung id to leave out (current page). */
+  ohne?: string;
+}
+const { saeule, zielgruppe, ebene = 3, ohne } = Astro.props;
+const leistungen = (await getLeistungen()).filter(
+  (l) => l.id !== ohne && (!saeule || l.data.saeule === saeule) && (!zielgruppe || l.data.zielgruppen.includes(zielgruppe)),
+);
+---
+<div class="raster">
+  {
+    leistungen.map((l) => (
+      <Karte titel={l.data.titel} href={`/leistungen/${l.id}/`} ebene={ebene}>
+        {l.data.kurzbeschreibung}
+        <GewerkeHinweis slot="fuss" gewerke={l.data.gewerke} nennen={false} />
+      </Karte>
+    ))
+  }
+</div>
+
+<style>
+  .raster {
+    display: grid;
+    gap: var(--space-7) var(--space-6);
+  }
+
+  @media (min-width: 40em) {
+    .raster {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 70em) {
+    .raster {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+</style>

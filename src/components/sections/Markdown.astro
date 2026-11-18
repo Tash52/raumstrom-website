@@ -1,0 +1,10 @@
+---
+// Short Markdown text from the collections (see markdown.ts). Inline-safe: no raw HTML.
+import { markdownZuHtml } from './markdown.ts';
+interface Props {
+  text: string;
+  class?: string;
+}
+const { text, class: className } = Astro.props;
+---
+<div class:list={['prose', className]}><Fragment set:html={markdownZuHtml(text)} /></div>

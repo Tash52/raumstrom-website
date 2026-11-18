@@ -1,0 +1,38 @@
+---
+// Raumplaner entry page (phase 2c: introduction only). The planner itself follows in phase 4-6.
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Button from '../../components/base/Button.astro';
+import Icon from '../../components/base/Icon.astro';
+import Abschnitte from '../../components/sections/Abschnitte.astro';
+import Entwurfsbanner from '../../components/sections/Entwurfsbanner.astro';
+import Seitenkopf from '../../components/sections/Seitenkopf.astro';
+import { getSeite } from '../../components/sections/seiten.ts';
+
+const seite = await getSeite('raumplaner');
+---
+<BaseLayout title={seite.data.meta_title} description={seite.data.meta_description}>
+  <Entwurfsbanner entwurf={seite.data.entwurf} />
+  <Seitenkopf titel={seite.data.titel} lead={seite.body?.trim()} pfad={[{ text: seite.data.titel }]}>
+    <p class="folgt" data-planer-folgt>
+      <Icon name="clock" size="s" />
+      <span>Der Raumplaner folgt in Kürze. Bis dahin können Sie uns Ihr Vorhaben direkt schildern.</span>
+    </p>
+    <div class="cluster">
+      <Button href="/kontakt/" icon="arrow-right">Anfrage stellen</Button>
+    </div>
+  </Seitenkopf>
+  <Abschnitte seite={seite} />
+</BaseLayout>
+
+<style>
+  .folgt {
+    display: flex;
+    gap: var(--space-2);
+    align-items: flex-start;
+    max-width: 40rem;
+    padding: var(--space-4);
+    border-left: 0.375rem solid var(--leitung);
+    background: var(--surface-2);
+    font-weight: var(--weight-ui);
+  }
+</style>

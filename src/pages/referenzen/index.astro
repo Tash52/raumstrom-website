@@ -1,0 +1,84 @@
+---
+// Referenzen. Flag referenzen_anzeigen=false: only intro and empty state (no list). With the flag on, every
+// project shows; illustrative ones (illustrativ: true) get a blueprint graphic with a visible "Illustration" tag.
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Blueprint from '../../components/base/Blueprint.astro';
+import Karte from '../../components/base/Karte.astro';
+import Section from '../../components/base/Section.astro';
+import CtaBand from '../../components/sections/CtaBand.astro';
+import Entwurfsbanner from '../../components/sections/Entwurfsbanner.astro';
+import Markdown from '../../components/sections/Markdown.astro';
+import Seitenkopf from '../../components/sections/Seitenkopf.astro';
+import { abschnitt, getFeatures, getSeite, sichtbar } from '../../components/sections/seiten.ts';
+
+const seite = await getSeite('referenzen');
+const features = await getFeatures();
+const einleitung = abschnitt(seite, 'einleitung');
+const leer = abschnitt(seite, 'leer');
+const referenzen = features.referenzen_anzeigen ? (await getCollection('referenzen', ({ data }) => sichtbar(data.entwurf))) : [];
+const leistungen = new Map((await getCollection('leistungen')).map((l) => [l.id, l.data.titel]));
+---
+<BaseLayout title={seite.data.meta_title} description={seite.data.meta_description}>
+  <Entwurfsbanner entwurf={seite.data.entwurf} />
+  <Seitenkopf titel={seite.data.titel} lead={seite.body?.trim()} pfad={[{ text: seite.data.titel }]} />
+  <Section id={einleitung.id} titel={einleitung.titel} leitung>
+    <Markdown text={einleitung.text} />
+  </Section>
+  {
+    referenzen.length === 0 ? (
+      <Section id={leer.id} titel={leer.titel} flaeche="kalk-tief" leitung>
+        <Markdown text={leer.text} />
+      </Section>
+    ) : (
+      <Section id="projekte" titel="Projekte" flaeche="kalk-tief" leitung>
+        <div class="projekte">
+          {referenzen.map((r) => (
+            <Karte titel={r.data.titel} ebene={3} variante="flaeche">
+              <Fragment slot="medien">
+                {r.data.illustrativ || r.data.bilder.length === 0 ? (
+                  <Blueprint variante="referenz" name={r.data.titel} alt={`Illustrative Grafik zum Beispiel „${r.data.titel}“`} />
+                ) : (
+                  <Image src={r.data.bilder[0]!.src as ImageMetadata} alt={r.data.bilder[0]!.alt} width={960} loading="lazy" />
+                )}
+              </Fragment>
+              <p>{r.data.kurzbeschreibung}</p>
+              <ul class="ref-leistungen" role="list" slot="fuss">
+                {r.data.leistungen.filter((id) => leistungen.has(id)).map((id) => (
+                  <li><a href={`/leistungen/${id}/`}>{leistungen.get(id)}</a></li>
+                ))}
+              </ul>
+            </Karte>
+          ))}
+        </div>
+      </Section>
+    )
+  }
+  <CtaBand titel="Ihr Projekt besprechen" text="Schildern Sie uns Ihr Vorhaben, wir erläutern den Ablauf an Ihrem Beispiel." />
+</BaseLayout>
+
+<style>
+  .projekte {
+    display: grid;
+    gap: var(--space-6);
+  }
+
+  @media (min-width: 48em) {
+    .projekte {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .ref-leistungen {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+    font-size: var(--step--1);
+  }
+
+  .ref-leistungen a {
+    color: var(--accent-text);
+  }
+</style>

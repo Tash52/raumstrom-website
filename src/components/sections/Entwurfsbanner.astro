@@ -1,0 +1,41 @@
+---
+// Visible draft notice. Only rendered when the entry is a draft (entwurf: true); drafts exist only in
+// dev and build:staging (see seiten.ts). The production build does not generate draft pages at all.
+interface Props {
+  entwurf: boolean;
+  text?: string;
+}
+const { entwurf, text = 'Dieser Inhalt ist noch nicht freigegeben und wird im Produktions-Build nicht veröffentlicht.' } = Astro.props;
+---
+{
+  entwurf && (
+    <div class="entwurf" role="note" data-entwurf>
+      <div class="container">
+        <strong>Entwurf</strong>
+        <span>{text}</span>
+      </div>
+    </div>
+  )
+}
+
+<style>
+  .entwurf {
+    padding-block: var(--space-3);
+    background: var(--color-strom);
+    color: var(--color-graphit);
+    font-size: var(--step--1);
+    border-bottom: var(--border-strong) solid var(--color-graphit);
+  }
+
+  .entwurf .container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-3);
+  }
+
+  .entwurf strong {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    letter-spacing: var(--tracking-mono);
+  }
+</style>

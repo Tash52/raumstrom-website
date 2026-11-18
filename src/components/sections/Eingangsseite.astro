@@ -1,0 +1,32 @@
+---
+// Entry page for a target group (Für Zuhause / Für Unternehmen): page texts, matching Leistungen, CTA.
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Section from '../base/Section.astro';
+import Abschnitte from './Abschnitte.astro';
+import CtaBand from './CtaBand.astro';
+import Entwurfsbanner from './Entwurfsbanner.astro';
+import GewerkeListe from './GewerkeListe.astro';
+import LeistungsRaster from './LeistungsRaster.astro';
+import Seitenkopf from './Seitenkopf.astro';
+import { getLeistungen, getSeite } from './seiten.ts';
+
+interface Props {
+  seiteId: 'fuer-zuhause' | 'fuer-unternehmen';
+  zielgruppe: 'zuhause' | 'unternehmen';
+}
+const { seiteId, zielgruppe } = Astro.props;
+const seite = await getSeite(seiteId);
+const leistungen = (await getLeistungen()).filter((l) => l.data.zielgruppen.includes(zielgruppe));
+const gewerke = [...new Set(leistungen.flatMap((l) => l.data.gewerke))];
+---
+<BaseLayout title={seite.data.meta_title} description={seite.data.meta_description}>
+  <Entwurfsbanner entwurf={seite.data.entwurf} />
+  <Seitenkopf titel={seite.data.titel} lead={seite.body?.trim()} pfad={[{ text: seite.data.titel }]} />
+  <Abschnitte seite={seite}>
+    <GewerkeListe slot="partner-hinweis" gewerke={gewerke} />
+  </Abschnitte>
+  <Section id="leistungen" titel="Unsere Leistungen" flaeche="kalk-tief" leitung>
+    <LeistungsRaster zielgruppe={zielgruppe} />
+  </Section>
+  <CtaBand />
+</BaseLayout>

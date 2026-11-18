@@ -137,7 +137,7 @@ test('Partner-Gewerke sind gekennzeichnet (QA B3)', async ({ page }) => {
     await page.goto(pfad);
     const hinweise = page.locator('[data-gewerke-hinweis]');
     expect(await hinweise.count(), pfad).toBeGreaterThan(0);
-    await expect(hinweise.first()).toContainText('Ausführung durch unseren Meister-Partnerbetrieb');
+    await expect(hinweise.first()).toContainText(/Ausführung durch unser(en Meister-Partnerbetrieb|e Meister-Partnerbetriebe)/);
   }
 });
 

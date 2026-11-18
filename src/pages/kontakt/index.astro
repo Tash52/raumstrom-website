@@ -1,0 +1,95 @@
+---
+// Kontakt: intro, contact form (UI), Einzugsgebiet, Datenschutz note. Contact data only from firma.yaml.
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Section from '../../components/base/Section.astro';
+import Icon from '../../components/base/Icon.astro';
+import KontaktFormular from '../../components/forms/KontaktFormular.astro';
+import Entwurfsbanner from '../../components/sections/Entwurfsbanner.astro';
+import Markdown from '../../components/sections/Markdown.astro';
+import Seitenkopf from '../../components/sections/Seitenkopf.astro';
+import { abschnitt, getFirma, getSeite, isPlaceholder } from '../../components/sections/seiten.ts';
+
+const seite = await getSeite('kontakt');
+const firma = await getFirma();
+const einleitung = abschnitt(seite, 'einleitung');
+const gebiet = abschnitt(seite, 'einzugsgebiet');
+const daten = abschnitt(seite, 'daten');
+const zeige = (v: string) => Boolean(v) && !isPlaceholder(v);
+const telefon = zeige(firma.kontakt.telefon) && zeige(firma.kontakt.telefon_anzeige) ? firma.kontakt : null;
+const email = zeige(firma.kontakt.email) ? firma.kontakt.email : null;
+const zeiten = firma.erreichbarkeit.filter((e) => zeige(e.zeiten));
+---
+<BaseLayout title={seite.data.meta_title} description={seite.data.meta_description}>
+  <Entwurfsbanner entwurf={seite.data.entwurf} />
+  <Seitenkopf titel={seite.data.titel} lead={seite.body?.trim()} pfad={[{ text: seite.data.titel }]} />
+  <Section id="formular" titel={einleitung.titel} leitung>
+    <Fragment slot="einleitung"><Markdown text={einleitung.text} /></Fragment>
+    <div class="kontakt-raster">
+      <KontaktFormular />
+      {
+        (telefon || email || zeiten.length > 0) && (
+          <aside class="direkt" aria-labelledby="direkt-titel">
+            <h3 id="direkt-titel" class="direkt-titel">Direkt erreichen</h3>
+            <ul role="list">
+              {telefon && <li><Icon name="phone" size="s" /><a href={`tel:${telefon.telefon}`}>{telefon.telefon_anzeige}</a></li>}
+              {email && <li><Icon name="mail" size="s" /><a href={`mailto:${email}`}>{email}</a></li>}
+              {zeiten.map((z) => <li><Icon name="clock" size="s" /><span>{z.tage}: {z.zeiten}</span></li>)}
+            </ul>
+          </aside>
+        )
+      }
+    </div>
+  </Section>
+  <Section id={gebiet.id} titel={gebiet.titel} flaeche="kalk-tief" leitung>
+    <Markdown text={gebiet.text} />
+  </Section>
+  <Section id={daten.id} titel={daten.titel} leitung>
+    <Markdown text={daten.text} />
+    <p class="datenschutz-link"><a class="textlink" href="/datenschutz/">Zur Datenschutzerklärung</a></p>
+  </Section>
+</BaseLayout>
+
+<style>
+  .kontakt-raster {
+    display: grid;
+    gap: var(--space-8);
+    align-items: start;
+  }
+
+  @media (min-width: 64em) {
+    .kontakt-raster {
+      grid-template-columns: minmax(0, 44rem) minmax(16rem, 1fr);
+    }
+  }
+
+  .direkt {
+    display: grid;
+    gap: var(--space-4);
+    padding-top: var(--space-5);
+    border-top: var(--border-strong) solid var(--text);
+  }
+
+  .direkt-titel {
+    font-size: var(--step-1);
+  }
+
+  .direkt ul {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  .direkt li {
+    display: flex;
+    gap: var(--space-3);
+    align-items: center;
+  }
+
+  .direkt a {
+    color: inherit;
+    text-underline-offset: 0.2em;
+  }
+
+  .datenschutz-link {
+    margin-top: var(--space-4);
+  }
+</style>

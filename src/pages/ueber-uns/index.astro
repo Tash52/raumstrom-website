@@ -1,0 +1,83 @@
+---
+// Über uns: page texts plus the team collection. Without a photo a blueprint illustration is shown.
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Blueprint from '../../components/base/Blueprint.astro';
+import Abschnitte from '../../components/sections/Abschnitte.astro';
+import CtaBand from '../../components/sections/CtaBand.astro';
+import Entwurfsbanner from '../../components/sections/Entwurfsbanner.astro';
+import Seitenkopf from '../../components/sections/Seitenkopf.astro';
+import { getSeite, isPlaceholder } from '../../components/sections/seiten.ts';
+
+const seite = await getSeite('ueber-uns');
+const team = (await getCollection('team')).sort((a, b) => a.data.reihenfolge - b.data.reihenfolge);
+---
+<BaseLayout title={seite.data.meta_title} description={seite.data.meta_description}>
+  <Entwurfsbanner entwurf={seite.data.entwurf} />
+  <Seitenkopf titel={seite.data.titel} lead={seite.body?.trim()} pfad={[{ text: seite.data.titel }]} />
+  <Abschnitte seite={seite}>
+    <ul slot="antwort" class="team" role="list">
+      {
+        team.map((m) => {
+          const altOk = m.data.foto_alt && !isPlaceholder(m.data.foto_alt);
+          return (
+            <li class="mitglied">
+              {m.data.foto && altOk ? (
+                <Image src={m.data.foto as ImageMetadata} alt={m.data.foto_alt!} width={640} class="mitglied-foto" loading="lazy" />
+              ) : (
+                <Blueprint variante="team" name={m.data.name} alt={`Illustration als Platzhalter für das Foto von ${m.data.name}`} />
+              )}
+              <h3 class="mitglied-name">{m.data.name}</h3>
+              <p class="mitglied-rolle t-mono">{m.data.rolle}</p>
+              <p class="mitglied-text">{m.data.kurztext}</p>
+            </li>
+          );
+        })
+      }
+    </ul>
+  </Abschnitte>
+  <CtaBand titel="Lernen Sie uns kennen" text="Schildern Sie uns Ihr Vorhaben, wir melden uns persönlich bei Ihnen." />
+</BaseLayout>
+
+<style>
+  .team {
+    display: grid;
+    gap: var(--space-7) var(--space-6);
+    max-width: 52rem;
+  }
+
+  @media (min-width: 40em) {
+    .team {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .mitglied {
+    display: grid;
+    gap: var(--space-2);
+    align-content: start;
+  }
+
+  .mitglied :global(.blueprint),
+  .mitglied-foto {
+    margin-bottom: var(--space-3);
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+  }
+
+  .mitglied-name {
+    font-size: var(--step-1);
+  }
+
+  .mitglied-rolle {
+    color: var(--text-muted);
+  }
+
+  .mitglied-text {
+    color: var(--text-muted);
+    max-width: 44ch;
+  }
+</style>

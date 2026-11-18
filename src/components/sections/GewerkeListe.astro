@@ -1,0 +1,62 @@
+---
+// Gewerke-Kennzeichnung of a Leistung from the matrix (gewerke.yaml): per Gewerk, who executes it.
+// The notice (GewerkeHinweis) stands directly above; this list names the Gewerke one by one.
+import { getGewerk } from '../../lib/content/index.ts';
+import GewerkeHinweis from '../base/GewerkeHinweis.astro';
+
+interface Props {
+  gewerke: string[];
+}
+const { gewerke } = Astro.props;
+const eintraege = await Promise.all(gewerke.map((id) => getGewerk(id)));
+---
+{
+  eintraege.length > 0 && (
+    <div class="gewerke" data-gewerke-kennzeichnung>
+      <GewerkeHinweis gewerke={gewerke} nennen={false} />
+      <ul role="list" class="gewerke-liste">
+        {eintraege.map((g) => (
+          <li class:list={['gewerk', g.ausfuehrung === 'partner' && 'gewerk-partner']}>
+            <span class="gewerk-name">{g.name}</span>
+            <span class="gewerk-art">{g.ausfuehrung === 'partner' ? 'Meister-Partnerbetrieb' : 'Eigene Ausführung'}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+<style>
+  .gewerke {
+    display: grid;
+    gap: var(--space-4);
+  }
+
+  .gewerke-liste {
+    display: grid;
+    gap: 0;
+    max-width: 40rem;
+    border-top: var(--border) solid var(--line-strong);
+  }
+
+  .gewerk {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-4);
+    justify-content: space-between;
+    padding-block: var(--space-3);
+    border-bottom: var(--border) solid var(--line-strong);
+    font-size: var(--step--1);
+  }
+
+  .gewerk-art {
+    font-family: var(--font-mono);
+    letter-spacing: var(--tracking-mono);
+    color: var(--text-muted);
+  }
+
+  .gewerk-partner .gewerk-art {
+    color: var(--accent-text);
+    font-weight: 500;
+  }
+</style>

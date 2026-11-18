@@ -1,0 +1,71 @@
+---
+// FAQ as native <details> (keyboard and screen reader ready, no JavaScript). Answer first, short.
+import Icon from '../base/Icon.astro';
+import Markdown from './Markdown.astro';
+
+interface Props {
+  fragen: { id: string; data: { frage: string; antwort: string } }[];
+}
+const { fragen } = Astro.props;
+---
+<div class="faq">
+  {
+    fragen.map((f) => (
+      <details class="faq-eintrag" name="faq">
+        <summary>
+          <span>{f.data.frage}</span>
+          <Icon name="chevron-down" class="faq-pfeil" />
+        </summary>
+        <Markdown text={f.data.antwort} class="faq-antwort" />
+      </details>
+    ))
+  }
+</div>
+
+<style>
+  .faq {
+    max-width: var(--measure);
+    border-top: var(--border-strong) solid var(--text);
+  }
+
+  .faq-eintrag {
+    border-bottom: var(--border) solid var(--line-strong);
+  }
+
+  summary {
+    display: flex;
+    gap: var(--space-4);
+    align-items: center;
+    justify-content: space-between;
+    min-height: 3.5rem;
+    padding-block: var(--space-4);
+    font-size: var(--step-1);
+    font-weight: var(--weight-strong);
+    font-stretch: var(--wdth-ui);
+    line-height: 1.25;
+    list-style: none;
+    cursor: pointer;
+  }
+
+  summary::-webkit-details-marker {
+    display: none;
+  }
+
+  summary:hover {
+    color: var(--accent-text);
+  }
+
+  .faq :global(.faq-pfeil) {
+    flex: none;
+    transition: transform var(--dur-base) var(--ease-out);
+  }
+
+  details[open] :global(.faq-pfeil) {
+    transform: rotate(180deg);
+  }
+
+  .faq-antwort {
+    padding-bottom: var(--space-5);
+    color: var(--text-muted);
+  }
+</style>

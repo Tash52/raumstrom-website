@@ -1,0 +1,137 @@
+---
+// Static "behind the wall" illustration: wall face peeled in layers (paint, plaster, masonry) with the cable
+// that ends in a socket. Also the poster/fallback for the 3D hero (motion-3d, Phase 3: [data-hero-visual]).
+// Inline SVG, classes only (CSP). Text inside is decoration; the figure carries the description.
+interface Props {
+  class?: string;
+}
+const { class: className } = Astro.props;
+---
+<figure class:list={['wand', className]} data-hero-visual>
+  <svg viewBox="0 0 560 420" role="img" aria-labelledby="wand-titel wand-beschreibung" focusable="false">
+    <title id="wand-titel">Wand im Querschnitt</title>
+    <desc id="wand-beschreibung">
+      Eine Wand, in Schichten freigelegt: außen Farbe, darunter Putz, darunter Mauerwerk. Im Mauerwerk verläuft eine
+      leuchtende Leitung, die in einer Steckdose endet.
+    </desc>
+    <defs>
+      <pattern id="wand-ziegel" width="64" height="32" patternUnits="userSpaceOnUse">
+        <path class="w-fuge" d="M0 0 H64 M0 16 H64 M0 32 H64 M32 0 V16 M0 16 V32 M64 16 V32" />
+      </pattern>
+    </defs>
+    <rect class="w-mauer" x="40" y="40" width="480" height="340" />
+    <rect x="40" y="40" width="480" height="340" fill="url(#wand-ziegel)" />
+    <polygon class="w-putz" points="210,40 520,40 520,380 290,380" />
+    <polygon class="w-farbe" points="330,40 520,40 520,380 410,380" />
+    <path class="w-rahmen" d="M40 40 H520 V380 H40 Z" />
+    <path class="w-kabel-unter" d="M236 150 H440" />
+    <path class="w-kabel" d="M40 310 H200 V150 H236" />
+    <rect class="w-dose" x="436" y="126" width="48" height="48" rx="2" />
+    <circle class="w-dose-ring" cx="460" cy="150" r="15" />
+    <circle class="w-punkt-glow" cx="460" cy="150" r="22" />
+    <circle class="w-punkt" cx="460" cy="150" r="6" />
+    <g class="w-beschriftung" aria-hidden="true">
+      <text x="56" y="362">Mauerwerk</text>
+      <text x="304" y="362">Putz</text>
+      <text x="424" y="362">Farbe</text>
+      <text x="56" y="298">Leitung</text>
+      <text x="436" y="196">Dose</text>
+    </g>
+  </svg>
+</figure>
+
+<style>
+  .wand {
+    margin: 0;
+  }
+
+  .wand svg {
+    width: 100%;
+    height: auto;
+  }
+
+  .w-mauer {
+    fill: var(--color-graphit-2);
+  }
+
+  .w-fuge {
+    fill: none;
+    stroke: var(--color-kalk);
+    stroke-opacity: 0.16;
+    stroke-width: 1.5;
+  }
+
+  .w-putz {
+    fill: #c9c3b6;
+  }
+
+  .w-farbe {
+    fill: var(--color-kalk);
+  }
+
+  .w-rahmen {
+    fill: none;
+    stroke: var(--color-kalk);
+    stroke-opacity: 0.55;
+    stroke-width: 2;
+  }
+
+  .w-kabel {
+    fill: none;
+    stroke: var(--color-strom);
+    stroke-width: 5;
+    stroke-linejoin: miter;
+  }
+
+  .w-kabel-unter {
+    fill: none;
+    stroke: var(--color-graphit);
+    stroke-width: 2.5;
+    stroke-dasharray: 3 7;
+    stroke-linecap: round;
+  }
+
+
+  .w-dose {
+    fill: var(--color-kalk);
+    stroke: var(--color-graphit);
+    stroke-width: 2.5;
+  }
+
+  .w-dose-ring {
+    fill: none;
+    stroke: var(--color-graphit);
+    stroke-width: 2.5;
+  }
+
+  .w-punkt-glow {
+    fill: var(--color-strom);
+    opacity: 0.35;
+  }
+
+  .w-punkt {
+    fill: var(--color-strom);
+    stroke: var(--color-graphit);
+    stroke-width: 2;
+  }
+
+  .w-beschriftung text {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    fill: var(--color-kalk);
+  }
+
+  .w-beschriftung text:nth-child(2),
+  .w-beschriftung text:nth-child(3),
+  .w-beschriftung text:nth-child(5) {
+    fill: var(--color-graphit);
+  }
+
+  @media (forced-colors: active) {
+    .w-kabel,
+    .w-rahmen {
+      stroke: CanvasText;
+    }
+  }
+</style>

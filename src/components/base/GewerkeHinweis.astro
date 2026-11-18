@@ -2,8 +2,7 @@
 // Gewerke-Kennzeichnung (Briefing Abschnitt 2): wherever a Leistung or text names Gewerke that a
 // Meister-Partnerbetrieb executes, render this right next to it. Renders nothing if all are "eigen".
 // Data only from src/content/settings/gewerke.yaml (unknown ids fail the build).
-import { getPartnerGewerke } from '../../lib/content/index.ts';
-import { PARTNER_HINWEIS } from '../../lib/schemas/index.ts';
+import { getPartnerGewerke, partnerHinweis } from '../../lib/content/index.ts';
 import Icon from './Icon.astro';
 
 interface Props {
@@ -15,13 +14,15 @@ interface Props {
 }
 const { gewerke, nennen = true, class: className } = Astro.props;
 const partner = await getPartnerGewerke(gewerke);
+// Singular for one partner Gewerk, plural for several (partnerHinweis decides).
+const hinweis = await partnerHinweis(gewerke);
 ---
 {
   partner.length > 0 && (
     <p class:list={['gewerke-hinweis', className]} data-gewerke-hinweis>
       <Icon name="info-circle" size="s" />
       <span>
-        {PARTNER_HINWEIS}
+        {hinweis}
         {nennen && `: ${partner.map((g) => g.name).join(', ')}`}
       </span>
     </p>

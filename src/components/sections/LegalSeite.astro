@@ -1,0 +1,66 @@
+---
+// Legal page from the legal collection, filled with company data via renderRechtstext.
+// Drafts (entwurf: true) show in dev/staging with a banner and noindex. The production build never
+// outputs draft text: it renders only a notice (check:launch blocks the release while drafts exist).
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { renderRechtstext } from '../../lib/content/index.ts';
+import Entwurfsbanner from './Entwurfsbanner.astro';
+import Seitenkopf from './Seitenkopf.astro';
+import { STAGING } from './seiten.ts';
+import type { LEGAL_SEITEN } from '../../lib/schemas/legal.ts';
+
+interface Props {
+  seite: (typeof LEGAL_SEITEN)[number];
+}
+const { seite } = Astro.props;
+const eintrag = (await getCollection('legal')).find((e) => e.data.seite === seite);
+if (!eintrag) throw new Error(`src/content/legal/${seite}.md fehlt`);
+const entwurf = eintrag.data.entwurf;
+const zeigeText = !entwurf || STAGING;
+const html = zeigeText ? await renderRechtstext(eintrag) : '';
+const stand = eintrag.data.stand.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' });
+const beschreibung = `${eintrag.data.titel} von RAUMSTROM.`;
+---
+<BaseLayout title={`${eintrag.data.titel} | RAUMSTROM`} description={beschreibung} noindex={entwurf}>
+  <Entwurfsbanner entwurf={entwurf && STAGING} text="Dieser Rechtstext ist ein Entwurf und noch nicht rechtlich geprüft. Er wird im Produktions-Build nicht veröffentlicht." />
+  <Seitenkopf titel={eintrag.data.titel} pfad={[{ text: eintrag.data.titel }]} />
+  <section class="rechtstext" aria-label={eintrag.data.titel}>
+    <div class="container container-text">
+      {
+        zeigeText ? (
+          <>
+            <p class="stand t-mono">Stand: {stand}</p>
+            <div class="prose" data-rechtstext><Fragment set:html={html} /></div>
+          </>
+        ) : (
+          <p>Dieser Text wird derzeit erstellt und steht in Kürze an dieser Stelle zur Verfügung.</p>
+        )
+      }
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .rechtstext {
+    padding-block: var(--space-4) var(--section-y);
+    background: var(--surface);
+  }
+
+  .stand {
+    margin-bottom: var(--space-5);
+    color: var(--text-muted);
+  }
+
+  .rechtstext :global(.prose) {
+    max-width: none;
+  }
+
+  .rechtstext :global(.prose h2) {
+    font-size: var(--step-2);
+  }
+
+  .rechtstext :global(.prose h3) {
+    margin-top: var(--space-6);
+  }
+</style>

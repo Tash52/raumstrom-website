@@ -1,57 +1,177 @@
 ---
-// STUB (Phase 1b, design-system: uses the base layout and components). Owned by page-builder, replaced in Phase 2.
+// Startseite. Texts from pages/start.md, Leistungen from the leistungen collection, Gewerke from gewerke.yaml.
 import BaseLayout from '../layouts/BaseLayout.astro';
+import Button from '../components/base/Button.astro';
 import GewerkeHinweis from '../components/base/GewerkeHinweis.astro';
+import Icon from '../components/base/Icon.astro';
 import Karte from '../components/base/Karte.astro';
-import MonoLabel from '../components/base/MonoLabel.astro';
 import Section from '../components/base/Section.astro';
-import { getFirma } from '../lib/content/index.ts';
+import CtaBand from '../components/sections/CtaBand.astro';
+import GewerkeListe from '../components/sections/GewerkeListe.astro';
+import Markdown from '../components/sections/Markdown.astro';
+import WandSchnitt from '../components/sections/WandSchnitt.astro';
+import { getGewerke } from '../lib/content/index.ts';
+import { abschnitt, getFirma, getLeistungen, getSeite, SAEULEN_TEXT } from '../components/sections/seiten.ts';
 
+const seite = await getSeite('start');
 const firma = await getFirma();
+const leistungen = await getLeistungen();
+// "Aus einer Hand" claim: the notice must name ALL partner Gewerke of the whole offer.
+const alleGewerke = (await getGewerke()).map((g) => g.id);
+const saeulen = (Object.keys(SAEULEN_TEXT) as (keyof typeof SAEULEN_TEXT)[]).map((id) => {
+  const liste = leistungen.filter((l) => l.data.saeule === id);
+  return { id, titel: SAEULEN_TEXT[id], liste, gewerke: [...new Set(liste.flatMap((l) => l.data.gewerke))] };
+});
+const einstieg = abschnitt(seite, 'einstieg');
+const saeulenText = abschnitt(seite, 'saeulen');
+const eingaenge = abschnitt(seite, 'eingaenge');
+const koordination = abschnitt(seite, 'koordination');
+const planer = abschnitt(seite, 'raumplaner-teaser');
+const region = abschnitt(seite, 'region');
 ---
-<BaseLayout title={`${firma.name} · ${firma.claim}`} description={`${firma.name}: ${firma.claim}`}>
-  <Section id="start" titel={firma.claim} ebene={1} leitung class="stub-hero">
-    <Fragment slot="einleitung">
-      <p class="t-lead">Modernisierung aus einer Hand. Jede Renovierung beginnt bei der Elektrik.</p>
-      <GewerkeHinweis gewerke={['koordination', 'elektroinstallation']} />
-    </Fragment>
+<BaseLayout title={seite.data.meta_title} description={seite.data.meta_description}>
+  <section class="hero flaeche-graphit" aria-labelledby="hero-titel">
+    <div class="container hero-inner">
+      <div class="hero-text">
+        <h1 id="hero-titel" class="t-display hero-titel">{seite.data.titel}</h1>
+        <p class="t-lead">{seite.body?.trim()}</p>
+        <GewerkeHinweis gewerke={alleGewerke} />
+        <div class="cluster">
+          <Button href="/kontakt/" groesse="l" icon="arrow-right">Anfrage stellen</Button>
+          <Button href="/raumplaner/" variante="sekundaer" groesse="l" icon="cube-3d-sphere">Raumplaner öffnen</Button>
+        </div>
+      </div>
+      <WandSchnitt class="hero-bild" />
+    </div>
+  </section>
+
+  <Section id={einstieg.id} titel={einstieg.titel} leitung>
+    <Markdown text={einstieg.text} />
   </Section>
-  <Section id="saeulen" titel="Drei Säulen" flaeche="graphit" leitung>
-    <div class="stub-saeulen">
-      <Karte titel="Modernisieren">
-        <MonoLabel slot="label" ton="akzent">Säule 1</MonoLabel>
-        Komplettrenovierung: Elektrik, Trockenbau, Boden, Wände, Fliesen und Bad, Malerarbeiten.
-        <GewerkeHinweis slot="fuss" gewerke={['elektroinstallation', 'trockenbau', 'bodenbelag', 'putz-stuck', 'fliesen-bad', 'malerarbeiten']} />
+
+  <Section id={saeulenText.id} titel={saeulenText.titel} flaeche="kalk-tief" leitung>
+    <Fragment slot="einleitung"><Markdown text={saeulenText.text} /></Fragment>
+    <div class="saeulen">
+      {
+        saeulen.map((s) => (
+          <Karte titel={s.titel} ebene={3} variante="flaeche">
+            <ul class="saeule-liste" role="list">
+              {s.liste.map((l) => (
+                <li><a href={`/leistungen/${l.id}/`}>{l.data.titel}</a></li>
+              ))}
+            </ul>
+            <GewerkeHinweis slot="fuss" gewerke={s.gewerke} />
+          </Karte>
+        ))
+      }
+    </div>
+  </Section>
+
+  <Section id={eingaenge.id} titel={eingaenge.titel} leitung>
+    <Fragment slot="einleitung"><Markdown text={eingaenge.text} /></Fragment>
+    <div class="eingaenge">
+      <Karte titel="Für Zuhause" href="/fuer-zuhause/" ebene={3}>
+        Wohnung, Haus, Bad und Wallbox.
+        <Icon slot="label" name="home" />
       </Karte>
-      <Karte titel="Elektrifizieren">
-        <MonoLabel slot="label" ton="akzent">Säule 2</MonoLabel>
-        Wallbox-Installation, Elektro-Modernisierung, Zählerschrank und Unterverteilung.
-        <GewerkeHinweis slot="fuss" gewerke={['wallbox-installation', 'elektroinstallation', 'zaehlerschrank']} />
-      </Karte>
-      <Karte titel="Sicher betreiben">
-        <MonoLabel slot="label" ton="akzent">Säule 3</MonoLabel>
-        Wiederkehrende Prüfung von Ladesäulen, Wallboxen und Ladekabeln nach DGUV V3.
-        <GewerkeHinweis slot="fuss" gewerke={['pruefservice-dguv-v3']} />
+      <Karte titel="Für Unternehmen" href="/fuer-unternehmen/" ebene={3}>
+        Mieterwechsel, Ladepunkte und Prüfservice.
+        <Icon slot="label" name="building" />
       </Karte>
     </div>
   </Section>
+
+  <Section id={koordination.id} titel={koordination.titel} flaeche="kalk-tief" leitung>
+    <Fragment slot="einleitung"><Markdown text={koordination.text} /></Fragment>
+    <GewerkeListe gewerke={alleGewerke} />
+  </Section>
+
+  <Section id={planer.id} titel={planer.titel} leitung>
+    <Markdown text={planer.text} />
+    <div class="cluster teaser-aktion">
+      <Button href="/raumplaner/" icon="cube-3d-sphere">Raumplaner öffnen</Button>
+    </div>
+  </Section>
+
+  <Section id={region.id} titel={region.titel} flaeche="kalk-tief" leitung>
+    <Markdown text={region.text} />
+  </Section>
+
+  <CtaBand titel={`Ein Ansprechpartner für Ihr Vorhaben`} text={`${firma.name} plant, koordiniert und führt aus. Schildern Sie uns, was Sie vorhaben.`} />
 </BaseLayout>
 
 <style>
-  .stub-hero :global(h1) {
-    font-size: var(--step-5);
-    max-width: 14ch;
+  .hero {
+    padding-block: var(--space-8) var(--space-9);
+    overflow: clip;
   }
 
-  .stub-saeulen {
+  .hero-inner {
     display: grid;
-    gap: var(--space-7);
+    gap: var(--space-8);
+    align-items: center;
+  }
+
+  .hero-text {
+    display: grid;
+    gap: var(--space-5);
+    justify-items: start;
+  }
+
+  .hero-titel {
+    max-width: 11ch;
+    font-size: var(--step-5);
+  }
+
+  .hero-bild {
+    max-width: 36rem;
   }
 
   @media (min-width: 64em) {
-    .stub-saeulen {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: var(--space-6);
+    .hero-inner {
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+      gap: var(--space-7);
     }
+  }
+
+  .saeulen {
+    display: grid;
+    gap: var(--space-5);
+  }
+
+  @media (min-width: 64em) {
+    .saeulen {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  .saeule-liste {
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  .saeule-liste a {
+    color: var(--text);
+    text-underline-offset: 0.22em;
+  }
+
+  .saeule-liste a:hover {
+    color: var(--accent-text);
+  }
+
+  .eingaenge {
+    display: grid;
+    gap: var(--space-6);
+    max-width: 56rem;
+  }
+
+  @media (min-width: 40em) {
+    .eingaenge {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .teaser-aktion {
+    margin-top: var(--space-5);
   }
 </style>

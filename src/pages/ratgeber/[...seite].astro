@@ -1,0 +1,82 @@
+---
+// Ratgeber. Exists only with features.ratgeber_anzeigen = true (no static path otherwise, so no page and no
+// link). Index at /ratgeber/, articles at /ratgeber/<id>/. Articles are written in phase 7 (collection is empty).
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Karte from '../../components/base/Karte.astro';
+import Section from '../../components/base/Section.astro';
+import CtaBand from '../../components/sections/CtaBand.astro';
+import Entwurfsbanner from '../../components/sections/Entwurfsbanner.astro';
+import Seitenkopf from '../../components/sections/Seitenkopf.astro';
+import { getFeatures, sichtbar } from '../../components/sections/seiten.ts';
+import { ohneKommentare } from '../../components/sections/markdown.ts';
+
+export async function getStaticPaths() {
+  if (!(await getFeatures()).ratgeber_anzeigen) return [];
+  const artikel = (await getCollection('ratgeber', ({ data }) => sichtbar(data.entwurf))).sort((a, b) => (b.data.veroeffentlicht?.valueOf() ?? 0) - (a.data.veroeffentlicht?.valueOf() ?? 0));
+  return [
+    { params: { seite: undefined }, props: { artikel, aktuell: null } },
+    ...artikel.map((a) => ({ params: { seite: a.id }, props: { artikel, aktuell: a } })),
+  ];
+}
+const { artikel, aktuell } = Astro.props as { artikel: Awaited<ReturnType<typeof getCollection<'ratgeber'>>>; aktuell: Awaited<ReturnType<typeof getCollection<'ratgeber'>>>[number] | null };
+const datum = (d: Date) => d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' });
+---
+{
+  aktuell ? (
+    <BaseLayout title={aktuell.data.meta_title} description={aktuell.data.meta_description}>
+      <Entwurfsbanner entwurf={aktuell.data.entwurf} />
+      <Seitenkopf titel={aktuell.data.titel} pfad={[{ text: 'Ratgeber', href: '/ratgeber/' }, { text: aktuell.data.titel }]}>
+        {(aktuell.data.aktualisiert ?? aktuell.data.veroeffentlicht) && <p class="t-mono">Aktualisiert: {datum((aktuell.data.aktualisiert ?? aktuell.data.veroeffentlicht)!)}</p>}
+      </Seitenkopf>
+      <section class="artikel" aria-label={aktuell.data.titel}>
+        <div class="container container-text">
+          <div class="prose"><Fragment set:html={ohneKommentare(aktuell.rendered?.html ?? '')} /></div>
+          {aktuell.data.quellen.length > 0 && (
+            <>
+              <h2 class="quellen-titel">Quellen</h2>
+              <ul class="prose" role="list">
+                {aktuell.data.quellen.map((q) => <li><a href={q.url}>{q.titel}</a></li>)}
+              </ul>
+            </>
+          )}
+        </div>
+      </section>
+      <CtaBand />
+    </BaseLayout>
+  ) : (
+    <BaseLayout title="Ratgeber | RAUMSTROM" description="Fachwissen zu Renovierung, Elektro-Modernisierung und Wallbox von RAUMSTROM.">
+      <Seitenkopf titel="Ratgeber" pfad={[{ text: 'Ratgeber' }]} lead="Fachwissen zu Renovierung, Elektro und Ladeinfrastruktur." />
+      <Section id="artikel" titel="Alle Artikel" leitung>
+        {artikel.length === 0 ? (
+          <p>Die ersten Artikel folgen in Kürze.</p>
+        ) : (
+          <div class="liste">
+            {artikel.map((a) => (
+              <Karte titel={a.data.titel} href={`/ratgeber/${a.id}/`}>{a.data.meta_description}</Karte>
+            ))}
+          </div>
+        )}
+      </Section>
+      <CtaBand />
+    </BaseLayout>
+  )
+}
+
+<style>
+  .artikel {
+    padding-block: var(--space-4) var(--section-y);
+    background: var(--surface);
+  }
+
+  .quellen-titel {
+    margin-top: var(--space-7);
+    font-size: var(--step-2);
+  }
+
+  .liste {
+    display: grid;
+    gap: var(--space-6);
+    max-width: 52rem;
+  }
+</style>

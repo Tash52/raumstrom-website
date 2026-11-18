@@ -1,0 +1,86 @@
+---
+// One page per Leistung (leistungen collection). Gewerke-Kennzeichnung from the matrix, Ablauf, FAQ, CTA.
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Section from '../../components/base/Section.astro';
+import Button from '../../components/base/Button.astro';
+import AblaufListe from '../../components/sections/AblaufListe.astro';
+import CtaBand from '../../components/sections/CtaBand.astro';
+import Entwurfsbanner from '../../components/sections/Entwurfsbanner.astro';
+import FaqListe from '../../components/sections/FaqListe.astro';
+import GewerkeListe from '../../components/sections/GewerkeListe.astro';
+import LeistungsRaster from '../../components/sections/LeistungsRaster.astro';
+import Seitenkopf from '../../components/sections/Seitenkopf.astro';
+import { getFaqFuer, getLeistungen, getSeite, SAEULEN_TEXT } from '../../components/sections/seiten.ts';
+import { ohneKommentare } from '../../components/sections/markdown.ts';
+
+export async function getStaticPaths() {
+  return (await getLeistungen()).map((l) => ({ params: { slug: l.id }, props: { leistung: l } }));
+}
+const { leistung } = Astro.props as { leistung: Awaited<ReturnType<typeof getLeistungen>>[number] };
+const d = leistung.data;
+const uebersicht = await getSeite('leistungen');
+const faq = await getFaqFuer(d.faq);
+const aehnliche = (await getLeistungen()).filter((l) => l.data.saeule === d.saeule && l.id !== leistung.id);
+const html = ohneKommentare(leistung.rendered?.html ?? '');
+---
+<BaseLayout title={d.meta_title} description={d.meta_description}>
+  <Entwurfsbanner entwurf={d.entwurf} />
+  <Seitenkopf
+    titel={d.titel}
+    lead={d.kurzbeschreibung}
+    pfad={[{ text: uebersicht.data.titel, href: '/leistungen/' }, { text: d.titel }]}
+  >
+    <GewerkeListe gewerke={d.gewerke} />
+    <div class="cluster">
+      <Button href={`/kontakt/?anliegen=${leistung.id}`} icon="arrow-right">Anfrage stellen</Button>
+      <Button href="/raumplaner/" variante="sekundaer" icon="cube-3d-sphere">Raumplaner öffnen</Button>
+    </div>
+  </Seitenkopf>
+
+  {
+    html.trim() && (
+      <section class="korpus" aria-label={`Beschreibung: ${d.titel}`}>
+        <div class="container container-text">
+          <div class="prose korpus-text"><Fragment set:html={html} /></div>
+        </div>
+      </section>
+    )
+  }
+
+  {
+    d.ablauf.length > 0 && (
+      <Section id="ablauf" titel="So läuft es ab" flaeche="kalk-tief" leitung>
+        <AblaufListe schritte={d.ablauf} />
+      </Section>
+    )
+  }
+
+  {
+    faq.length > 0 && (
+      <Section id="faq" titel="Häufige Fragen" leitung>
+        <FaqListe fragen={faq} />
+      </Section>
+    )
+  }
+
+  {
+    aehnliche.length > 0 && (
+      <Section id="weitere" titel={`Weitere Leistungen: ${SAEULEN_TEXT[d.saeule]}`} flaeche="kalk-tief" leitung>
+        <LeistungsRaster saeule={d.saeule} ohne={leistung.id} />
+      </Section>
+    )
+  }
+
+  <CtaBand titel={`${d.titel} anfragen`} text="Schildern Sie uns Ihr Vorhaben oder skizzieren Sie Ihren Raum vorab im Raumplaner." />
+</BaseLayout>
+
+<style>
+  .korpus {
+    padding-block: var(--space-6) var(--section-y);
+    background: var(--surface);
+  }
+
+  .korpus-text > :global(h2:first-child) {
+    margin-top: 0;
+  }
+</style>

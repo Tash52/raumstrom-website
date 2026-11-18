@@ -1,0 +1,185 @@
+---
+// Contact form (UI only). Interface to POST /api/contact: kontakt-schnittstelle.ts.
+// Works without JavaScript through native validation and a plain multipart POST; with JavaScript
+// (kontakt-formular.ts) it validates with accessible messages and sends via fetch.
+// [data-altcha-platz] is the mount point for the ALTCHA widget (backend-api / later phase); it writes its
+// payload into the field "altcha". Until then the field is not sent.
+import AuswahlFeld from '../base/AuswahlFeld.astro';
+import Button from '../base/Button.astro';
+import Checkbox from '../base/Checkbox.astro';
+import DateiFeld from '../base/DateiFeld.astro';
+import TextBereich from '../base/TextBereich.astro';
+import TextFeld from '../base/TextFeld.astro';
+import { getLeistungen } from '../sections/seiten.ts';
+import { CSRF_URL, FELD, KONTAKT_ENDPOINT, LIMITS } from './kontakt-schnittstelle.ts';
+
+interface Props {
+  /** Pre-selected anliegen (Leistung id). */
+  anliegen?: string;
+}
+const { anliegen } = Astro.props;
+const optionen = [
+  ...(await getLeistungen()).map((l) => ({ wert: l.id, text: l.data.titel })),
+  { wert: 'sonstiges', text: 'Etwas anderes' },
+];
+const mb = (b: number) => `${Math.round(b / 1024 / 1024)} MB`;
+---
+<form
+  id="kontakt-formular"
+  class="formular"
+  action={KONTAKT_ENDPOINT}
+  method="post"
+  enctype="multipart/form-data"
+  data-csrf-url={CSRF_URL}
+  data-max-dateien={LIMITS.maxDateien}
+  data-max-datei-bytes={LIMITS.maxDateiBytes}
+  data-max-gesamt-bytes={LIMITS.maxGesamtBytes}
+  data-datei-typen={LIMITS.dateiTypen.join(',')}
+  data-nachricht-min={LIMITS.nachrichtMin}
+>
+  <div class="fehler-zusammenfassung" id="kontakt-fehler" role="alert" tabindex="-1" hidden>
+    <h2 class="fehler-titel" id="kontakt-fehler-titel"></h2>
+    <ul role="list" id="kontakt-fehler-liste"></ul>
+  </div>
+
+  <div class="paar">
+    <TextFeld name={FELD.name} label="Name" autocomplete="name" required maxlength={100} />
+    <TextFeld name={FELD.email} typ="email" label="E-Mail" autocomplete="email" required maxlength={160} />
+  </div>
+  <div class="paar">
+    <TextFeld name={FELD.telefon} typ="tel" label="Telefon" autocomplete="tel" maxlength={40} hinweis="Freiwillig, für Rückfragen zum Termin." />
+    <TextFeld name={FELD.ort} label="Postleitzahl und Ort des Projekts" autocomplete="postal-code" maxlength={100} hinweis="Freiwillig." />
+  </div>
+  <AuswahlFeld name={FELD.anliegen} label="Worum geht es?" optionen={optionen} wert={anliegen} leerText="Bitte wählen (freiwillig)" />
+  <TextBereich
+    name={FELD.nachricht}
+    label="Ihr Vorhaben"
+    rows={7}
+    required
+    minlength={LIMITS.nachrichtMin}
+    maxlength={LIMITS.nachrichtMax}
+    hinweis="Raum, ungefähre Größe, gewünschter Zeitraum."
+  />
+  <DateiFeld
+    name={FELD.fotos}
+    label="Fotos"
+    accept={LIMITS.dateiTypen.join(',')}
+    multiple
+    hinweis={`Freiwillig: bis zu ${LIMITS.maxDateien} Bilder (JPG, PNG, WebP, HEIC), je höchstens ${mb(LIMITS.maxDateiBytes)}.`}
+  />
+
+  <input type="hidden" name={FELD.skizze} value="" />
+  <input type="hidden" name={FELD.csrf} value="" />
+
+  <div class="falle" aria-hidden="true">
+    <label for="feld-website">Bitte leer lassen</label>
+    <input id="feld-website" type="text" name={FELD.website} tabindex="-1" autocomplete="off" />
+  </div>
+
+  <div class="altcha" data-altcha-platz></div>
+
+  <Checkbox name={FELD.einwilligung} value="ja" required>
+    Ich habe die <a class="textlink" href="/datenschutz/">Datenschutzerklärung</a> gelesen und bin damit einverstanden, dass RAUMSTROM meine Angaben und Fotos zur Bearbeitung der Anfrage verwendet.
+  </Checkbox>
+
+  <div class="aktionen">
+    <Button type="submit" groesse="l" icon="arrow-right" id="kontakt-senden">Anfrage senden</Button>
+    <p class="status" id="kontakt-status" role="status" aria-live="polite"></p>
+  </div>
+</form>
+
+<section class="erfolg" id="kontakt-erfolg" aria-labelledby="kontakt-erfolg-titel" tabindex="-1" hidden>
+  <h2 id="kontakt-erfolg-titel">Anfrage gesendet</h2>
+  <p>Vielen Dank. Wir haben Ihre Anfrage erhalten und melden uns bei Ihnen.</p>
+</section>
+
+<script>
+  import './kontakt-formular.ts';
+</script>
+
+<style>
+  .formular {
+    display: grid;
+    gap: var(--space-6);
+    max-width: 44rem;
+  }
+
+  .formular[hidden] {
+    display: none;
+  }
+
+  .paar {
+    display: grid;
+    gap: var(--space-6);
+  }
+
+  @media (min-width: 40em) {
+    .paar {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  /* honeypot: out of sight and out of the tab order; not display:none so simple bots still fill it */
+  .falle {
+    position: absolute;
+    left: -10000px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  .aktionen {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    align-items: center;
+  }
+
+  .status:empty {
+    display: none;
+  }
+
+  .fehler-zusammenfassung {
+    padding: var(--space-5);
+    border: var(--border-strong) solid var(--error);
+    border-left-width: 0.5rem;
+    background: var(--surface-field);
+    color: var(--text);
+  }
+
+  .fehler-zusammenfassung[hidden] {
+    display: none;
+  }
+
+  .fehler-titel {
+    font-size: var(--step-1);
+    letter-spacing: 0;
+    font-stretch: var(--wdth-ui);
+  }
+
+  .fehler-zusammenfassung ul {
+    margin-top: var(--space-3);
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  .fehler-zusammenfassung a {
+    color: var(--error);
+    text-underline-offset: 0.2em;
+  }
+
+  .erfolg {
+    max-width: 44rem;
+    padding: var(--space-6);
+    border-left: 0.5rem solid var(--leitung);
+    background: var(--surface-field);
+  }
+
+  .erfolg[hidden] {
+    display: none;
+  }
+
+  .erfolg p {
+    margin-top: var(--space-3);
+  }
+</style>

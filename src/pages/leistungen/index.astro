@@ -1,0 +1,39 @@
+---
+// Leistungen overview: the three pillars with their Leistungen (collections) and the Kennzeichnung text.
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Section from '../../components/base/Section.astro';
+import CtaBand from '../../components/sections/CtaBand.astro';
+import Entwurfsbanner from '../../components/sections/Entwurfsbanner.astro';
+import GewerkeListe from '../../components/sections/GewerkeListe.astro';
+import LeistungsRaster from '../../components/sections/LeistungsRaster.astro';
+import Markdown from '../../components/sections/Markdown.astro';
+import Seitenkopf from '../../components/sections/Seitenkopf.astro';
+import { getGewerke } from '../../lib/content/index.ts';
+import { abschnitt, getSeite, SAEULEN_TEXT } from '../../components/sections/seiten.ts';
+
+const seite = await getSeite('leistungen');
+const antwort = abschnitt(seite, 'antwort');
+const kennzeichnung = abschnitt(seite, 'kennzeichnung');
+const alleGewerke = (await getGewerke()).map((g) => g.id);
+const saeulen = (Object.keys(SAEULEN_TEXT) as (keyof typeof SAEULEN_TEXT)[]).map((id) => ({ id, titel: SAEULEN_TEXT[id], text: abschnitt(seite, id) }));
+---
+<BaseLayout title={seite.data.meta_title} description={seite.data.meta_description}>
+  <Entwurfsbanner entwurf={seite.data.entwurf} />
+  <Seitenkopf titel={seite.data.titel} lead={seite.body?.trim()} pfad={[{ text: seite.data.titel }]} />
+  <Section id={antwort.id} titel={antwort.titel} leitung>
+    <Markdown text={antwort.text} />
+  </Section>
+  {
+    saeulen.map((s, i) => (
+      <Section id={s.id} titel={s.text.titel} flaeche={i % 2 === 0 ? 'kalk-tief' : 'kalk'} leitung>
+        <Fragment slot="einleitung"><Markdown text={s.text.text} /></Fragment>
+        <LeistungsRaster saeule={s.id} />
+      </Section>
+    ))
+  }
+  <Section id={kennzeichnung.id} titel={kennzeichnung.titel} leitung>
+    <Fragment slot="einleitung"><Markdown text={kennzeichnung.text} /></Fragment>
+    <GewerkeListe gewerke={alleGewerke} />
+  </Section>
+  <CtaBand />
+</BaseLayout>

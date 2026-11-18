@@ -1,0 +1,38 @@
+---
+// Regional page, only for entries with entwurf: false (see CLAUDE.md: regionen). None yet, so no pages.
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Section from '../../components/base/Section.astro';
+import CtaBand from '../../components/sections/CtaBand.astro';
+import LeistungsRaster from '../../components/sections/LeistungsRaster.astro';
+import Markdown from '../../components/sections/Markdown.astro';
+import Seitenkopf from '../../components/sections/Seitenkopf.astro';
+import { ohneKommentare } from '../../components/sections/markdown.ts';
+
+export async function getStaticPaths() {
+  // Strictly published entries: drafts never get a page, not even in staging.
+  const regionen = await getCollection('regionen', ({ data }) => data.entwurf === false);
+  return regionen.filter((r) => (r.body ?? '').trim().length > 0).map((r) => ({ params: { ort: r.id }, props: { region: r } }));
+}
+const { region } = Astro.props as { region: Awaited<ReturnType<typeof getCollection<'regionen'>>>[number] };
+const d = region.data;
+---
+<BaseLayout title={d.meta_title} description={d.meta_description}>
+  <Seitenkopf titel={`Renovierung in ${d.ort}`} pfad={[{ text: d.ort }]} lead={d.meta_description} />
+  <Section id="ort" titel={`${d.ort} und Umgebung`} leitung>
+    <Markdown text={d.besonderheiten} />
+    <div class="prose korpus"><Fragment set:html={ohneKommentare(region.rendered?.html ?? '')} /></div>
+    {d.anfahrt && <Markdown text={d.anfahrt} class="anfahrt" />}
+  </Section>
+  <Section id="leistungen" titel="Unsere Leistungen" flaeche="kalk-tief" leitung>
+    <LeistungsRaster />
+  </Section>
+  <CtaBand />
+</BaseLayout>
+
+<style>
+  .korpus,
+  .anfahrt {
+    margin-top: var(--space-5);
+  }
+</style>

@@ -1,0 +1,31 @@
+---
+// Renders the named blocks (abschnitte) of a page entry as sections, in the order of the entry.
+// Extra content per block: named slot with the block id (e.g. <Fragment slot="partner-hinweis">).
+// ueberspringen: ids rendered by the page itself. dunkel: ids on Graphit.
+import Section from '../base/Section.astro';
+import Markdown from './Markdown.astro';
+import type { SeitenEintrag } from './seiten.ts';
+
+interface Props {
+  seite: SeitenEintrag;
+  ueberspringen?: string[];
+  dunkel?: string[];
+  leitung?: boolean;
+}
+const { seite, ueberspringen = [], dunkel = [], leitung = true } = Astro.props;
+const bloecke = seite.data.abschnitte.filter((a) => !ueberspringen.includes(a.id));
+---
+{
+  bloecke.map((a) => (
+    <Section id={a.id} titel={a.titel} flaeche={dunkel.includes(a.id) ? 'graphit' : 'kalk'} leitung={leitung}>
+      <Markdown text={a.text} />
+      {Astro.slots.has(a.id) && <div class="abschnitt-extra"><slot name={a.id} /></div>}
+    </Section>
+  ))
+}
+
+<style>
+  .abschnitt-extra {
+    margin-top: var(--space-6);
+  }
+</style>

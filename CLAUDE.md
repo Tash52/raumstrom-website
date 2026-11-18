@@ -42,6 +42,8 @@ Cloud-Umgebung: Netz nur npm/PyPI/GitHub (lesen) plus 15 freigegebene Hosts (Pla
 - `'wasm-unsafe-eval'` nur auf `/raumplaner/` und `/planer/ansehen`: dort `Astro.csp?.insertScriptResource("'wasm-unsafe-eval'")`. Worker/blob: ebenso nur seitenweise.
 - Schriften: Astro-Fonts-API mit `fontProviders.local()` in `astro.config.mjs` (Block `fonts` ergänzt design-system).
 
+- Kontaktformular: UI `src/components/forms/KontaktFormular.astro`, Vertrag in `src/components/forms/kontakt-schnittstelle.ts` (Feldnamen `FELD`, `LIMITS`, `KontaktAntwort`). `POST /api/contact` multipart/form-data: name, email, telefon?, ort?, anliegen?, nachricht, fotos* (≤5, je ≤10 MB, jpeg/png/webp/heic), skizze? (reserviert), einwilligung=ja, altcha, csrf (Token aus `GET /api/csrf` → `{token}`, Vorschlag), website (Honeypot, muss leer sein). Antwort JSON: 200 `{ok:true}`; sonst 4xx/5xx `{ok:false, fehler?:{<feld>:"Meldung"}, nachricht?}`. Entwürfe: Seiten-Helfer `src/components/sections/seiten.ts` (`STAGING`, `sichtbar`).
+
 ## Konventionen
 - Keine CDN-/Fremd-Hosts, nirgends (Test: 0 Fremd-Requests). Draco-/Basis-/KTX2-Decoder, meshopt, pdf.js-Worker, Schriften (auch für drei `<Text font>`) und HDRs (`<Environment files="/hdr/…">` statt `preset`) liegen lokal unter `public/`.
 - CSP ohne `'unsafe-inline'`: keine `style`-Attribute, keine `on*`-Handler, kein Inline-`<script>` außer von Astro gebündelt; dynamische Werte über Klassen, CSS-Variablen per Stylesheet oder `element.style` aus gebündeltem JS.

@@ -1,0 +1,16 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Abschnitte from '../../components/sections/Abschnitte.astro';
+import CtaBand from '../../components/sections/CtaBand.astro';
+import Entwurfsbanner from '../../components/sections/Entwurfsbanner.astro';
+import Seitenkopf from '../../components/sections/Seitenkopf.astro';
+import { getSeite } from '../../components/sections/seiten.ts';
+
+const seite = await getSeite('partner');
+---
+<BaseLayout title={seite.data.meta_title} description={seite.data.meta_description}>
+  <Entwurfsbanner entwurf={seite.data.entwurf} />
+  <Seitenkopf titel={seite.data.titel} lead={seite.body?.trim()} pfad={[{ text: seite.data.titel }]} />
+  <Abschnitte seite={seite} />
+  <CtaBand titel="Zusammenarbeit anfragen" text="Schreiben Sie uns kurz, wer Sie sind und was Sie vorhaben." />
+</BaseLayout>

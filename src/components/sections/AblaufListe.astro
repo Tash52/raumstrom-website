@@ -1,0 +1,74 @@
+---
+// Process steps as an ordered list along a cable with a node per step (content is a real sequence).
+interface Props {
+  schritte: { titel: string; text: string }[];
+}
+const { schritte } = Astro.props;
+---
+<ol class="ablauf" role="list">
+  {
+    schritte.map((s) => (
+      <li class="ablauf-schritt">
+        <span class="ablauf-knoten" aria-hidden="true"></span>
+        <h3 class="ablauf-titel">{s.titel}</h3>
+        <p class="ablauf-text">{s.text}</p>
+      </li>
+    ))
+  }
+</ol>
+
+<style>
+  .ablauf {
+    --abstand: var(--space-6);
+    position: relative;
+    display: grid;
+    gap: var(--abstand);
+    counter-reset: schritt;
+    max-width: 48rem;
+  }
+
+  .ablauf-schritt {
+    position: relative;
+    padding-left: var(--space-7);
+    counter-increment: schritt;
+  }
+
+  /* cable segment from node to node */
+  .ablauf-schritt:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: calc(0.3125rem - var(--leitung-w) / 2);
+    top: 0.9rem;
+    bottom: calc(var(--abstand) * -1 - 0.2rem);
+    width: var(--leitung-w);
+    background: var(--leitung);
+  }
+
+  .ablauf-knoten {
+    position: absolute;
+    left: 0;
+    top: 0.45rem;
+    width: 0.625rem;
+    height: 0.625rem;
+    border-radius: var(--radius-punkt);
+    background: var(--accent-surface);
+    box-shadow: 0 0 0 2px var(--surface), 0 0 0 3.5px var(--leitung);
+  }
+
+  .ablauf-titel::before {
+    content: 'Schritt ' counter(schritt) ': ';
+    font-family: var(--font-mono);
+    font-weight: 400;
+    font-size: var(--step--1);
+    letter-spacing: var(--tracking-mono);
+    color: var(--text-muted);
+    display: block;
+    margin-bottom: var(--space-1);
+  }
+
+  .ablauf-text {
+    margin-top: var(--space-2);
+    color: var(--text-muted);
+    max-width: 56ch;
+  }
+</style>
