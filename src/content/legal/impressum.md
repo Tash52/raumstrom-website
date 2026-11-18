@@ -20,9 +20,12 @@ Gesellschafter: {{firma.gesellschafter.*.name}}
 
 Vertreten durch die vertretungsberechtigten Gesellschafter: {{firma.vertretungsberechtigte}}
 
-<!-- § 5 Abs. 1 Nr. 4 DDG: Registereintrag (z. B. eingetragene GbR im Gesellschaftsregister). firma.yaml hat dafür noch kein Feld (Befund an architect). -->
+<!-- § 5 Abs. 1 Nr. 4 DDG, § 2 Abs. 1 Nr. 3 DL-InfoV: Registereintrag. Block entfällt, wenn firma.register.nummer leer ist (nicht eingetragen). -->
+<!-- wenn firma.register.nummer -->
 
-[[PLATZHALTER: Registereintrag, z. B. „Gesellschaftsregister, Amtsgericht …, GsR …“, oder Zeile löschen, wenn die Gesellschaft in keinem Register eingetragen ist]]
+Registereintrag: {{firma.register.art}}, {{firma.register.gericht}}, {{firma.register.nummer}}
+
+<!-- /wenn -->
 
 ## Kontakt
 

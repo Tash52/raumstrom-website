@@ -29,7 +29,7 @@ Zur Wahrung der Widerrufsfrist reicht es aus, dass Sie die Mitteilung über die 
 
 ### Folgen des Widerrufs
 
-<!-- Gesetzlicher Mustertext, unverändert. „g&uuml;nstigste“ als HTML-Entity, weil der Wording-Scan Superlative meldet; Ausnahme für den Mustertext in scripts/lib/wording.mjs ist vorgeschlagen (Bericht 2-legal-compliance). -->
+<!-- Gesetzlicher Mustertext, unverändert. „günstigste Standardlieferung“ ist im Wording-Scan als Mustertext erlaubt (scripts/lib/wording.mjs). -->
 
 Wenn Sie diesen Vertrag widerrufen, haben wir Ihnen alle Zahlungen, die wir von Ihnen erhalten haben, einschließlich der Lieferkosten (mit Ausnahme der zusätzlichen Kosten, die sich daraus ergeben, dass Sie eine andere Art der Lieferung als die von uns angebotene, günstigste Standardlieferung gewählt haben), unverzüglich und spätestens binnen vierzehn Tagen ab dem Tag zurückzuzahlen, an dem die Mitteilung über Ihren Widerruf dieses Vertrags bei uns eingegangen ist. Für diese Rückzahlung verwenden wir dasselbe Zahlungsmittel, das Sie bei der ursprünglichen Transaktion eingesetzt haben, es sei denn, mit Ihnen wurde ausdrücklich etwas anderes vereinbart; in keinem Fall werden Ihnen wegen dieser Rückzahlung Entgelte berechnet.
 
@@ -57,14 +57,16 @@ Wenn Sie diesen Vertrag widerrufen, haben wir Ihnen alle Zahlungen, die wir von 
 
 ## Muster-Widerrufsformular
 
+<!-- Markierung „(∗)“ (U+2217) statt eines maskierten Sternchens: Keystatic entfernt die Maskierung beim Speichern, ein bloßes Sternchen würde als Hervorhebung gerendert. -->
+
 (Wenn Sie den Vertrag widerrufen wollen, dann füllen Sie bitte dieses Formular aus und senden Sie es zurück.)
 
 - An {{firma.firmierung}}, {{firma.adresse.strasse}}, {{firma.adresse.plz}} {{firma.adresse.ort}}, E-Mail: {{firma.kontakt.email}}:
-- Hiermit widerrufe(n) ich/wir (\*) den von mir/uns (\*) abgeschlossenen Vertrag über den Kauf der folgenden Waren (\*)/die Erbringung der folgenden Dienstleistung (\*)
-- Bestellt am (\*)/erhalten am (\*)
+- Hiermit widerrufe(n) ich/wir (∗) den von mir/uns (∗) abgeschlossenen Vertrag über den Kauf der folgenden Waren (∗)/die Erbringung der folgenden Dienstleistung (∗)
+- Bestellt am (∗)/erhalten am (∗)
 - Name des/der Verbraucher(s)
 - Anschrift des/der Verbraucher(s)
 - Unterschrift des/der Verbraucher(s) (nur bei Mitteilung auf Papier)
 - Datum
 
-(\*) Unzutreffendes streichen.
+(∗) Unzutreffendes streichen.

@@ -11,7 +11,7 @@ Automatisch erzeugt mit `npm run platzhalter` am 2026-11-18. Nicht von Hand bear
 - [ ] Gewerke-Matrix: Ausführung eigen/partner je Gewerk (`src/content/settings/gewerke.yaml`)
 - [ ] Server-Secrets auf dem Server in `.env` gesetzt (Vorlage `.env.example`; `npm run check:launch` prüft sie)
 
-## Rechtliches (56)
+## Rechtliches (55)
 
 - [ ] Vertragsmodell festlegen: RAUMSTROM als Vertragspartner mit Meister-Partnerbetrieben als Nachunternehmer (dieser Entwurf) oder Direktvertrag zwischen Kunde und Partnerbetrieb; danach Abschnitt „Ausführung durch Meister-Partnerbetriebe“ anpassen · `src/content/legal/agb.md:11`
 - [ ] Bindefrist für Angebote, z. B. 30 Tage · `src/content/legal/agb.md:27`
@@ -20,9 +20,9 @@ Automatisch erzeugt mit `npm run platzhalter` am 2026-11-18. Nicht von Hand bear
 - [ ] Ergebnis der Barrierefreiheitsprüfung vor Launch (a11y-perf-tester): z. B. „Die Website ist mit WCAG 2.2 Stufe AA weitgehend vereinbar. Geprüft am … mit automatischen Tests (axe-core) und manueller Prüfung per Tastatur und Screenreader.“ · `src/content/legal/barrierefreiheit.md:22`
 - [ ] Abgleich mit Planer-Agenten und a11y-Prüfung: Welche Teile sind nicht vollständig barrierefrei, und welche Alternative gibt es (z. B. Anfrage über das Kontaktformular mit Fotos und Maßen)? · `src/content/legal/barrierefreiheit.md:34`
 - [ ] Antwortfrist, z. B. fünf Werktagen · `src/content/legal/barrierefreiheit.md:40`
-- [ ] Abgleich mit Planer-Agenten: Schlüsselname · `src/content/legal/cookie-einstellungen.md:21`
-- [ ] Abgleich mit backend-api: kein Cookie (Token im Formular) oder Cookie-Name · `src/content/legal/cookie-einstellungen.md:22`
-- [ ] Laufzeit oder „wird nicht gespeichert“ · `src/content/legal/cookie-einstellungen.md:22`
+- [ ] Abgleich mit Planer-Agenten: Schlüsselname · `src/content/legal/cookie-einstellungen.md:20`
+- [ ] Abgleich mit backend-api: kein Cookie (Token im Formular) oder Cookie-Name · `src/content/legal/cookie-einstellungen.md:24`
+- [ ] Laufzeit oder „wird nicht gespeichert“ · `src/content/legal/cookie-einstellungen.md:26`
 - [ ] Name und Anschrift des Hosters, Serverstandort Deutschland · `src/content/legal/datenschutz.md:36`
 - [ ] Speicherdauer der Server-Logfiles beim Hoster, z. B. 7 Tage · `src/content/legal/datenschutz.md:48`
 - [ ] Abgleich mit backend-api: Art und Dauer der Speicherung beim Rate-Limit, z. B. nur im Arbeitsspeicher, höchstens 1 Stunde · `src/content/legal/datenschutz.md:50`
@@ -35,7 +35,6 @@ Automatisch erzeugt mit `npm run platzhalter` am 2026-11-18. Nicht von Hand bear
 - [ ] Abgleich mit backend-api: Wie ist der CSRF-Schutz umgesetzt (Token im Formular ohne Cookie, oder technisch notwendiges Cookie mit Name und Laufzeit)? Ergebnis auch auf der Seite Cookie-Einstellungen eintragen. · `src/content/legal/datenschutz.md:110`
 - [ ] Weitergabe an Partnerbetriebe bestätigen: erst nach Ihrer Zustimmung im Angebotsgespräch oder bereits bei der Kalkulation? Rechtliche Einordnung (eigene Verantwortliche, Auftragsverarbeitung) mit dem Rechtstexte-Service klären. · `src/content/legal/datenschutz.md:122`
 - [ ] Anschrift und Website des BayLDA aus der Behördenseite übernehmen (am 18.11.2026 nicht geprüft) · `src/content/legal/datenschutz.md:147`
-- [ ] Registereintrag, z. B. „Gesellschaftsregister, Amtsgericht …, GsR …“, oder Zeile löschen, wenn die Gesellschaft in keinem Register eingetragen ist · `src/content/legal/impressum.md:25`
 - [ ] vollständiger Name der Gesellschaft laut Gesellschaftsvertrag · `src/content/settings/firma.yaml:6`
 - [ ] vollständiger Name Gesellschafter 1 (Christian Maul?) · `src/content/settings/firma.yaml:9`
 - [ ] vollständiger Name Gesellschafter 2 (Jernar Kassimov?) · `src/content/settings/firma.yaml:11`

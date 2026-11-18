@@ -16,10 +16,14 @@ Diese Website setzt keine Cookies zu Analyse-, Marketing- oder Werbezwecken und 
 
 Gespeichert wird nur, was für eine von Ihnen ausdrücklich gewünschte Funktion unbedingt erforderlich ist (§ 25 Abs. 2 Nr. 2 TDDDG). Diese Speicherungen bleiben auf Ihrem Gerät.
 
-| Zweck | Art der Speicherung | Wann | Dauer |
-|---|---|---|---|
-| Entwurf im Raumplaner | Lokaler Speicher des Browsers (localStorage), [[PLATZHALTER: Abgleich mit Planer-Agenten: Schlüsselname]] | nur wenn Sie auf „Entwurf speichern“ klicken | bis Sie den Entwurf löschen |
-| Schutz der Formulare vor Missbrauch | [[PLATZHALTER: Abgleich mit backend-api: kein Cookie (Token im Formular) oder Cookie-Name]] | beim Absenden eines Formulars | [[PLATZHALTER: Laufzeit oder „wird nicht gespeichert“]] |
+- **Entwurf im Raumplaner**
+  - Art der Speicherung: Lokaler Speicher des Browsers (localStorage), [[PLATZHALTER: Abgleich mit Planer-Agenten: Schlüsselname]]
+  - Wann: nur wenn Sie auf „Entwurf speichern“ klicken
+  - Dauer: bis Sie den Entwurf löschen
+- **Schutz der Formulare vor Missbrauch**
+  - Art der Speicherung: [[PLATZHALTER: Abgleich mit backend-api: kein Cookie (Token im Formular) oder Cookie-Name]]
+  - Wann: beim Absenden eines Formulars
+  - Dauer: [[PLATZHALTER: Laufzeit oder „wird nicht gespeichert“]]
 
 Der Spam-Schutz ALTCHA setzt keine Cookies.
 

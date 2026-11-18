@@ -96,3 +96,12 @@ Kurzform (Teaser, Meta): „Renovierung aus einer Hand koordiniert: ein Ansprech
 ## 7. Getestet
 
 `npm ci` ok · `npm run scan:wording` ok (0 Funde) · `npm run platzhalter` ok (79 offene Punkte, 0 Fehler) · `npm test` ok (Vitest 148/148, Hook-Test 7/7) · `npm run check` 0 Fehler · `npm run build:staging` ok. Die Rechtsseiten werden noch nicht gerendert (Routen baut page-builder). Die Markdown-Ausgabe habe ich im Content-Store geprüft: Marker, Kommentare und Tabelle bleiben erhalten, `\` wird zu `<br>`.
+
+## 8. Nachbesserung (18.11.2026): Keystatic-feste Rechtstexte und Register
+
+- `cookie-einstellungen.md`: GFM-Tabelle durch verschachtelte Liste ersetzt (je Zweck: Art der Speicherung, Wann, Dauer), Inhalt und Platzhalter unverändert.
+- `impressum.md`: Register-Platzhalter ersetzt durch `<!-- wenn firma.register.nummer -->` mit „Registereintrag: {{firma.register.art}}, {{firma.register.gericht}}, {{firma.register.nummer}}“. Ist `nummer` leer, entfällt die Zeile. Die drei Platzhalter stehen jetzt in `firma.yaml`.
+- `widerruf.md`: Statt `(\*)` steht im Muster-Formular jetzt `(∗)` (U+2217, sieht gleich aus). Grund: Keystatic entfernt den Escape, und ein bloßes `*` würde als Hervorhebung gerendert. Den veralteten Kommentar zur HTML-Entity „g&uuml;nstigste“ habe ich ersetzt, denn der Scan erlaubt den Mustertext inzwischen.
+- Alle sechs Texte geprüft: Es gibt keine weiteren Tabellen und keine `\*`-Escapes, auch nicht in Kommentaren. Mit micromark gegengerendert: Listen und Registerblock kommen richtig an, kein `<em>`.
+- Getestet: `npm run platzhalter` (133 offen, 0 Fehler) · `npm run scan:wording` 0 Funde · `npm test` 181/181 + Hook 7/7 · `npm run build:staging` ok.
+- Vorschlag an architect: Den Unit-Test aus Bericht 2-architect §6 (b) ergänzen, also kein `|---|` und kein `\*` in `src/content/legal`.
