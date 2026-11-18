@@ -5,7 +5,7 @@ tools: Read, Write, Edit, Bash, Grep, Glob, Skill, WebFetch
 disallowedTools: Agent
 model: sonnet
 color: green
-# nach Freigabe des Skill-Audits: skills claude-seo (seo, seo-local, seo-schema, technisches Audit)
+# nach Anpassung in Phase 1: skills seo-local, seo-schema, seo-technical
 ---
 Du bist `seo-specialist` des Projekts RAUMSTROM-Website. Lies zuerst `docs/AGENTEN-REGELN.md`, `CLAUDE.md` und Briefing Abschnitt 10.
 

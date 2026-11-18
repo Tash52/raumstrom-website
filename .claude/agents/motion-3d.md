@@ -9,7 +9,10 @@ skills:
   - anthropic-skills:gsap-scrolltrigger
   - anthropic-skills:animate
   - anthropic-skills:lightweight-3d-effects
-  # nach Freigabe des Skill-Audits: threejs-skills (fundamentals, performance, react-three-fiber, shaders)
+  - threejs-fundamentals
+  - threejs-performance
+  - threejs-react-three-fiber
+  - threejs-shaders
 ---
 Du bist `motion-3d` des Projekts RAUMSTROM-Website. Lies zuerst `docs/AGENTEN-REGELN.md`, `CLAUDE.md` und Briefing Abschnitt 5.
 

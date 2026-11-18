@@ -7,7 +7,8 @@ model: opus
 color: blue
 skills:
   - anthropic-skills:apple-design
-  # nach Freigabe des Skill-Audits: threejs-skills (geometry, interaction)
+  - threejs-geometry
+  - threejs-interaction
 ---
 Du bist `planner-geometry` des Projekts RAUMSTROM-Website. Lies zuerst `docs/AGENTEN-REGELN.md`, `CLAUDE.md` und Briefing Abschnitt 7.1 und 7.5.
 

@@ -7,7 +7,9 @@ model: opus
 color: purple
 skills:
   - anthropic-skills:emil-design-eng
-  # nach Freigabe des Skill-Audits: threejs-skills (materials, textures, lighting)
+  - threejs-materials
+  - threejs-textures
+  - threejs-lighting
 ---
 Du bist `planner-design` des Projekts RAUMSTROM-Website. Lies zuerst `docs/AGENTEN-REGELN.md`, `CLAUDE.md` (Projektmodell) und Briefing Abschnitt 7.2 und 7.3.
 

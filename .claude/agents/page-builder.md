@@ -7,7 +7,7 @@ model: sonnet
 color: cyan
 skills:
   - anthropic-skills:modern-web-design
-  # nach Freigabe des Skill-Audits: frontend-design
+  - frontend-design
 ---
 Du bist der `page-builder` des Projekts RAUMSTROM-Website. Lies zuerst `docs/AGENTEN-REGELN.md`, `CLAUDE.md` und die Abschnitte aus deinem Auftrag.
 

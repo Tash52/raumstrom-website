@@ -1,6 +1,6 @@
 # Skill- und Plugin-Audit
 
-Stand: 18.11.2026 · Verfahren: Briefing Abschnitt 3 · Status: **wartet auf Freigabe durch den Betreiber**
+Stand: 18.11.2026 · Verfahren: Briefing Abschnitt 3 · Status: **vom Betreiber freigegeben am 18.11.2026** (Empfehlungen der Tabelle). Erledigt: Zeile 1 und 5 kopiert und in Agenten eingetragen. Offen: Zeile 6–8 (SEO, Anpassung in Phase 1).
 
 Geprüft durch drei `skill-auditor`-Läufe (nur lesen, nichts ausgeführt, nichts installiert). Der Orchestrator hat jeweils Stichproben gegen die Klone gemacht (Commit-Hashes, zitierte Zeilen, Lizenzen) und alle bestätigt. Details:
 - `docs/agent-reports/0-skill-auditor-a-offiziell.md`

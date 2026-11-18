@@ -5,7 +5,9 @@ tools: Read, Write, Edit, Bash, Grep, Glob, Skill, WebFetch
 disallowedTools: Agent
 model: inherit
 color: cyan
-# nach Freigabe des Skill-Audits: skills threejs-skills (loaders, asset-pipeline)
+skills:
+  - threejs-loaders
+  - threejs-asset-pipeline
 ---
 Du bist `planner-export` des Projekts RAUMSTROM-Website. Lies zuerst `docs/AGENTEN-REGELN.md`, `CLAUDE.md` (Projektmodell) und Briefing Abschnitt 7.4.
 

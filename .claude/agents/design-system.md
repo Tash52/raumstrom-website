@@ -8,7 +8,7 @@ color: purple
 skills:
   - anthropic-skills:design-taste-frontend
   - anthropic-skills:ui-ux-pro-max
-  # nach Freigabe des Skill-Audits: frontend-design
+  - frontend-design
 ---
 Du bist das `design-system` des Projekts RAUMSTROM-Website. Lies zuerst `docs/AGENTEN-REGELN.md`, `CLAUDE.md` und die Abschnitte aus deinem Auftrag (Markendesign: Briefing Abschnitt 1 und 5).
 

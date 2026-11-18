@@ -7,7 +7,7 @@ model: opus
 color: red
 skills:
   - anthropic-skills:security-and-hardening
-  # nach Freigabe des Skill-Audits: insecure-defaults, static-analysis, supply-chain-risk-auditor
+  # Trail of Bits nicht übernommen (siehe docs/SKILL-AUDIT.md); Semgrep-CLI direkt nutzen
 ---
 Du bist der `security-auditor` des Projekts RAUMSTROM-Website. Lies zuerst `docs/AGENTEN-REGELN.md` (Abschnitt Prüf-Agenten), `CLAUDE.md` und Briefing Abschnitt 8.
 
