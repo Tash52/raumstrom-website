@@ -53,7 +53,7 @@ Unsere Website-Anwendung selbst schreibt kein Zugriffsprotokoll. Bei Formularanf
 
 ## Verschlüsselung
 
-Die Verbindung zu dieser Website ist per TLS verschlüsselt (erkennbar an „https://“ in der Adresszeile). Daten, die Sie über Formulare senden, können dadurch auf dem Übertragungsweg nicht von Dritten mitgelesen werden.
+Die Verbindung zu dieser Website ist per TLS verschlüsselt (erkennbar am Schloss-Symbol bzw. am Protokoll HTTPS in der Adresszeile). Daten, die Sie über Formulare senden, können dadurch auf dem Übertragungsweg nicht von Dritten mitgelesen werden.
 
 ## Kontaktformular
 

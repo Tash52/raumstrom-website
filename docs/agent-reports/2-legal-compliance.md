@@ -130,3 +130,8 @@ cookie-einstellungen.md: Der CSRF-Eintrag mit zwei Platzhaltern ist ersetzt durc
 4. **Betreiber:** SMTP- und Postfach-Anbieter (AVV, EU-Standort), ob der Hoster Zugriffsprotokolle führt und wie lange, Löschfrist für Anfragen.
 
 Getestet: `npm ci` ok · `npm run platzhalter` 128 offen, 0 Fehler · `scan:wording` 0 Funde · `npm test` Vitest 216/216 + Hook 7/7 · `build:staging` ok. In `dist/client/datenschutz/` und `cookie-einstellungen/` geprüft: neue Abschnitte gerendert, keine Kommentare in der Ausgabe.
+
+## Nacharbeit B4 (Autolink), 18.11.2026
+- `src/content/legal/datenschutz.md:56`: „https://“ ersetzt durch „am Schloss-Symbol bzw. am Protokoll HTTPS in der Adresszeile“; kein Autolink mehr.
+- Alle sechs Rechtstexte geprüft: übrige URL-/Domain-Fragmente stehen nur in HTML-Kommentaren (kein Autolink). Gerendertes HTML nach `build:staging`: keine `%E2%80`-Links; externe hrefs nur Canonical (`raumstrom.de`) und `gesetze-im-internet.de/hwo/` (Impressum, Berufsrecht aus firma.yaml, beabsichtigt).
+- Getestet: `npm ci`, `scan:wording` 0 Funde, `platzhalter` (keine Änderung an PLATZHALTER.md), `npm test` Vitest 230/230 + Hook 7/7, `build:staging` ok.
