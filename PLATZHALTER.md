@@ -11,7 +11,7 @@ Automatisch erzeugt mit `npm run platzhalter` am 2026-11-18. Nicht von Hand bear
 - [ ] Gewerke-Matrix: Ausführung eigen/partner je Gewerk (`src/content/settings/gewerke.yaml`)
 - [ ] Server-Secrets auf dem Server in `.env` gesetzt (Vorlage `.env.example`; `npm run check:launch` prüft sie)
 
-## Rechtliches (55)
+## Rechtliches (50)
 
 - [ ] Vertragsmodell festlegen: RAUMSTROM als Vertragspartner mit Meister-Partnerbetrieben als Nachunternehmer (dieser Entwurf) oder Direktvertrag zwischen Kunde und Partnerbetrieb; danach Abschnitt „Ausführung durch Meister-Partnerbetriebe“ anpassen · `src/content/legal/agb.md:11`
 - [ ] Bindefrist für Angebote, z. B. 30 Tage · `src/content/legal/agb.md:27`
@@ -21,20 +21,15 @@ Automatisch erzeugt mit `npm run platzhalter` am 2026-11-18. Nicht von Hand bear
 - [ ] Abgleich mit Planer-Agenten und a11y-Prüfung: Welche Teile sind nicht vollständig barrierefrei, und welche Alternative gibt es (z. B. Anfrage über das Kontaktformular mit Fotos und Maßen)? · `src/content/legal/barrierefreiheit.md:34`
 - [ ] Antwortfrist, z. B. fünf Werktagen · `src/content/legal/barrierefreiheit.md:40`
 - [ ] Abgleich mit Planer-Agenten: Schlüsselname · `src/content/legal/cookie-einstellungen.md:20`
-- [ ] Abgleich mit backend-api: kein Cookie (Token im Formular) oder Cookie-Name · `src/content/legal/cookie-einstellungen.md:24`
-- [ ] Laufzeit oder „wird nicht gespeichert“ · `src/content/legal/cookie-einstellungen.md:26`
 - [ ] Name und Anschrift des Hosters, Serverstandort Deutschland · `src/content/legal/datenschutz.md:36`
 - [ ] Speicherdauer der Server-Logfiles beim Hoster, z. B. 7 Tage · `src/content/legal/datenschutz.md:48`
-- [ ] Abgleich mit backend-api: Art und Dauer der Speicherung beim Rate-Limit, z. B. nur im Arbeitsspeicher, höchstens 1 Stunde · `src/content/legal/datenschutz.md:50`
-- [ ] Abgleich mit backend-api: Pflicht- und freiwillige Felder, z. B. Name, E-Mail-Adresse, Telefonnummer (freiwillig), Ort des Vorhabens, Nachricht, Dateianhänge · `src/content/legal/datenschutz.md:58`
-- [ ] Abgleich mit backend-api: bestätigen, dass der Server Anfragen und Anhänge nach dem Versand nicht dauerhaft speichert · `src/content/legal/datenschutz.md:62`
-- [ ] Löschfrist für Anfragen ohne Auftrag, z. B. 6 Monate · `src/content/legal/datenschutz.md:64`
-- [ ] Abgleich mit backend-api/Planer: werden Metadaten vor dem Versand entfernt? Falls ja: „Wir entfernen diese Metadaten vor dem Versand.“ Falls nein: „Entfernen Sie diese bei Bedarf vor dem Hochladen.“ · `src/content/legal/datenschutz.md:72`
-- [ ] Name und Anschrift des SMTP-Anbieters, Serverstandort · `src/content/legal/datenschutz.md:100`
-- [ ] Abgleich mit backend-api: Erhalten Absender eine Eingangsbestätigung per E-Mail? Falls ja, hier beschreiben. · `src/content/legal/datenschutz.md:102`
-- [ ] Abgleich mit backend-api: Wie ist der CSRF-Schutz umgesetzt (Token im Formular ohne Cookie, oder technisch notwendiges Cookie mit Name und Laufzeit)? Ergebnis auch auf der Seite Cookie-Einstellungen eintragen. · `src/content/legal/datenschutz.md:110`
-- [ ] Weitergabe an Partnerbetriebe bestätigen: erst nach Ihrer Zustimmung im Angebotsgespräch oder bereits bei der Kalkulation? Rechtliche Einordnung (eigene Verantwortliche, Auftragsverarbeitung) mit dem Rechtstexte-Service klären. · `src/content/legal/datenschutz.md:122`
-- [ ] Anschrift und Website des BayLDA aus der Behördenseite übernehmen (am 18.11.2026 nicht geprüft) · `src/content/legal/datenschutz.md:147`
+- [ ] beim Hoster klären, ob er oder ein vorgeschalteter Reverse-Proxy Zugriffsprotokolle führt; falls nein, die Absätze zu Logfiles und Speicherdauer anpassen · `src/content/legal/datenschutz.md:52`
+- [ ] Bedeutung des Pflicht-Häkchens klären: Kenntnisnahme der Datenschutzerklärung (dann passt der Text oben, Formulartext anpassen) oder Einwilligung nach Art. 6 Abs. 1 lit. a DSGVO (dann Widerrufsrecht hier beschreiben) · `src/content/legal/datenschutz.md:78`
+- [ ] Löschfrist für Anfragen ohne Auftrag, z. B. 6 Monate · `src/content/legal/datenschutz.md:82`
+- [ ] Name und Anschrift des SMTP-Anbieters und Serverstandort (EU); falls das Postfach, in dem Anfragen eingehen, bei einem anderen Anbieter liegt, auch diesen nennen · `src/content/legal/datenschutz.md:120`
+- [ ] backend-api bestätigt, dass abgelaufene Prüfwerte und Kennungen nach Ende des Zeitfensters tatsächlich aus dem Arbeitsspeicher gelöscht werden · `src/content/legal/datenschutz.md:140`
+- [ ] Weitergabe an Partnerbetriebe bestätigen: erst nach Ihrer Zustimmung im Angebotsgespräch oder bereits bei der Kalkulation? Rechtliche Einordnung (eigene Verantwortliche, Auftragsverarbeitung) mit dem Rechtstexte-Service klären. · `src/content/legal/datenschutz.md:152`
+- [ ] Anschrift und Website des BayLDA aus der Behördenseite übernehmen (am 18.11.2026 nicht geprüft) · `src/content/legal/datenschutz.md:177`
 - [ ] vollständiger Name der Gesellschaft laut Gesellschaftsvertrag · `src/content/settings/firma.yaml:6`
 - [ ] vollständiger Name Gesellschafter 1 (Christian Maul?) · `src/content/settings/firma.yaml:9`
 - [ ] vollständiger Name Gesellschafter 2 (Jernar Kassimov?) · `src/content/settings/firma.yaml:11`
