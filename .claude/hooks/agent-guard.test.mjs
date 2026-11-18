@@ -1,4 +1,4 @@
-// Run with: node --test .claude/hooks/
+// Run with: node --test .claude/hooks/agent-guard.test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
@@ -31,6 +31,13 @@ test('review agents may not change git state', () => {
     assert.ok(bash(agent, 'git checkout -- src'), agent);
     assert.equal(bash(agent, 'git status --short'), null, agent);
     assert.equal(bash(agent, 'git diff HEAD~1'), null, agent);
+    assert.equal(bash(agent, 'git -C /repo stash list'), null, agent);
+    assert.equal(bash(agent, 'git stash show -p'), null, agent);
+    assert.equal(bash(agent, 'git tag -l'), null, agent);
+    assert.equal(bash(agent, 'git tag'), null, agent);
+    assert.ok(bash(agent, 'git -C /repo tag hooktest'), agent);
+    assert.ok(bash(agent, 'git stash'), agent);
+    assert.ok(bash(agent, 'git stash pop'), agent);
     assert.equal(bash(agent, 'npm ci && npm run build:staging && npx playwright test'), null, agent);
   }
 });

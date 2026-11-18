@@ -23,7 +23,7 @@ const WRITE_TOOLS = new Set(['Write', 'Edit', 'NotebookEdit']);
 
 const GIT_PUSH = /\bgit\b[^|;&\n]*\bpush\b/;
 const GIT_MUTATION =
-  /\bgit\s+(?:-C\s+\S+\s+)?(?:commit|add|rm|mv|reset|checkout|restore|switch|clean|rebase|merge|stash|apply|am|cherry-pick|revert|tag)\b/;
+  /\bgit\s+(?:-C\s+\S+\s+)?(?:commit|add|rm|mv|reset|checkout|restore|switch|clean|rebase|merge|apply|am|cherry-pick|revert|stash(?!\s+(?:list|show)\b)|tag(?!\s+(?:-l|--list)\b|\s*$|\s*[|;&]))\b/;
 
 // skill-auditor: every pipeline segment must be one of these read-only forms.
 const AUDITOR_ALLOWED = [
