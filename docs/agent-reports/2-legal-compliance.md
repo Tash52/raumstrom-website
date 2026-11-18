@@ -105,3 +105,28 @@ Kurzform (Teaser, Meta): „Renovierung aus einer Hand koordiniert: ein Ansprech
 - Alle sechs Texte geprüft: Es gibt keine weiteren Tabellen und keine `\*`-Escapes, auch nicht in Kommentaren. Mit micromark gegengerendert: Listen und Registerblock kommen richtig an, kein `<em>`.
 - Getestet: `npm run platzhalter` (133 offen, 0 Fehler) · `npm run scan:wording` 0 Funde · `npm test` 181/181 + Hook 7/7 · `npm run build:staging` ok.
 - Vorschlag an architect: Den Unit-Test aus Bericht 2-architect §6 (b) ergänzen, also kein `|---|` und kein `\*` in `src/content/legal`.
+
+## 9. Nacharbeit (18.11.2026): Datenschutz und Cookie-Seite an die Kontakt-API angeglichen
+
+Branch `worktree-agent-a498e6915e03ed2a6`, Basis dae69c6. Geändert nur `src/content/legal/datenschutz.md` und `src/content/legal/cookie-einstellungen.md` (plus `PLATZHALTER.md` per `npm run platzhalter`). Keine Tabellen, keine `\*`.
+
+Abgeglichen mit `kontakt-schnittstelle.ts`, `KontaktFormular.astro`, `kontakt-ablauf.ts`, `kontakt-mails.ts`, `api.ts`, `speicher.ts`, `schluessel.ts`, `csrf.ts`, `altcha.ts`, `altcha-widget.ts`, `server/server.mjs`, `node_modules/altcha/dist/external` (setCookie nur per Option, nicht gesetzt).
+
+datenschutz.md:
+- Kontaktformular: Feldliste (Name, E-Mail, Telefon freiwillig, PLZ/Ort freiwillig, Anliegen freiwillig, Vorhaben, Fotos freiwillig, Häkchen, Eingangszeit), Zweck, Art. 6 Abs. 1 lit. b/f, keine Speicherung auf dem Server (nur Arbeitsspeicher, keine DB/Dateien), Honeypot-Anfragen verworfen, Speicherdauer im Postfach (Löschfrist bleibt Platzhalter), Pflichtangaben-Hinweis korrigiert.
+- „Datei-Uploads“ → „Fotos hochladen“: max. 5, JPG/PNG/WebP/HEIC, 10 MB je Datei, 20 MB gesamt, **keine PDFs/Grundrisse** (alter Text war falsch), Neukodierung zu JPG ≤ 2560 px, alle Metadaten inkl. GPS entfernt, neutrale Dateinamen, Original nicht gespeichert.
+- E-Mail-Versand: SMTP-Anbieter und ggf. Postfach-Anbieter als Platzhalter, TLS nur bis zum Mailserver, keine Ende-zu-Ende-Verschlüsselung (vorher pauschal „verschlüsselt“), Reply-To mit Name/Adresse, Eingangsbestätigung ohne Nutzereingaben, max. 2/Tag je Adresse.
+- Neu „Schutz vor Missbrauch“: ALTCHA selbst gehostet, keine Verhaltensdaten, Nonce 10 min im Speicher, JavaScript nötig (Alternative Telefon/E-Mail); CSRF-Token ohne Cookie, nur im Formular, 2 h, einmalig; Rate-Limit über HMAC der IP (IPv6 /64), 5 je 15 min, nur Arbeitsspeicher, nicht protokolliert; HMAC der E-Mail-Adresse für das Bestätigungslimit (24 h). Alter Rate-Limit-Absatz unter „Hosting“ entfernt.
+- Hosting: die Anwendung schreibt keine Zugriffsprotokolle, Ereignis-Logs ohne IP/Namen/Adressen. Ob der Hoster oder ein Reverse-Proxy Zugriffsprotokolle führt, ist ein neuer Platzhalter.
+- „Speicherung im Browser“, „Das Wichtigste“: jetzt ausdrücklich keine Cookies. Bei „Empfänger“ sind Hoster und E-Mail-Dienst genannt.
+- Fünf Platzhalter erledigt (Felder, keine Speicherung, Metadaten, Eingangsbestätigung, CSRF), drei neu (Häkchen-Rechtsgrundlage, Speicherbereinigung, Hoster-Logs).
+
+cookie-einstellungen.md: Der CSRF-Eintrag mit zwei Platzhaltern ist ersetzt durch: „keine Cookies, auch keine technisch notwendigen“. Dazu kommt eine Liste, die zeigt, dass Formular und ALTCHA nichts im Browser speichern. Der Code-Abgleich steht als Kommentar im Text. Der Planer-Eintrag (localStorage) bleibt unverändert.
+
+### Befunde (Code vs. rechtliche Anforderung, nicht selbst geändert)
+1. **backend-api, Speicherbegrenzung (belegt):** `src/lib/security/speicher.ts`, `RateLimiter#aufraeumen` und `EinmalSpeicher#aufraeumen` löschen abgelaufene Einträge erst bei 20 000 bzw. 50 000 Schlüsseln. Bei normalem Verkehr bleiben die HMAC-Werte von IP- und E-Mail-Adresse bis zum Neustart im Speicher. Der Bericht 2-backend-api („max. 24 h“) und die Datenschutzerklärung sagen etwas anderes (Art. 5 Abs. 1 lit. e DSGVO). Vorschlag: abgelaufene Einträge bei jedem `pruefe`/`markiere` begrenzt aufräumen oder per `setInterval(...).unref()` regelmäßig löschen, dazu ein Unit-Test. Danach den Platzhalter in datenschutz.md streichen (legal-compliance).
+2. **page-builder + backend-api, Pflicht-Häkchen (Rechtseinschätzung, keine Rechtsberatung):** `KontaktFormular.astro` „… bin damit einverstanden, dass RAUMSTROM meine Angaben und Fotos … verwendet“ und `kontakt-mails.ts` „Einwilligung in die Verarbeitung laut Datenschutzerklärung: ja“ formulieren eine Einwilligung nach lit. a, die Verarbeitung stützt sich aber auf lit. b/f. Empfehlung: Häkchen als Kenntnisnahme („Ich habe die Datenschutzerklärung gelesen.“) oder Hinweistext ohne Häkchen, Mailzeile entsprechend. Der Platzhalter blockiert den Launch bis zur Entscheidung (Betreiber/Rechtstexte-Service).
+3. **backend-api, Hinweis:** `server/server.mjs:95` loggt `err.message` bei internen Fehlern. Derzeit ist kein Pfad bekannt, über den Nutzereingaben dorthin gelangen. Bitte bei der Phase-8-Prüfung mitbetrachten.
+4. **Betreiber:** SMTP- und Postfach-Anbieter (AVV, EU-Standort), ob der Hoster Zugriffsprotokolle führt und wie lange, Löschfrist für Anfragen.
+
+Getestet: `npm ci` ok · `npm run platzhalter` 128 offen, 0 Fehler · `scan:wording` 0 Funde · `npm test` Vitest 216/216 + Hook 7/7 · `build:staging` ok. In `dist/client/datenschutz/` und `cookie-einstellungen/` geprüft: neue Abschnitte gerendert, keine Kommentare in der Ausgabe.

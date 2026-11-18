@@ -6,7 +6,7 @@ entwurf: true
 ---
 <!-- ENTWURF – vor Veröffentlichung durch Rechtstexte-Service mit Abmahnschutz oder Anwalt prüfen lassen -->
 
-<!-- Marker-Syntax: siehe docs/agent-reports/2-legal-compliance.md, Abschnitt "Schnittstelle". Technische Angaben (Logfiles, Formular, Planer, Speicher) vor Launch mit backend-api und den Planer-Agenten abgleichen; jede [[PLATZHALTER]]-Stelle ist eine offene Tatsachenfrage. -->
+<!-- Marker-Syntax: siehe docs/agent-reports/2-legal-compliance.md, Abschnitt "Schnittstelle". Jede [[PLATZHALTER]]-Stelle ist eine offene Tatsachenfrage. Kontaktformular, Fotos, ALTCHA, CSRF, Rate-Limit und Mail am 18.11.2026 mit dem Code abgeglichen (Stand dae69c6: src/components/forms/kontakt-schnittstelle.ts, KontaktFormular.astro, src/lib/security/, src/lib/uploads/, src/lib/mail/, docs/agent-reports/2-backend-api.md). Bei Änderungen an Feldern, Limits oder Fristen diesen Text mitziehen. Raumplaner-Versand (Phase 6) ist noch nicht umgesetzt; Abschnitt "Raumplaner" dann abgleichen. -->
 
 ## Verantwortlicher
 
@@ -26,7 +26,7 @@ Einen Datenschutzbeauftragten haben wir nicht benannt, weil wir dazu gesetzlich 
 
 ## Das Wichtigste in Kürze
 
-- Diese Website setzt keine Cookies zu Analyse- oder Werbezwecken und verwendet kein Tracking, keine Analysewerkzeuge und keine Social-Media-Plugins.
+- Diese Website setzt keine Cookies und verwendet kein Tracking, keine Analysewerkzeuge und keine Social-Media-Plugins.
 - Alle Inhalte, Schriften und Programmteile werden von unserem eigenen Server geladen. Es werden beim Aufruf keine Daten an Drittanbieter wie Schriften-, Karten- oder Videodienste übertragen.
 - Personenbezogene Daten verarbeiten wir nur, wenn Sie uns eine Anfrage schicken (Kontaktformular oder Raumplaner) und soweit dies für den technischen Betrieb der Website nötig ist.
 - Der Raumplaner arbeitet in Ihrem Browser. Ihr Grundriss und Ihr Entwurf werden erst übertragen, wenn Sie ausdrücklich auf „Absenden“ klicken.
@@ -47,7 +47,9 @@ Zweck: Auslieferung der Website, Gewährleistung von Stabilität und Sicherheit 
 
 Speicherdauer: Die Logfiles werden nach [[PLATZHALTER: Speicherdauer der Server-Logfiles beim Hoster, z. B. 7 Tage]] gelöscht, sofern nicht ein konkreter Sicherheitsvorfall eine längere Aufbewahrung zur Aufklärung erfordert.
 
-Zum Schutz vor Missbrauch begrenzen wir die Zahl der Anfragen, die von einer IP-Adresse in kurzer Zeit an unsere Formulare gesendet werden können. Dafür wird die IP-Adresse [[PLATZHALTER: Abgleich mit backend-api: Art und Dauer der Speicherung beim Rate-Limit, z. B. nur im Arbeitsspeicher, höchstens 1 Stunde]] verarbeitet. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO.
+<!-- Code-Stand 18.11.2026: server/server.mjs schreibt kein Zugriffsprotokoll; die API protokolliert nur Ereignisnamen (z. B. "kontakt: gesendet (2 fotos)") ohne IP-Adresse, Namen, E-Mail-Adresse oder Inhalte. Zugriffsprotokolle entstehen nur beim Hoster oder einem vorgeschalteten Reverse-Proxy; vor Launch beim Hoster klären und die Absätze oben ggf. anpassen. -->
+
+Unsere Website-Anwendung selbst schreibt kein Zugriffsprotokoll. Bei Formularanfragen hält sie nur technische Ereignisse fest (zum Beispiel „Anfrage gesendet“ oder „Anfrage abgelehnt“), ohne IP-Adresse, Namen, E-Mail-Adresse oder Inhalte Ihrer Anfrage. Die oben genannten Zugriffsdaten werden nur in den Protokollen des Hosters erfasst. [[PLATZHALTER: beim Hoster klären, ob er oder ein vorgeschalteter Reverse-Proxy Zugriffsprotokolle führt; falls nein, die Absätze zu Logfiles und Speicherdauer anpassen]]
 
 ## Verschlüsselung
 
@@ -55,21 +57,39 @@ Die Verbindung zu dieser Website ist per TLS verschlüsselt (erkennbar an „htt
 
 ## Kontaktformular
 
-Wenn Sie uns über das Kontaktformular schreiben, verarbeiten wir die Angaben, die Sie dort machen: [[PLATZHALTER: Abgleich mit backend-api: Pflicht- und freiwillige Felder, z. B. Name, E-Mail-Adresse, Telefonnummer (freiwillig), Ort des Vorhabens, Nachricht, Dateianhänge]].
+Wenn Sie uns über das Kontaktformular schreiben, verarbeiten wir folgende Angaben:
+
+- Name (Pflichtangabe)
+- E-Mail-Adresse (Pflichtangabe), damit wir Ihnen antworten können
+- Telefonnummer (freiwillig), für Rückfragen und die Terminabsprache
+- Postleitzahl und Ort des Projekts (freiwillig), damit wir einschätzen können, ob das Vorhaben in unserem Einzugsgebiet liegt
+- Art des Anliegens (freiwillig, Auswahl aus unseren Leistungen)
+- Beschreibung Ihres Vorhabens (Pflichtangabe)
+- Fotos (freiwillig, siehe „Fotos hochladen“)
+- Ihre Bestätigung zur Datenschutzerklärung (Pflichtangabe)
+- Datum und Uhrzeit des Eingangs
+
+Dazu kommen technische Angaben, die nur dem Schutz vor Missbrauch dienen und nicht an uns weitergeleitet werden (siehe „Schutz vor Missbrauch“).
 
 Zweck: Bearbeitung Ihrer Anfrage und gegebenenfalls Vorbereitung eines Angebots. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO, soweit Ihre Anfrage auf einen Vertrag mit uns gerichtet ist, im Übrigen Art. 6 Abs. 1 lit. f DSGVO (unser berechtigtes Interesse an der Beantwortung von Anfragen).
 
-Ihre Anfrage wird als E-Mail an unser Postfach übermittelt (siehe „E-Mail-Versand“) und nicht in einer Datenbank auf dem Webserver gespeichert. [[PLATZHALTER: Abgleich mit backend-api: bestätigen, dass der Server Anfragen und Anhänge nach dem Versand nicht dauerhaft speichert]]
+<!-- OFFEN (Befund an page-builder/backend-api, 18.11.2026): Das Pflicht-Häkchen lautet "... bin damit einverstanden, dass RAUMSTROM meine Angaben und Fotos zur Bearbeitung der Anfrage verwendet" (KontaktFormular.astro) und die Anfrage-Mail vermerkt "Einwilligung ... ja". Das wirkt wie eine Einwilligung nach Art. 6 Abs. 1 lit. a DSGVO, die Verarbeitung stützt sich aber auf lit. b/f. Eine Pflicht-Einwilligung neben einer anderen Rechtsgrundlage ist widersprüchlich (ein Widerruf liefe ins Leere). Empfehlung: Häkchen als Kenntnisnahme formulieren ("Ich habe die Datenschutzerklärung gelesen.") oder durch einen Hinweistext über dem Absende-Knopf ersetzen. Der Platzhalter blockiert den Launch bis zur Entscheidung. -->
 
-Speicherdauer: Wir löschen Anfragen, sobald sie erledigt sind und kein Vertrag zustande kommt, spätestens nach [[PLATZHALTER: Löschfrist für Anfragen ohne Auftrag, z. B. 6 Monate]]. Kommt ein Vertrag zustande, bewahren wir die Unterlagen auf, solange gesetzliche Aufbewahrungsfristen es verlangen (insbesondere nach § 147 Abgabenordnung bis zu zehn Jahre).
+[[PLATZHALTER: Bedeutung des Pflicht-Häkchens klären: Kenntnisnahme der Datenschutzerklärung (dann passt der Text oben, Formulartext anpassen) oder Einwilligung nach Art. 6 Abs. 1 lit. a DSGVO (dann Widerrufsrecht hier beschreiben)]]
 
-Die Bereitstellung Ihrer Daten ist freiwillig. Ohne Angabe einer Kontaktmöglichkeit können wir Ihre Anfrage jedoch nicht beantworten.
+Ablauf: Unser Server prüft Ihre Angaben, wandelt Fotos um (siehe „Fotos hochladen“) und sendet die Anfrage als E-Mail an unser Postfach (siehe „E-Mail-Versand“). Auf dem Webserver wird nichts gespeichert: Formulardaten und Fotos liegen nur während der Verarbeitung im Arbeitsspeicher und werden danach verworfen. Es gibt keine Datenbank und keine Zwischenspeicherung in Dateien. Anfragen, die unser Missbrauchsschutz als automatisiert erkennt, werden verworfen und nicht weitergeleitet.
 
-## Datei-Uploads
+Speicherdauer: Ihre Anfrage liegt danach nur in unserem E-Mail-Postfach. Wir löschen sie, sobald sie erledigt ist und kein Vertrag zustande kommt, spätestens nach [[PLATZHALTER: Löschfrist für Anfragen ohne Auftrag, z. B. 6 Monate]]. Kommt ein Vertrag zustande, bewahren wir die Unterlagen auf, solange gesetzliche Aufbewahrungsfristen es verlangen (insbesondere nach § 147 Abgabenordnung bis zu zehn Jahre).
 
-Sie können Ihrer Anfrage Dateien beifügen, zum Beispiel Fotos, Grundrisse oder PDF-Dokumente. Wir prüfen hochgeladene Dateien automatisch auf zulässige Dateitypen und Größe und leiten sie zusammen mit Ihrer Anfrage per E-Mail an uns weiter. Für Zweck, Rechtsgrundlage und Speicherdauer gilt der Abschnitt „Kontaktformular“.
+Die Bereitstellung Ihrer Daten ist weder gesetzlich noch vertraglich vorgeschrieben. Ohne die Pflichtangaben können wir Ihre Anfrage über das Formular jedoch nicht entgegennehmen. Sie erreichen uns auch per Telefon oder E-Mail.
 
-Bitte beachten Sie: Fotos können Metadaten enthalten, etwa Aufnahmezeitpunkt, Gerät oder Standort. [[PLATZHALTER: Abgleich mit backend-api/Planer: werden Metadaten vor dem Versand entfernt? Falls ja: „Wir entfernen diese Metadaten vor dem Versand.“ Falls nein: „Entfernen Sie diese bei Bedarf vor dem Hochladen.“]] Bitte laden Sie keine Bilder hoch, auf denen andere Personen erkennbar sind, ohne deren Einverständnis.
+## Fotos hochladen
+
+Sie können Ihrer Anfrage bis zu 5 Fotos beifügen (JPG, PNG, WebP oder HEIC, je bis zu 10 MB, zusammen bis zu 20 MB). Andere Dateiarten, etwa PDF-Dokumente, nimmt das Formular nicht an.
+
+Fotos können Metadaten enthalten, etwa Aufnahmezeitpunkt, Gerätetyp oder den Ort der Aufnahme. Unser Server prüft jede Datei auf ihr tatsächliches Format und erzeugt daraus ein neues Bild im JPG-Format mit höchstens 2560 Pixeln Kantenlänge. Dabei werden alle Metadaten einschließlich der Standortdaten entfernt, und die Datei erhält einen neutralen Namen (zum Beispiel „foto-1.jpg“). Nur dieses neu erzeugte Bild wird mit Ihrer Anfrage per E-Mail an uns gesendet; die Originaldatei wird nicht gespeichert.
+
+Zweck, Rechtsgrundlage und Speicherdauer entsprechen dem Abschnitt „Kontaktformular“. Bitte laden Sie keine Bilder hoch, auf denen andere Personen erkennbar sind, ohne deren Einverständnis, und achten Sie darauf, dass keine vertraulichen Unterlagen zu sehen sind.
 
 ## Raumplaner
 
@@ -97,27 +117,37 @@ Das Ergebnis der KI-Erkennung ist ein Vorschlag, den Sie prüfen und ändern kö
 
 ## E-Mail-Versand
 
-Anfragen aus Kontaktformular und Raumplaner versenden wir über den E-Mail-Dienst [[PLATZHALTER: Name und Anschrift des SMTP-Anbieters, Serverstandort]]. Mit dem Anbieter besteht ein Vertrag zur Auftragsverarbeitung nach Art. 28 DSGVO. Die E-Mails werden verschlüsselt übertragen.
+Anfragen aus dem Kontaktformular versenden wir über den E-Mail-Dienst [[PLATZHALTER: Name und Anschrift des SMTP-Anbieters und Serverstandort (EU); falls das Postfach, in dem Anfragen eingehen, bei einem anderen Anbieter liegt, auch diesen nennen]]. Mit dem Anbieter besteht ein Vertrag zur Auftragsverarbeitung nach Art. 28 DSGVO. Die Verbindung von unserem Server zum Mailserver ist per TLS verschlüsselt. Eine Ende-zu-Ende-Verschlüsselung der E-Mails findet nicht statt.
 
-[[PLATZHALTER: Abgleich mit backend-api: Erhalten Absender eine Eingangsbestätigung per E-Mail? Falls ja, hier beschreiben.]]
+Ihre Anfrage geht als E-Mail an unser Postfach. Ihre E-Mail-Adresse und Ihr Name stehen darin als Antwortadresse, damit wir Ihnen direkt antworten können.
+
+Eingangsbestätigung: Nach dem Absenden schicken wir eine automatische Bestätigung an die E-Mail-Adresse, die Sie angegeben haben. Sie enthält bewusst keine Angaben aus Ihrer Anfrage, sondern nur einen festen Text und unsere Kontaktdaten. So kann das Formular nicht dazu missbraucht werden, beliebige Inhalte an fremde Adressen zu senden. An dieselbe Adresse senden wir höchstens zwei Bestätigungen pro Tag. Zweck ist, Ihnen den Eingang zu bestätigen. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO, soweit Ihre Anfrage auf einen Vertrag gerichtet ist, im Übrigen Art. 6 Abs. 1 lit. f DSGVO (unser berechtigtes Interesse an einer verlässlichen Kommunikation). Auf unserem Webserver wird die Bestätigung nicht gespeichert.
 
 Wenn Sie uns direkt per E-Mail schreiben, verarbeiten wir Ihre Angaben zur Bearbeitung Ihres Anliegens; es gelten Zweck, Rechtsgrundlage und Speicherdauer aus dem Abschnitt „Kontaktformular“.
 
-## Schutz vor automatisierten Anfragen (ALTCHA)
+## Schutz vor Missbrauch
 
-Damit unsere Formulare nicht durch automatisierte Programme missbraucht werden, verwenden wir ALTCHA. Dabei löst Ihr Browser vor dem Absenden eine kleine Rechenaufgabe; unser Server prüft das Ergebnis. ALTCHA läuft vollständig auf unserem eigenen Server, setzt keine Cookies, lädt nichts von Drittanbietern und erstellt keine Nutzerprofile. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO; unser berechtigtes Interesse ist der Schutz vor Spam und Missbrauch.
+Damit das Kontaktformular nicht durch automatisierte Programme oder untergeschobene Anfragen missbraucht wird, setzen wir die folgenden Maßnahmen ein. Alle laufen auf unserem eigenen Server, setzen keine Cookies, laden nichts von Drittanbietern und erstellen keine Nutzerprofile. Rechtsgrundlage ist jeweils Art. 6 Abs. 1 lit. f DSGVO; unser berechtigtes Interesse ist der Schutz vor Spam, Überlastung und Missbrauch.
 
-[[PLATZHALTER: Abgleich mit backend-api: Wie ist der CSRF-Schutz umgesetzt (Token im Formular ohne Cookie, oder technisch notwendiges Cookie mit Name und Laufzeit)? Ergebnis auch auf der Seite Cookie-Einstellungen eintragen.]]
+**Spam-Schutz (ALTCHA):** Wir verwenden die Open-Source-Software ALTCHA, die wir selbst auf unserem Server betreiben. Ihr Browser ruft bei unserem Server eine Rechenaufgabe ab und löst sie im Hintergrund, sobald Sie das Formular ausfüllen; unser Server prüft das Ergebnis. Dabei werden keine Mausbewegungen, Tastatureingaben oder anderen Verhaltensdaten erfasst, und es werden keine Daten an den Hersteller übermittelt. Damit jede gelöste Aufgabe nur einmal verwendet werden kann, merkt sich unser Server eine zufällige Kennung der Aufgabe ohne Bezug zu Ihrer Person im Arbeitsspeicher, bis die Aufgabe nach 10 Minuten ungültig wird. Der Spam-Schutz benötigt JavaScript. Ist JavaScript abgeschaltet, erreichen Sie uns per Telefon oder E-Mail.
+
+**Schutz vor untergeschobenen Anfragen:** Beim Öffnen des Formulars erhält Ihr Browser von unserem Server ein zufälliges, signiertes Einmal-Kennzeichen, das mit dem Formular zurückgesendet wird. Es wird weder als Cookie noch anderweitig in Ihrem Browser gespeichert, sondern steht nur im geöffneten Formular. Es ist 2 Stunden gültig und nur einmal verwendbar; dazu merkt sich unser Server seine Kennung bis zum Ablauf im Arbeitsspeicher. Das Kennzeichen enthält keine Angaben zu Ihrer Person.
+
+**Begrenzung der Anfragen:** Damit niemand in kurzer Zeit sehr viele Anfragen senden kann, zählt unser Server, wie oft von einem Internetanschluss aus das Formular gesendet oder eine Rechenaufgabe abgerufen wird (für das Formular höchstens 5 Anfragen in 15 Minuten). Dafür bildet er aus Ihrer IP-Adresse (bei IPv6 nur aus dem Netzpräfix) mit einem geheimen Schlüssel einen Prüfwert, aus dem sich die IP-Adresse nicht zurückrechnen lässt. Gespeichert wird nur dieser Prüfwert mit einem Zähler, nicht die IP-Adresse. Für die Begrenzung der Eingangsbestätigungen (siehe „E-Mail-Versand“) bildet der Server auf die gleiche Weise einen Prüfwert aus Ihrer E-Mail-Adresse. Die Prüfwerte liegen nur im Arbeitsspeicher, werden nicht protokolliert und nicht weitergegeben. Sie werden nach Ablauf des jeweiligen Zeitfensters gelöscht (höchstens 24 Stunden), bei einem Neustart des Servers sofort.
+
+<!-- OFFEN (Befund an backend-api, 18.11.2026): src/lib/security/speicher.ts löscht abgelaufene Einträge (RateLimiter und EinmalSpeicher, jeweils #aufraeumen) erst, wenn 20 000 bzw. 50 000 Einträge erreicht sind. Bei geringem Verkehr bleiben Prüfwerte bis zum Neustart im Speicher, also länger als oben zugesagt (Art. 5 Abs. 1 lit. e DSGVO). Platzhalter entfernen, sobald abgelaufene Einträge regelmäßig gelöscht werden. -->
+
+[[PLATZHALTER: backend-api bestätigt, dass abgelaufene Prüfwerte und Kennungen nach Ende des Zeitfensters tatsächlich aus dem Arbeitsspeicher gelöscht werden]]
 
 ## Speicherung im Browser
 
-Diese Website setzt keine Cookies, die eine Einwilligung erfordern. Eine Speicherung in Ihrem Browser erfolgt nur, wenn sie für eine von Ihnen ausdrücklich gewünschte Funktion unbedingt erforderlich ist (§ 25 Abs. 2 Nr. 2 TDDDG), zum Beispiel wenn Sie im Raumplaner auf „Entwurf speichern“ klicken. Der Entwurf bleibt dann nur auf Ihrem Gerät gespeichert und wird nicht an uns übertragen. Sie können ihn im Planer oder über die Einstellungen Ihres Browsers jederzeit löschen. Eine Übersicht finden Sie auf der Seite Cookie-Einstellungen.
+Diese Website setzt keine Cookies. Das Kontaktformular einschließlich Spam-Schutz speichert nichts in Ihrem Browser. Eine Speicherung in Ihrem Browser erfolgt nur, wenn sie für eine von Ihnen ausdrücklich gewünschte Funktion unbedingt erforderlich ist (§ 25 Abs. 2 Nr. 2 TDDDG), zum Beispiel wenn Sie im Raumplaner auf „Entwurf speichern“ klicken. Der Entwurf bleibt dann nur auf Ihrem Gerät gespeichert und wird nicht an uns übertragen. Sie können ihn im Planer oder über die Einstellungen Ihres Browsers jederzeit löschen. Eine Übersicht finden Sie auf der Seite Cookie-Einstellungen.
 
 <!-- § 25 TDDDG (geprüft 18.11.2026, gesetze-im-internet.de/ttdsg/__25.html): Abs. 2 Nr. 2 – keine Einwilligung, wenn unbedingt erforderlich für einen ausdrücklich gewünschten digitalen Dienst. -->
 
 ## Empfänger Ihrer Daten
 
-Ihre Daten erhalten nur die in dieser Erklärung genannten Auftragsverarbeiter.
+Ihre Daten erhalten nur die in dieser Erklärung genannten Auftragsverarbeiter, insbesondere der Hoster (siehe „Hosting und Server-Logfiles“) und der E-Mail-Dienst (siehe „E-Mail-Versand“). Sie verarbeiten die Daten nur nach unserer Weisung.
 
 Betrifft Ihre Anfrage Gewerke, die einer unserer Meister-Partnerbetriebe ausführt, geben wir die dafür nötigen Angaben (zum Beispiel Ort, Umfang, Fotos und Pläne des Vorhabens sowie Ihre Kontaktdaten) an diesen Partnerbetrieb weiter, damit er die Leistung kalkulieren und ausführen kann. Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO. [[PLATZHALTER: Weitergabe an Partnerbetriebe bestätigen: erst nach Ihrer Zustimmung im Angebotsgespräch oder bereits bei der Kalkulation? Rechtliche Einordnung (eigene Verantwortliche, Auftragsverarbeitung) mit dem Rechtstexte-Service klären.]]
 
