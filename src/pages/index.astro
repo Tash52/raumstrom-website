@@ -6,6 +6,8 @@ import GewerkeHinweis from '../components/base/GewerkeHinweis.astro';
 import Icon from '../components/base/Icon.astro';
 import Karte from '../components/base/Karte.astro';
 import Section from '../components/base/Section.astro';
+import AblaufListe from '../components/sections/AblaufListe.astro';
+import { parseAblaufListe } from '../components/sections/ablauf.ts';
 import CtaBand from '../components/sections/CtaBand.astro';
 import GewerkeListe from '../components/sections/GewerkeListe.astro';
 import Markdown from '../components/sections/Markdown.astro';
@@ -28,6 +30,8 @@ const einstieg = abschnitt(seite, 'einstieg');
 const saeulenText = abschnitt(seite, 'saeulen');
 const eingaenge = abschnitt(seite, 'eingaenge');
 const koordination = abschnitt(seite, 'koordination');
+const ablauf = abschnitt(seite, 'ablauf');
+const ablaufSchritte = parseAblaufListe(ablauf.text, 'pages/start.md, Abschnitt "ablauf"');
 const planer = abschnitt(seite, 'raumplaner-teaser');
 const region = abschnitt(seite, 'region');
 ---
@@ -76,14 +80,18 @@ const region = abschnitt(seite, 'region');
     <GewerkeListe gewerke={alleGewerke} />
   </Section>
 
-  <Section id={planer.id} titel={planer.titel} leitung>
+  <Section id={ablauf.id} titel={ablauf.titel} leitung>
+    <AblaufListe schritte={ablaufSchritte} />
+  </Section>
+
+  <Section id={planer.id} titel={planer.titel} flaeche="kalk-tief" leitung>
     <Markdown text={planer.text} />
     <div class="cluster teaser-aktion">
       <Button href="/raumplaner/" icon="cube-3d-sphere">Raumplaner öffnen</Button>
     </div>
   </Section>
 
-  <Section id={region.id} titel={region.titel} flaeche="kalk-tief" leitung>
+  <Section id={region.id} titel={region.titel} leitung>
     <Markdown text={region.text} />
   </Section>
 
