@@ -7,6 +7,7 @@ import { existsSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { loadDotEnv, parseEnv } from './env.mjs';
 import { applySecurityHeaders } from './headers.mjs';
+import { prepareProxyHeaders } from './proxy.mjs';
 import { loadPagePolicies, resolveStatic, routeKey, sendFile } from './static.mjs';
 
 const ROOT = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
@@ -22,7 +23,7 @@ if (!parsed.ok) {
   console.error('Siehe .env.example.');
   process.exit(1);
 }
-const { HOST, PORT } = parsed.env;
+const { HOST, PORT, TRUST_PROXY } = parsed.env;
 
 if (!existsSync(path.join(CLIENT, 'index.html'))) {
   console.error(`Kein Build gefunden unter ${CLIENT}. Zuerst npm run build ausführen.`);
@@ -45,6 +46,10 @@ function notFound(req, res) {
   res.setHeader('Content-Type', 'text/plain; charset=utf-8');
   res.end('Nicht gefunden');
 }
+
+// Methods Astro may see; routes answer 405 with their own Allow. Anything else (TRACE, CONNECT …)
+// cannot become a fetch Request and would end as 500 with a stack trace in the log (L-2).
+const API_METHODS = new Set(['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']);
 
 function plain(res, status, body, extra = {}) {
   res.statusCode = status;
@@ -71,7 +76,10 @@ async function handle(req, res) {
 
   if (pathname.startsWith('/api/')) {
     res.setHeader('Cache-Control', 'no-store');
+    if (!API_METHODS.has(req.method ?? '')) return plain(res, 405, 'Methode nicht erlaubt', { Allow: 'GET, HEAD, POST' });
     if (!astroHandler) return notFound(req, res);
+    // M-1: strip X-Forwarded-*/Forwarded unless TRUST_PROXY, set x-raumstrom-client-ip (server/proxy.mjs).
+    prepareProxyHeaders(req, { trustProxy: TRUST_PROXY });
     return astroHandler(req, res, () => notFound(req, res));
   }
 

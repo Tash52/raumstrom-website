@@ -51,6 +51,8 @@ export function loadPagePolicies(headersFile) {
  * Never resolves outside root, never serves dotfiles (except /.well-known/).
  */
 export function resolveStatic(root, rawPathname) {
+  // Encoded slashes/backslashes never name a file; decoding them would build "//host/" redirects (L-1).
+  if (/%(2f|5c)/i.test(rawPathname)) return { notFound: true };
   let pathname;
   try {
     pathname = decodeURIComponent(rawPathname);
@@ -60,6 +62,8 @@ export function resolveStatic(root, rawPathname) {
   if (pathname.includes('\0') || pathname.includes('\\')) return { notFound: true };
   const segments = pathname.split('/').filter(Boolean);
   if (segments.some((s) => s === '..' || (s.startsWith('.') && s !== '.well-known'))) return { notFound: true };
+  // Precompressed variants are served via Accept-Encoding only, never by name.
+  if (PRECOMPRESSED.some((v) => pathname.endsWith(v.ext))) return { notFound: true };
 
   const base = path.resolve(root);
   const target = path.resolve(base, ...segments);
@@ -67,7 +71,8 @@ export function resolveStatic(root, rawPathname) {
 
   const stat = safeStat(target);
   if (stat?.isDirectory()) {
-    if (!pathname.endsWith('/')) return { redirect: `${pathname}/` };
+    // Rebuilt from the segments: always exactly one leading slash, never protocol-relative.
+    if (!pathname.endsWith('/')) return { redirect: `/${segments.map(encodeURIComponent).join('/')}/` };
     const index = path.join(target, 'index.html');
     return safeStat(index)?.isFile() ? { file: index } : { notFound: true };
   }
@@ -87,10 +92,55 @@ export function contentType(file) {
   return MIME[path.extname(file).toLowerCase()] ?? 'application/octet-stream';
 }
 
-/** Streams a file with caching headers; handles HEAD and If-None-Match. */
+/** File types the build precompresses (scripts/lib/precompress.mjs) and the server negotiates. */
+export const COMPRESSIBLE = ['.html', '.css', '.js', '.mjs', '.json', '.svg', '.xml', '.txt'];
+/** Preferred first. */
+export const PRECOMPRESSED = [
+  { ext: '.br', encoding: 'br' },
+  { ext: '.gz', encoding: 'gzip' },
+];
+
+/** Encodings the client accepts (RFC 9110 12.5.3: q=0 excludes, "*" covers unlisted codings). */
+export function acceptedEncodings(header) {
+  const listed = new Map();
+  for (const part of String(header ?? '').split(',')) {
+    const [name = '', ...params] = part.trim().toLowerCase().split(';');
+    if (!name.trim()) continue;
+    const q = params.map((p) => p.trim()).find((p) => p.startsWith('q='));
+    const value = q ? Number(q.slice(2)) : 1;
+    listed.set(name.trim(), Number.isFinite(value) ? value : 0);
+  }
+  const ok = (enc) => (listed.has(enc) ? listed.get(enc) > 0 : (listed.get('*') ?? 0) > 0);
+  return new Set(PRECOMPRESSED.map((v) => v.encoding).filter(ok));
+}
+
+/** Picks the precompressed sibling for this request, if any (must not be older than the original). */
+function pickVariant(req, file, stat) {
+  if (!COMPRESSIBLE.includes(path.extname(file).toLowerCase())) return null;
+  const accepted = acceptedEncodings(req.headers['accept-encoding']);
+  for (const v of PRECOMPRESSED) {
+    if (!accepted.has(v.encoding)) continue;
+    const s = safeStat(file + v.ext);
+    if (s?.isFile() && s.mtimeMs >= stat.mtimeMs) return { file: file + v.ext, stat: s, encoding: v.encoding };
+  }
+  return null;
+}
+
+function etagMatches(header, etag) {
+  if (typeof header !== 'string') return false;
+  return header.split(',').some((t) => t.trim() === etag || t.trim() === '*');
+}
+
+/**
+ * Streams a file with caching headers; handles HEAD and If-None-Match. Text files go out as the
+ * precompressed .br/.gz sibling when Accept-Encoding allows it (own ETag, Vary: Accept-Encoding).
+ */
 export function sendFile(req, res, file, status = 200) {
-  const stat = statSync(file);
-  const etag = `W/"${stat.size.toString(16)}-${Math.floor(stat.mtimeMs).toString(16)}"`;
+  const original = statSync(file);
+  const variant = pickVariant(req, file, original);
+  const stat = variant?.stat ?? original;
+  const suffix = variant ? `-${variant.encoding}` : '';
+  const etag = `W/"${stat.size.toString(16)}-${Math.floor(original.mtimeMs).toString(16)}${suffix}"`;
   const rel = file.split(path.sep).join('/');
   const cache = rel.includes('/_astro/')
     ? 'public, max-age=31536000, immutable'
@@ -99,9 +149,11 @@ export function sendFile(req, res, file, status = 200) {
       : 'public, max-age=3600';
   res.setHeader('Content-Type', contentType(file));
   res.setHeader('Cache-Control', cache);
+  if (COMPRESSIBLE.includes(path.extname(file).toLowerCase())) res.setHeader('Vary', 'Accept-Encoding');
+  if (variant) res.setHeader('Content-Encoding', variant.encoding);
   if (status === 200) {
     res.setHeader('ETag', etag);
-    if (req.headers['if-none-match'] === etag) {
+    if (etagMatches(req.headers['if-none-match'], etag)) {
       res.statusCode = 304;
       res.end();
       return;
@@ -113,5 +165,5 @@ export function sendFile(req, res, file, status = 200) {
     res.end();
     return;
   }
-  createReadStream(file).pipe(res);
+  createReadStream(variant?.file ?? file).pipe(res);
 }
