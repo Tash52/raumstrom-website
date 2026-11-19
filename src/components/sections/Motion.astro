@@ -1,0 +1,10 @@
+---
+// Motion layer for every page (motion-3d): global motion styles, the cable element used by the
+// page transition, and the bundled motion script (no inline script; CSP hashes are added by Astro).
+// Everything is progressive: without JS, with reduced motion or on touch the page stays static.
+import '../../lib/motion/motion.css';
+---
+<div class="vt-leitung" aria-hidden="true"></div>
+<script>
+  import '../../lib/motion/index.ts';
+</script>

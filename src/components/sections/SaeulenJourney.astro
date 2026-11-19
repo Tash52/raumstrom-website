@@ -1,0 +1,336 @@
+---
+// The three pillars as a customer journey (motion-3d). Static markup = an ordered list of three cards
+// with a poster each (works without JS, on touch and with reduced motion). On desktop with motion,
+// src/islands/journey/steuerung.ts pins the block and scrolls the cards horizontally; a 3D turntable
+// (room, wallbox, test device) runs on the stage when the device allows it, posters underneath.
+import { Picture } from 'astro:assets';
+import GewerkeHinweis from '../base/GewerkeHinweis.astro';
+import PauseKnopf from './PauseKnopf.astro';
+import poster0 from '../../islands/journey/poster/journey-0.png';
+import poster1 from '../../islands/journey/poster/journey-1.png';
+import poster2 from '../../islands/journey/poster/journey-2.png';
+
+interface Saeule {
+  id: string;
+  titel: string;
+  liste: { id: string; data: { titel: string } }[];
+  gewerke: string[];
+}
+interface Props {
+  saeulen: Saeule[];
+}
+const { saeulen } = Astro.props;
+const POSTER = [poster0, poster1, poster2];
+// Decorative stills; the panel text carries the meaning.
+const BILD = { formats: ['avif', 'webp'] as const, widths: [320, 640, 960], sizes: '(min-width: 64em) 40vw, (min-width: 40em) 45vw, 90vw' };
+const ALT = [
+  'Raum im Grundriss, durch die Türöffnung führt eine leuchtende Leitung herein und endet in einem Punkt.',
+  'Wallbox an der Wand mit Ladekabel und Stecker.',
+  'Prüfgerät mit Messleitungen vor einem Prüfprotokoll mit abgehakten Zeilen.',
+];
+---
+<div class="journey" data-journey data-journey-zustand="statisch">
+  <div class="journey-leiste" aria-hidden="true">
+    {
+      saeulen.map((s, i) => (
+        <span class="journey-knoten" data-journey-knoten>
+          <span class="journey-knoten-punkt" />
+          <span class="journey-knoten-text">{String(i + 1).padStart(2, '0')} {s.titel}</span>
+        </span>
+      ))
+    }
+  </div>
+  <div class="journey-raster">
+    <div class="journey-buehne" aria-hidden="true">
+      {
+        POSTER.slice(0, saeulen.length).map((p, i) => (
+          <Picture src={p} alt="" formats={[...BILD.formats]} widths={BILD.widths} sizes={BILD.sizes} loading="lazy" decoding="async" class:list={['journey-buehne-bild', `journey-buehne-bild-${i}`]} />
+        ))
+      }
+      <div class="journey-canvas" data-journey-canvas></div>
+    </div>
+    <div class="journey-fenster">
+      <ol class="journey-spur" data-journey-spur role="list">
+        {
+          saeulen.map((s, i) => (
+            <li class="journey-panel" data-journey-panel>
+              <div class="journey-panel-bild">
+                <Picture src={POSTER[i]!} alt={ALT[i] ?? ''} formats={[...BILD.formats]} widths={BILD.widths} sizes={BILD.sizes} loading="lazy" decoding="async" />
+              </div>
+              <div class="journey-panel-text">
+                <p class="journey-nr" aria-hidden="true">
+                  {String(i + 1).padStart(2, '0')} / {String(saeulen.length).padStart(2, '0')}
+                </p>
+                <h3 class="journey-titel">{s.titel}</h3>
+                <ul class="journey-liste" role="list">
+                  {s.liste.map((l) => (
+                    <li>
+                      <a href={`/leistungen/${l.id}/`}>{l.data.titel}</a>
+                    </li>
+                  ))}
+                </ul>
+                <GewerkeHinweis gewerke={s.gewerke} />
+              </div>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </div>
+  <PauseKnopf class="journey-pause" />
+</div>
+
+<style>
+  .journey {
+    --n: 3;
+    position: relative;
+  }
+
+  /* ---------- Static: three cards (default, also mobile and reduced motion) ---------- */
+  .journey-leiste,
+  .journey-buehne {
+    display: none;
+  }
+
+  .journey-spur {
+    display: grid;
+    gap: var(--space-7) var(--space-6);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (min-width: 40em) {
+    .journey-spur {
+      grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+    }
+  }
+
+  .journey-panel {
+    display: grid;
+    gap: var(--space-4);
+    align-content: start;
+  }
+
+  .journey-panel-bild :global(img) {
+    display: block;
+    width: min(100%, 22rem);
+    height: auto;
+    aspect-ratio: 1;
+  }
+
+  .journey-panel-text {
+    display: grid;
+    gap: var(--space-3);
+    justify-items: start;
+  }
+
+  .journey-nr {
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    letter-spacing: var(--tracking-mono);
+    color: var(--text-muted);
+  }
+
+  .journey-titel {
+    font-size: var(--step-3);
+    font-weight: var(--weight-display);
+    font-stretch: var(--wdth-display);
+    letter-spacing: var(--tracking-display);
+    line-height: var(--leading-heading);
+  }
+
+  .journey-liste {
+    display: grid;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .journey-liste a {
+    color: var(--text);
+    text-underline-offset: 0.22em;
+  }
+
+  .journey-liste a:hover {
+    color: var(--accent-text);
+  }
+
+  .journey-pause {
+    margin-top: var(--space-5);
+  }
+
+  /* ---------- Pinned journey (set by JS on desktop with motion) ---------- */
+  .journey:global(.journey-aktiv) {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    gap: var(--space-5);
+    height: min(calc(100svh - var(--header-h) - 2rem), 44rem);
+  }
+
+  .journey:global(.journey-aktiv) .journey-leiste {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-4);
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    letter-spacing: var(--tracking-mono);
+    color: var(--text-muted);
+  }
+
+  .journey:global(.journey-aktiv) .journey-leiste::before {
+    content: '';
+    position: absolute;
+    left: 0.3125rem;
+    right: 0.3125rem;
+    top: 0.75em;
+    height: var(--leitung-w);
+    background: var(--line-strong);
+  }
+
+  .journey-knoten {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding-right: var(--space-2);
+    background: var(--surface);
+    transition: color 240ms ease;
+  }
+
+  .journey-knoten-punkt {
+    width: 0.625rem;
+    height: 0.625rem;
+    border-radius: var(--radius-punkt);
+    background: var(--surface);
+    box-shadow: 0 0 0 2px var(--line-strong);
+    transition:
+      background-color 240ms ease,
+      box-shadow 320ms ease;
+  }
+
+  .journey-knoten:global(.ist-durch) .journey-knoten-punkt {
+    background: var(--leitung);
+    box-shadow: 0 0 0 2px var(--leitung);
+  }
+
+  .journey-knoten:global(.ist-aktiv) {
+    color: var(--text);
+  }
+
+  .journey-knoten:global(.ist-aktiv) .journey-knoten-punkt {
+    background: var(--accent-surface);
+    box-shadow:
+      0 0 0 2px var(--leitung),
+      0 0 14px 3px rgb(197 240 30 / 0.6);
+  }
+
+  .journey:global(.journey-aktiv) .journey-raster {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--space-7);
+    min-height: 0;
+  }
+
+  .journey:global(.journey-aktiv) .journey-buehne {
+    position: relative;
+    display: block;
+    min-height: 0;
+  }
+
+  .journey-buehne :global(picture),
+  .journey-buehne :global(img) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .journey-buehne :global(img) {
+    opacity: 0;
+    transition: opacity 360ms ease;
+  }
+
+  .journey:global([data-aktiv='0']) .journey-buehne :global(.journey-buehne-bild-0),
+  .journey:global([data-aktiv='1']) .journey-buehne :global(.journey-buehne-bild-1),
+  .journey:global([data-aktiv='2']) .journey-buehne :global(.journey-buehne-bild-2) {
+    opacity: 1;
+  }
+
+  .journey:global(.journey-3d-an) .journey-buehne :global(img) {
+    opacity: 0;
+  }
+
+  .journey-canvas {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 500ms ease;
+  }
+
+  .journey-canvas:empty {
+    display: none;
+  }
+
+  .journey:global(.journey-3d-an) .journey-canvas {
+    opacity: 1;
+  }
+
+  .journey:global(.journey-aktiv) .journey-fenster {
+    overflow: hidden;
+    min-height: 0;
+    display: flex;
+  }
+
+  .journey:global(.journey-aktiv) .journey-spur {
+    display: flex;
+    gap: 0;
+    width: calc(var(--n) * 100%);
+    will-change: transform;
+  }
+
+  .journey:global(.journey-aktiv) .journey-panel {
+    flex: 0 0 calc(100% / var(--n));
+    align-content: center;
+    padding-right: var(--space-6);
+    opacity: 0.3;
+    transition: opacity 360ms ease;
+  }
+
+  .journey:global(.journey-aktiv) .journey-panel:global(.ist-aktiv),
+  .journey:global(.journey-aktiv) .journey-panel:focus-within {
+    opacity: 1;
+  }
+
+  .journey:global(.journey-aktiv) .journey-panel-bild {
+    display: none;
+  }
+
+  .journey:global(.journey-aktiv) .journey-titel {
+    font-size: var(--step-5);
+  }
+
+  .journey:global(.journey-aktiv) .journey-liste {
+    font-size: var(--step-1);
+  }
+
+  .journey:global(.journey-aktiv) .journey-pause {
+    margin-top: 0;
+    justify-self: start;
+  }
+
+  /* Poster rendering (tooling only): stage alone, square. */
+  .journey:global(.journey-poster) .journey-buehne {
+    display: block;
+    position: relative;
+    width: 480px;
+    height: 480px;
+  }
+
+  .journey:global(.journey-poster) .journey-buehne :global(img) {
+    display: none;
+  }
+</style>

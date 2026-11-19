@@ -1,14 +1,18 @@
 ---
 // Process steps as an ordered list along a cable with a node per step (content is a real sequence).
+// Motion (motion-3d): [data-prozess] lets src/lib/motion/scroll.ts power the cable step by step while
+// scrolling (strom overlay grows, nodes switch on). Without JS the cable is drawn completely.
 interface Props {
   schritte: { titel: string; text: string }[];
 }
 const { schritte } = Astro.props;
 ---
+<div class="ablauf-wrap" data-prozess>
+<span class="ablauf-strom" data-prozess-strom aria-hidden="true"></span>
 <ol class="ablauf" role="list">
   {
     schritte.map((s) => (
-      <li class="ablauf-schritt">
+      <li class="ablauf-schritt" data-prozess-schritt>
         <span class="ablauf-knoten" aria-hidden="true"></span>
         <h3 class="ablauf-titel">{s.titel}</h3>
         <p class="ablauf-text">{s.text}</p>
@@ -16,8 +20,54 @@ const { schritte } = Astro.props;
     ))
   }
 </ol>
+</div>
 
 <style>
+  .ablauf-wrap {
+    position: relative;
+    max-width: 48rem;
+  }
+
+  /* Powered cable overlay: from the first to the last node, scaled by scroll (GSAP). */
+  .ablauf-strom {
+    display: none;
+    position: absolute;
+    z-index: 1;
+    left: calc(0.3125rem - var(--leitung-w) / 2);
+    top: 0.75rem; /* exact top/height set by scroll.ts from the node positions */
+    height: 0;
+    width: var(--leitung-w);
+    background: var(--leitung);
+    box-shadow: 0 0 10px 1px rgb(197 240 30 / 0.55);
+    transform-origin: top;
+    pointer-events: none;
+  }
+
+  .ablauf-wrap:global(.prozess-aktiv) .ablauf-strom {
+    display: block;
+  }
+
+  .ablauf-wrap:global(.prozess-aktiv) .ablauf-schritt:not(:last-child)::before {
+    background: var(--line-strong);
+  }
+
+  .ablauf-wrap:global(.prozess-aktiv) .ablauf-knoten {
+    z-index: 2;
+    background: var(--surface);
+    box-shadow: 0 0 0 2px var(--surface), 0 0 0 3.5px var(--line-strong);
+    transition:
+      background-color 200ms ease,
+      box-shadow 320ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .ablauf-wrap:global(.prozess-aktiv) .ablauf-schritt:global(.ist-an) .ablauf-knoten {
+    background: var(--accent-surface);
+    box-shadow:
+      0 0 0 2px var(--surface),
+      0 0 0 3.5px var(--leitung),
+      0 0 16px 3px rgb(197 240 30 / 0.6);
+  }
+
   .ablauf {
     --abstand: var(--space-6);
     position: relative;
