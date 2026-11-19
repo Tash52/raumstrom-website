@@ -8,7 +8,8 @@ import type { Firma } from '../schemas/index.ts';
 import { isPlaceholder } from '../schemas/shared.ts';
 import { BildFehler, kodiereNeu, type NeuesBild } from '../uploads/bild.ts';
 import { pruefeAltcha } from './altcha.ts';
-import { EINMAL, LIMITS, PARALLEL, begrenze, protokolliere, type ApiKontext } from './api.ts';
+import { ANNAHME, ANNAHME_PRO_CLIENT, EINMAL, LIMITS, PARALLEL, PARALLEL_WARTEZEIT_MS, clientKennung, protokolliere, type ApiKontext } from './api.ts';
+import { BODY_GRENZEN, formDataAus, leseBody, type BodyGrenzen } from './body.ts';
 import { pruefeCsrfToken, verbraucheCsrfToken } from './csrf.ts';
 import { istGleicherUrsprung } from './herkunft.ts';
 import { MELDUNG, pruefeDateiLimits, validiere, zerlege, type FeldFehler } from './kontakt-validierung.ts';
@@ -25,11 +26,13 @@ export interface KontaktAbhaengigkeiten {
   sende: (mail: SendMailOptions) => Promise<void>;
   socketAdresse: string | undefined;
   jetzt?: () => Date;
+  /** Overrides for tests (deadline, minimum rate). */
+  bodyGrenzen?: Partial<BodyGrenzen>;
 }
 
 export type KontaktErgebnis =
   | { status: 200; ok: true }
-  | { status: 400 | 403 | 413 | 415 | 422 | 429 | 500 | 502 | 503; ok: false; fehler?: FeldFehler; nachricht?: string; retryNachS?: number };
+  | { status: 400 | 403 | 408 | 413 | 415 | 422 | 429 | 500 | 502 | 503; ok: false; fehler?: FeldFehler; nachricht?: string; retryNachS?: number };
 
 const TEXT = {
   allgemein: 'Ihre Anfrage konnte nicht verarbeitet werden. Bitte laden Sie die Seite neu und versuchen Sie es erneut.',
@@ -38,6 +41,7 @@ const TEXT = {
   gross: `Die Anfrage ist zu groß. Alle Fotos zusammen dürfen höchstens ${Math.round(FORM_LIMITS.maxGesamtBytes / 1024 / 1024)} MB groß sein.`,
   rate: 'Sie haben in kurzer Zeit mehrere Anfragen gesendet. Bitte versuchen Sie es in einigen Minuten erneut.',
   belegt: 'Gerade gehen sehr viele Anfragen ein. Bitte versuchen Sie es in einer Minute erneut.',
+  zeit: 'Die Übertragung hat zu lange gedauert. Bitte versuchen Sie es mit weniger oder kleineren Fotos erneut.',
   versand: 'Ihre Anfrage konnte gerade nicht gesendet werden. Bitte versuchen Sie es später erneut oder schreiben Sie uns direkt per E-Mail.',
 } as const;
 
@@ -65,27 +69,46 @@ export async function verarbeiteKontakt(request: Request, d: KontaktAbhaengigkei
   }
   const ct = request.headers.get('content-type') ?? '';
   if (!/^multipart\/form-data;\s*boundary=/i.test(ct)) return fehler(415, TEXT.typ);
-  const laenge = Number(request.headers.get('content-length') ?? '0');
-  if (!Number.isFinite(laenge) || laenge > MAX_BODY) return fehler(413, TEXT.gross);
+  const laengeKopf = request.headers.get('content-length');
+  const laenge = laengeKopf === null ? null : Number(laengeKopf);
+  if (laenge !== null && (!Number.isSafeInteger(laenge) || laenge < 0 || laenge > MAX_BODY)) return fehler(413, TEXT.gross);
 
-  const proClient = begrenze(LIMITS.kontakt, request, d.socketAdresse, k);
-  const gesamt = LIMITS.kontaktGesamt.pruefe('gesamt');
-  if (!proClient.erlaubt || !gesamt.erlaubt) {
+  // Per client: every attempt counts (an attacker only exhausts its own bucket). The global budget is
+  // checked much later, for real send attempts only (H-1).
+  const kennung = clientKennung(request, d.socketAdresse, k);
+  const proClient = LIMITS.kontakt.pruefe(kennung);
+  if (!proClient.erlaubt) {
     protokolliere('kontakt: rate-limit');
-    return fehler(429, TEXT.rate, { retryNachS: Math.max(proClient.retryNachS, gesamt.erlaubt ? 0 : gesamt.retryNachS) });
+    return fehler(429, TEXT.rate, { retryNachS: proClient.retryNachS });
   }
 
-  const frei = PARALLEL.belege();
-  if (!frei) {
-    protokolliere('kontakt: ausgelastet');
+  // Slots for reading the body: at most 2 per client, 8 overall. Reading is bounded by size, a
+  // deadline and a minimum rate, so a stalled upload frees its slot within seconds (slowloris).
+  const freiClient = ANNAHME_PRO_CLIENT.belege(kennung);
+  if (!freiClient) {
+    protokolliere('kontakt: rate-limit parallel');
+    return fehler(429, TEXT.rate, { retryNachS: 60 });
+  }
+  const freiAnnahme = ANNAHME.belege();
+  if (!freiAnnahme) {
+    freiClient();
+    protokolliere('kontakt: ausgelastet annahme');
     return fehler(503, TEXT.belegt, { retryNachS: 60 });
   }
+  let freiArbeit: (() => void) | null = null;
   try {
+    const body = await leseBody(request, { ...BODY_GRENZEN, ...d.bodyGrenzen, maxBytes: MAX_BODY });
+    if (!body.ok) {
+      protokolliere(`kontakt: body ${body.grund}`);
+      if (body.grund === 'zeit') return fehler(408, TEXT.zeit);
+      if (body.grund === 'zu-gross') return fehler(413, TEXT.gross);
+      return fehler(400, TEXT.allgemein);
+    }
     let form: FormData;
     try {
-      form = await request.formData();
+      form = await formDataAus(body.daten, ct);
     } catch {
-      // Body over the adapter limit, aborted upload or broken multipart.
+      // Broken multipart or wrong boundary.
       return fehler(400, TEXT.allgemein);
     }
     const roh = zerlege(form);
@@ -121,6 +144,19 @@ export async function verarbeiteKontakt(request: Request, d: KontaktAbhaengigkei
       return fehler(403, MELDUNG.csrf);
     }
 
+    // Global budget (SMTP quota): only requests that passed every check above count.
+    const gesamt = LIMITS.kontaktGesamt.pruefe('gesamt');
+    if (!gesamt.erlaubt) {
+      protokolliere('kontakt: WARNUNG globales limit erreicht');
+      return fehler(429, TEXT.rate, { retryNachS: gesamt.retryNachS });
+    }
+
+    freiArbeit = await PARALLEL.warte(PARALLEL_WARTEZEIT_MS);
+    if (!freiArbeit) {
+      protokolliere('kontakt: ausgelastet');
+      return fehler(503, TEXT.belegt, { retryNachS: 60 });
+    }
+
     const bilder: NeuesBild[] = [];
     for (const [i, datei] of roh.dateien.entries()) {
       try {
@@ -128,7 +164,9 @@ export async function verarbeiteKontakt(request: Request, d: KontaktAbhaengigkei
       } catch (e) {
         const grund = e instanceof BildFehler ? e.grund : 'defekt';
         protokolliere(`kontakt: foto abgelehnt ${grund}`);
-        return fehler(422, 'Bitte prüfen Sie Ihre Fotos.', { fehler: { fotos: grund === 'typ' ? MELDUNG.fotos : MELDUNG.fotoDefekt } });
+        if (grund === 'ausgelastet') return fehler(503, TEXT.belegt, { retryNachS: 60 });
+        const meldung = grund === 'typ' ? MELDUNG.fotos : grund === 'zu-gross' ? MELDUNG.fotoZuGross : MELDUNG.fotoDefekt;
+        return fehler(422, 'Bitte prüfen Sie Ihre Fotos.', { fehler: { fotos: meldung } });
       }
     }
 
@@ -147,9 +185,8 @@ export async function verarbeiteKontakt(request: Request, d: KontaktAbhaengigkei
       return fehler(502, TEXT.versand);
     }
 
-    // Confirmation without any user content; at most 2 per address and day.
-    const proAdresse = LIMITS.bestaetigung.pruefe(hmacB64(k.mailKey, daten.email.toLowerCase()).slice(0, 22));
-    if (proAdresse.erlaubt) {
+    // Confirmation without any user content (L-4): at most 2 per address and day, 20 per hour overall.
+    if (darfBestaetigen(k, daten.email)) {
       try {
         await d.sende(bestaetigungMail(daten.email, kontext));
       } catch (e) {
@@ -159,8 +196,18 @@ export async function verarbeiteKontakt(request: Request, d: KontaktAbhaengigkei
     protokolliere(`kontakt: gesendet (${bilder.length} fotos)`);
     return { status: 200, ok: true };
   } finally {
-    frei();
+    freiArbeit?.();
+    freiAnnahme();
+    freiClient();
   }
+}
+
+/** Per-address limit first, so a blocked address does not use up the global confirmation budget. */
+export function darfBestaetigen(k: Pick<ApiKontext, 'mailKey'>, email: string): boolean {
+  if (!LIMITS.bestaetigung.pruefe(hmacB64(k.mailKey, email.toLowerCase()).slice(0, 22)).erlaubt) return false;
+  if (LIMITS.bestaetigungGesamt.pruefe('gesamt').erlaubt) return true;
+  protokolliere('kontakt: bestaetigung globales limit');
+  return false;
 }
 
 /** Only the error code (e.g. ECONNECTION, EAUTH); messages may contain addresses. */

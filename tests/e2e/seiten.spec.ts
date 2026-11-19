@@ -111,7 +111,8 @@ test.describe('Kontaktformular (UI)', () => {
     await page.locator('#kontakt-senden').click();
     const summary = page.locator('#kontakt-fehler');
     await expect(summary).toBeVisible();
-    await expect(summary).toBeFocused();
+    // A11y 2 (backend-api fixes): focus goes to the first field with an error.
+    await expect(page.locator('#feld-name')).toBeFocused();
     await expect(summary.locator('li')).toHaveCount(4);
     await expect(page.locator('#feld-name')).toHaveAttribute('aria-invalid', 'true');
     await expect(page.locator('#feld-name')).toHaveAttribute('aria-describedby', /feld-name-fehler/);
@@ -168,6 +169,7 @@ test.describe('Kontakt-Rueckmeldeseiten (ohne JavaScript)', () => {
     test.use({ javaScriptEnabled: false });
     test('Formular: noscript-Hinweis zum Spam-Schutz', async ({ page }) => {
       await page.goto('/kontakt/');
+      await expect(page.locator('[data-altcha-platz] .noscript-hinweis')).toBeVisible();
       await expect(page.locator('[data-altcha-platz] .noscript-hinweis')).toContainText('benötigt JavaScript');
     });
   });

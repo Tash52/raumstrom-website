@@ -40,6 +40,7 @@ export const MELDUNG = {
   fotosGroesse: `Ein Foto ist größer als ${Math.round(LIMITS.maxDateiBytes / 1024 / 1024)} MB. Bitte wählen Sie kleinere Dateien.`,
   fotosGesamt: `Alle Fotos zusammen dürfen höchstens ${Math.round(LIMITS.maxGesamtBytes / 1024 / 1024)} MB groß sein.`,
   fotoDefekt: 'Ein Foto konnte nicht gelesen werden. Bitte wählen Sie eine andere Datei.',
+  fotoZuGross: 'Ein Foto hat eine zu hohe Auflösung. Bitte wählen Sie eine kleinere Version, zum Beispiel als JPG exportiert.',
   altcha: 'Bitte bestätigen Sie den Spam-Schutz und senden Sie das Formular erneut.',
   csrf: 'Das Formular ist abgelaufen. Bitte senden Sie es erneut.',
 } as const;

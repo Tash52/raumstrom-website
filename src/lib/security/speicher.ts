@@ -129,21 +129,87 @@ export class RateLimiter {
   }
 }
 
-/** Limits parallel expensive work (multipart parsing, image re-encoding, SMTP). */
+/** Limits parallel work. `belege` answers at once; `warte` queues for a bounded time (FIFO). */
 export class Parallelitaet {
   #laufend = 0;
+  readonly #wartende: { weiter: (frei: (() => void) | null) => void; timer: ReturnType<typeof setTimeout> }[] = [];
   readonly max: number;
-  constructor(max: number) {
+  readonly maxWartende: number;
+  constructor(max: number, maxWartende = 0) {
     this.max = max;
+    this.maxWartende = maxWartende;
   }
+
+  get laufend() {
+    return this.#laufend;
+  }
+  get wartend() {
+    return this.#wartende.length;
+  }
+
   belege(): (() => void) | null {
     if (this.#laufend >= this.max) return null;
     this.#laufend += 1;
+    return this.#freigabe();
+  }
+
+  /** Waits at most `maxMs` for a slot; null if the queue is full or the time is up. */
+  warte(maxMs: number): Promise<(() => void) | null> {
+    const sofort = this.belege();
+    if (sofort) return Promise.resolve(sofort);
+    if (this.#wartende.length >= this.maxWartende) return Promise.resolve(null);
+    return new Promise((resolve) => {
+      const eintrag = {
+        weiter: resolve,
+        timer: setTimeout(() => {
+          const i = this.#wartende.indexOf(eintrag);
+          if (i >= 0) this.#wartende.splice(i, 1);
+          resolve(null);
+        }, maxMs),
+      };
+      eintrag.timer.unref?.();
+      this.#wartende.push(eintrag);
+    });
+  }
+
+  #freigabe(): () => void {
     let frei = false;
     return () => {
       if (frei) return;
       frei = true;
-      this.#laufend -= 1;
+      const naechster = this.#wartende.shift();
+      if (naechster) {
+        // Hand the slot over directly; the count stays the same.
+        clearTimeout(naechster.timer);
+        naechster.weiter(this.#freigabe());
+      } else {
+        this.#laufend -= 1;
+      }
+    };
+  }
+}
+
+/** Parallel work per key (e.g. pseudonymous client key); entries vanish when their count drops to 0. */
+export class SchluesselParallelitaet {
+  readonly #laufend = new Map<string, number>();
+  readonly maxProSchluessel: number;
+  constructor(maxProSchluessel: number) {
+    this.maxProSchluessel = maxProSchluessel;
+  }
+  get groesse() {
+    return this.#laufend.size;
+  }
+  belege(key: string): (() => void) | null {
+    const n = this.#laufend.get(key) ?? 0;
+    if (n >= this.maxProSchluessel) return null;
+    this.#laufend.set(key, n + 1);
+    let frei = false;
+    return () => {
+      if (frei) return;
+      frei = true;
+      const rest = (this.#laufend.get(key) ?? 1) - 1;
+      if (rest <= 0) this.#laufend.delete(key);
+      else this.#laufend.set(key, rest);
     };
   }
 }

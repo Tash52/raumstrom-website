@@ -143,6 +143,11 @@ test.describe('Kontakt-API (Produktions-Build + Mailpit)', () => {
     });
     await page.setExtraHTTPHeaders({ 'x-forwarded-for': ipFuer(info.title, info.project.name) });
     await page.goto('/kontakt/');
+    // QA B1: widget and its checkbox are visible (the mount point must not carry the class "altcha").
+    await expect(page.locator('[data-altcha-platz]')).toBeVisible();
+    await expect(page.locator('altcha-widget')).toBeVisible();
+    await expect(page.locator('altcha-widget input[type="checkbox"]')).toBeVisible();
+    await expect(page.getByRole('checkbox', { name: /Roboter/i })).toBeVisible();
     await page.locator('#feld-name').focus(); // auto="onfocus" starts the proof of work
     await expect(page.locator('altcha-widget input[name="altcha"]')).toHaveValue(/.{40,}/, { timeout: 30_000 });
     expect(await page.locator('altcha-widget [style]').count()).toBe(0);
@@ -161,8 +166,23 @@ test.describe('Kontakt-API (Produktions-Build + Mailpit)', () => {
     await page.locator('#feld-fotos').setInputFiles({ name: 'urlaub.jpg', mimeType: 'image/jpeg', buffer: Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>') });
     await page.locator('#kontakt-senden').click();
     await expect(page.locator('#feld-fotos-fehler')).toContainText('JPG, PNG, WebP oder HEIC', { timeout: 30_000 });
-    await expect(page.locator('#kontakt-fehler')).toBeFocused();
+    // A11y 2: focus on the first field with an error, the summary stays visible.
+    await expect(page.locator('#feld-fotos')).toBeFocused();
+    await expect(page.locator('#kontakt-fehler')).toBeVisible();
     await keineMails(request, marker);
+  });
+
+  test('Fehler im Browser: Fokus auf das erste Fehlerfeld, vollständige Feldnamen in der Zusammenfassung', async ({ page }, info) => {
+    await page.setExtraHTTPHeaders({ 'x-forwarded-for': ipFuer(info.title, info.project.name) });
+    await page.goto('/kontakt/');
+    await page.locator('#feld-email').fill('erika@beispiel.de');
+    await page.locator('#kontakt-senden').click();
+    await expect(page.locator('#feld-name')).toBeFocused();
+    const links = page.locator('#kontakt-fehler-liste a');
+    await expect(links.first()).toHaveText(/^Name: /);
+    await expect(links.filter({ hasText: 'Datenschutzhinweis:' })).toHaveCount(1);
+    await expect(links.filter({ hasText: /Ich habe die:/ })).toHaveCount(0);
+    for (const t of await links.allTextContents()) expect(t).not.toContain('Pflichtfeld');
   });
 
   test('Ohne JavaScript: nativer POST landet auf der Fehlerseite (Spam-Schutz braucht JS), nicht auf JSON', async ({ browser, request }, info) => {
@@ -170,6 +190,9 @@ test.describe('Kontakt-API (Produktions-Build + Mailpit)', () => {
     const ctx = await browser.newContext({ javaScriptEnabled: false, extraHTTPHeaders: { 'x-forwarded-for': ipFuer(info.title, info.project.name) } });
     const page = await ctx.newPage();
     await page.goto('/kontakt/');
+    // QA B1: without JS the note about the spam protection (and the direct contact) is visible.
+    await expect(page.locator('[data-altcha-platz] .noscript-hinweis')).toBeVisible();
+    await expect(page.locator('[data-altcha-platz] .noscript-hinweis')).toContainText('benötigt JavaScript');
     await formularAusfuellen(page, marker, `kunde-${marker}@beispiel.test`, true);
     await expect(page.locator('#feld-einwilligung')).toBeChecked();
     await page.locator('#kontakt-senden').click();
