@@ -142,3 +142,152 @@ Pflege: `security-auditor`. Jede Prüfphase als eigener Abschnitt. Befunde mit S
 - **backend-api:** H-1, M-1 (zusammen mit architect), M-2, L-3, optional L-4, I-1, I-4.
 - **architect:** L-1, L-2 (`server/server.mjs`, `server/static.mjs`), Server-Anteil von M-1.
 - Nach den Fixes prüft der security-auditor H-1, M-1, M-2, L-1, L-2 und L-3 mit den oben genannten Reproduktionen erneut.
+
+### Phase 2 – Nachprüfung
+
+- **Stand:** `main` @ `0065724` (enthält `41b1886` backend-api und `fbf8971` architect). `npm run build:staging` frisch gebaut (124 vorkomprimierte Dateien). Unit-Tests `backend-api-fixes` und `server-http`: 53/53 grün.
+- **Umgebung:** `node server/server.mjs` mit Test-Secrets (ohne `.env`), A auf `:18480` mit `TRUST_PROXY=false`, B auf `:18481` mit `TRUST_PROXY=true` (wechselnde Client-Adressen per XFF). Kein Docker und kein Mailpit: SMTP zeigt auf einen geschlossenen Port, **502 heißt also „alle Prüfungen bestanden, nur der Versand scheitert"**. ALTCHA wurde mit `altcha-lib` `solveChallenge` gelöst. HEIC-Testbilder kamen aus pillow-heif 1.8.1 (Scratch-venv). Speicher gemessen als VmHWM/VmRSS des Serverprozesses (`/proc/<pid>/status`), Latenz über `/healthz` alle 50 ms. Für jede Messung wurde B neu gestartet.
+
+#### Gesamturteil
+
+**Nicht bestanden, knapp.** M-1, L-1, L-2, L-3 und L-4 sind behoben (belegt). Die ursprünglichen Reproduktionen zu H-1 und M-2 schlagen nicht mehr an. Der Event-Loop bleibt frei, und ein Client ohne Token sperrt niemanden mehr. Es gibt aber zwei neue, belegte Wege zur Sperre (N-1, N-2, je Medium). Außerdem liegt der Spitzenspeicher bei HEIC über dem Nachtest-Ziel (M-2-Rest). Alle drei Fixes sind klein und lokal. Danach ist ein kurzer Nachtest nötig.
+
+| ID | Status | Kurz |
+|---|---|---|
+| H-1 | **teilweise** (Repro behoben, Rest = N-1, N-2) | Flut ohne Token und Slowloris mit 1 B/2 s sperren nicht mehr |
+| M-1 | **behoben** (belegt) | XFF, `Forwarded`, `X-Real-IP` und `x-raumstrom-client-ip` vom Client wirken nicht mehr |
+| M-2 | **teilweise** (belegt) | Event-Loop frei, 40 MP abgewiesen, Dekodierung seriell; Spitze 690–850 MB statt < 600 MB |
+| L-1 | **behoben** (belegt) | keine protokoll-relative Weiterleitung |
+| L-2 | **behoben** (belegt) | TRACE und andere Methoden → 405, kein Stack im Log |
+| L-3 | **behoben** (belegt, Header) | `=?`/`?=`, Bidi und Zero-Width werden entfernt |
+| L-4 | **behoben** (Code und Unit-Test; ohne SMTP nicht dynamisch geprüft) | 20 Bestätigungen/h gesamt |
+| Kompression | **ohne Befund** (belegt) | `.br`/`.gz` nicht direkt abrufbar, Vary korrekt, API unkomprimiert |
+| N-1 | **neu · Medium · belegt** | globales Budget mit gelösten ALTCHA ohne einzige Mail aufbrauchbar |
+| N-2 | **neu · Medium · belegt** | `ANNAHME`-Slots (8) gelten für die ganze Anfrage; 4 Adressen sperren das Formular für 55 s je Runde |
+| N-3 | neu · Info · belegt | libheif schreibt Fehlerobjekte per `console.log` ins Server-Log |
+
+#### H-1 · teilweise behoben
+
+- **Belegt (Server B):** 70 × `POST /api/contact` ohne Token von `203.0.113.7` → 5 × 403, 65 × 429. Danach eine gültige Anfrage von `198.51.100.99` → **502** (früher 429, `Retry-After: 3526`).
+- **Belegt, Slowloris wie im Original (1 Byte alle 2 s, 4 Verbindungen von 2 Adressen):** Eine gleichzeitige gültige Anfrage → **502 nach 15 ms**. Die Slowloris-Verbindungen erhalten **408 nach 10,0 s** (`src/lib/security/body.ts:18-19`, Mindestrate nach Schonfrist).
+- Das globale Limit steht jetzt hinter CSRF und ALTCHA (`src/lib/security/kontakt-ablauf.ts:148`). Das entspricht dem Fix-Vorschlag. Es steht aber noch **vor** der Bildprüfung und vor dem Versand, siehe N-1. Die Slot-Logik lässt sich mit regelkonformer Rate weiter belegen, siehe N-2.
+
+#### N-1 · Medium · Globales Budget ohne Mailversand aufbrauchbar (belegt)
+
+- **Ort:** `src/lib/security/kontakt-ablauf.ts:148` (`kontaktGesamt.pruefe` verbraucht das Budget). Bilder werden erst danach geprüft (`:160-171`, `erkenneBildTyp`/`kodiereNeu`), der Versand folgt bei `:182`. Limit 60/h in `src/lib/security/api.ts:53`.
+- **Reproduktion (Server B):** 12 Adressen (`192.0.2.120–131`) × 5 Anfragen mit gültigem CSRF, gelöstem ALTCHA und einem „Foto" `kein bild` als `image/jpeg`. Ergebnis: 422 „Foto" für jede Anfrage, **keine Mail**, Dauer **31,7 s**. Danach eine gültige Anfrage eines anderen Clients → **429, `Retry-After: 3321`**. Das Formular ist rund 55 min für alle gesperrt. Im Log stehen nur `foto abgelehnt typ` und `WARNUNG globales limit erreicht`.
+- **Wirkung:** Die Annahme im Fix-Bericht („dabei gehen aber 60 echte Mails beim Betreiber ein") stimmt nicht. Die Sperre bleibt still und kostet 60 ALTCHA-Lösungen (rund 1 s je Lösung) sowie 12 Adressen. Mit IPv6 genügt ein /56, weil jedes /64 einen eigenen Bucket bekommt (`src/lib/security/schluessel.ts:25`). Bei 3 Adressen dauert es eine Stunde. CVSS etwa 5.3 (AV:N/AC:L/PR:N/UI:N/A:L).
+- **Fix-Vorschlag (backend-api):** Das Budget vor der teuren Arbeit nur **lesen** (z. B. `RateLimiter.reicht()` ohne Zählung). **Verbrauchen** erst unmittelbar vor `d.sende` (`:182`), also nachdem alle Bilder neu kodiert sind, oder erst nach erfolgreichem Versand. Unit-Test: 60 gültige Anfragen mit defektem Foto, danach eine gültige Anfrage → 200 bzw. 502. Optional bei IPv6 zusätzlich ein Bucket je /48 mit höherem Limit.
+
+#### N-2 · Medium · `ANNAHME`-Slots über die ganze Anfrage, Mindestrate erlaubt 55 s Belegung (belegt)
+
+- **Ort:** `src/lib/security/kontakt-ablauf.ts:92` belegt `ANNAHME` (8, `src/lib/security/api.ts:66`). Freigegeben wird erst in `finally` (`:200`), also nach Bildbearbeitung und SMTP, obwohl der Kommentar (`:85`) und `api.ts` „Body lesen" sagen. Die Mindestrate von 16 KB/s (`src/lib/security/body.ts:19`) erlaubt jeder Verbindung bis zu 55 s (`:18`).
+- **Reproduktion 1 (Server B, ohne Token):** 4 Adressen × 2 Verbindungen senden je 20 KB/s (`Content-Length: 20000000`). Eine gültige Anfrage einer fünften Adresse → **503 nach 21 ms** (`Retry-After: 60`). Die 8 Verbindungen enden erst nach **55,1 s** mit 408. Bandbreite insgesamt rund 160 KB/s.
+- **Reproduktion 2 (mit ALTCHA):** 8 Anfragen (4 Adressen) mit je 5 × HEIC 24 MP, Rauschen, 0,7 MB je Bild. Eine legitime Anfrage **ohne Foto** 1 s später → **503 nach 0,0 s**. Die Anfragen 5–8 erhalten nach 20,3 s ebenfalls 503 (`PARALLEL`-Wartezeit).
+- **Wirkung:** Jede Adresse hat 5 Versuche je 15 min. Für eine dauerhafte Sperre braucht es rund 26 Adressen (8 Slots × 900 s / (5 × 55 s)), mit IPv6 ein einziges /56. Für Runden von 55 s genügen 4 Adressen. In Produktion (`TRUST_PROXY=false`) müssen es echte Adressen sein (Nachstellung per XFF auf B). CVSS etwa 5.3 (A:L).
+- **Fix-Vorschlag (backend-api):**
+  1. `freiAnnahme()` direkt nach `leseBody`/`formDataAus` aufrufen. Der Speicher danach ist durch `PARALLEL` (4 + 8 Wartende) begrenzt.
+  2. `ANNAHME` deutlich erhöhen (z. B. 32) und stattdessen ein **globales Byte-Budget** für Bodys im Lesen führen. Ist es voll, wird die langsamste Verbindung abgebrochen statt die neue abgewiesen.
+  3. Die Mindestrate nach der Schonfrist erhöhen (z. B. 64 KB/s, das sind 0,5 Mbit/s) oder an `Content-Length` koppeln: Höchstdauer = Länge / Mindestrate.
+  4. IPv6-Bucket wie bei N-1.
+  - **Nachtest:** Reproduktion 1 und 2 → die legitime Anfrage erhält 502/200.
+
+#### M-1 · behoben (belegt)
+
+- **Code:** `server/proxy.mjs` löscht bei `TRUST_PROXY=false` alle `x-forwarded-*` und `forwarded` und setzt `x-raumstrom-client-ip` immer neu (`server/server.mjs:82`). Astro baut die Request-Header aus `req.headers` (`node_modules/astro/dist/core/app/node.js:304-318`), also wirkt das Löschen. Kein Code unter `src/` nutzt `clientAddress` (grep). Die Routen lesen nur den Server-Header (`src/lib/security/anfrage.ts:19`).
+- **Server A (`TRUST_PROXY=false`), je 8 × `POST /api/contact`:**
+  - XFF wechselnd mit `Host: raumstrom.de`, `Origin: https://raumstrom.de`, `X-Forwarded-Proto: https` → 5 × 403, 3 × 429.
+  - XFF wechselnd, `x-raumstrom-client-ip` wechselnd, `Forwarded: for=` wechselnd, `X-Real-IP` wechselnd, XFF-Kette mit wechselndem letzten Eintrag → jeweils 8 × 429 (gemeinsamer Socket-Bucket).
+  - `GET /api/altcha` 40 × mit XFF und `x-raumstrom-client-ip` wechselnd → 30 × 200, 10 × 429. `GET /api/csrf` ebenso → 30/10.
+- **Server B (`TRUST_PROXY=true`):** Erster XFF-Eintrag wechselnd, letzter fest → 5 × 403, 3 × 429. Fester XFF und `x-raumstrom-client-ip` wechselnd → 5/3. Zwei XFF-Header → 5/3. Ungültiger letzter Eintrag → Socket-Bucket. Wechselt der **letzte** Eintrag, entsteht je Eintrag ein eigener Bucket. Das ist gewollt (der eigene Proxy hängt an) und nur sicher, wenn der Port ausschließlich über den Proxy erreichbar ist. Hinweis für Phase 6: Container-Port nicht öffentlich binden, wenn `TRUST_PROXY=true`.
+
+#### M-2 · teilweise behoben (belegt)
+
+| Szenario (Server B, frisch gestartet, Basis ~81 MB) | Ergebnis | Dauer | `/healthz` max | VmHWM | RSS danach |
+|---|---|---|---|---|---|
+| 1 × 5 × `flach-40mp.heic` (8000 × 5000, 24 KB) | 422 „zu hohe Auflösung" | 0,2 s | 28 ms | 127 MB | 116 MB |
+| 1 × 1 × 5000 × 5001 (knapp über 25 MP) | 422 „zu hoch" | 0,2 s | 37 ms | 126 MB | 115 MB |
+| 1 × 1 × `flach-24mp` (5712 × 4284) | 502 | 1,3 s | 51 ms | 394 MB | 233 MB |
+| 1 × 1 × 10-Bit-RGBA 24 MP | 502 | 1,4 s | 27 ms | **511 MB** | 234 MB |
+| 1 × 1 × 30 Top-Level-Bilder à 24 MP (174 KB) | 502 | 1,1 s | 14 ms | 394 MB | 233 MB |
+| 1 × 5 × `flach-24mp` | 502 | 5,5 s | 39 ms | 672 MB | 397 MB |
+| 1 × 5 × `rausch-24mp` (0,7 MB je Bild) | 502 | 12,0 s | 26 ms | 689 MB | 430 MB |
+| 4 × 5 × `flach-24mp` | 4 × 502 | 13,9 s | 39 ms | 715 MB | 438 MB |
+| 4 × 5 × `rausch-24mp` | 4 × 502 | 37,6 s | 28 ms | 770 MB | 488 MB |
+| 8 × 5 × `flach-25mp` (5000²) | 8 × 502 | 28,6 s | 64 ms | **828 MB** | 462 MB |
+| 8 × 5 × `rausch-24mp` | 4 × 502, 4 × 503 (20,3 s) | 38,1 s | – | 821 MB | – |
+| defektes / abgeschnittenes HEIC | 422 „nicht gelesen" | 0,1–0,2 s | – | – | – |
+
+- **Behoben:**
+  - Der Event-Loop bleibt frei: höchstens 64 ms statt 1,6 s.
+  - 40-MP-Bomben werden vor dem Puffer abgewiesen.
+  - Die Dekodierung läuft seriell. Beleg: 20 Bilder in 37,6 s, das entspricht rund 1,8 s je Bild nacheinander; dazu der Code `HEIC_SLOT = Parallelitaet(1, 4)`, `src/lib/uploads/heic.ts:19`.
+  - Die Spitze ist gegenüber 1,78 GB mehr als halbiert, der Restspeicher sinkt von 1,63 GB auf etwa 0,45 GB.
+- **Offen (belegt):** Das Ziel „VmHWM < 600 MB" wird verfehlt. Schon **eine** Anfrage mit 5 HEIC erreicht 672–689 MB, die Spitze liegt bei 828 MB. Bei einem Container-Limit von 1 GB bleibt wenig Reserve, sobald gleichzeitig PNG/JPEG mit bis zu 40 MP über sharp laufen (`MAX_PIXEL`, nicht nachgemessen).
+- **Ursachen:**
+  - **Vermutung, aus Code und Messung abgeleitet:**
+    1. `resourceLimits` (`heic.ts:95`) begrenzen nur den V8-Heap des Workers. WASM-Speicher und ArrayBuffer-Backing-Stores zählen nicht dazu. Ein einzelnes 10-Bit-RGBA-Bild hebt den Spitzenwert um rund 430 MB.
+    2. `void worker.terminate()` (`heic.ts:102`) wartet nicht. Der Slot wird in `:129` freigegeben, bevor der WASM-Speicher des alten Workers tatsächlich frei ist. Der nächste Worker startet also überlappend.
+    3. Nach dem Slot liegen bis zu 4 RGBA-Puffer à ~100 MB gleichzeitig bei sharp (`PARALLEL` 4), weil der HEIC-Slot nur die Dekodierung umfasst, nicht die Neukodierung.
+  - **Belegt:** Die Allokator-Fragmentierung lässt RSS dauerhaft bei 400–490 MB.
+- **Fix-Vorschlag (backend-api):**
+  - `await worker.terminate()` vor `frei()`.
+  - Den HEIC-Slot bis nach `toBuffer()` halten, also Dekodieren und Neukodieren zusammen seriell.
+  - Optional `MAX_PIXEL_HEIC` auf 24 MP senken (iPhone 24 MP = 24,47 MP passt weiterhin).
+  - Für Phase 6: Container-Limit ≥ 1,5 GB, `MALLOC_ARENA_MAX=2` oder jemalloc prüfen, Neustart-Richtlinie.
+  - **Nachtest:** Zeilen „1 × 5 × rausch" und „8 × 5 × flach-25mp".
+
+#### L-1 · behoben (belegt, Server A, `curl --path-as-is`)
+
+- `/%2Fkontakt`, `/%2fkontakt`, `/%2F%2Fkontakt`, `/%5Ckontakt`, `/kontakt%2F`, `/kontakt/%2F`, `/%252Fkontakt`, `/%09/kontakt`, `/%E2%80%AE/kontakt`, `/%40evil.example`, `/kontakt;/` → **404 ohne `Location`** (`server/static.mjs:55`).
+- `/kontakt` → `308 /kontakt/`. `/kontakt?x=//evil.example` → `308 /kontakt/?x=//evil.example` (relativ, harmlos). `/%2e%2e/kontakt` → `308 /kontakt/` (WHATWG normalisiert). Die Weiterleitung hat immer genau einen führenden `/` und kodierte Segmente (`:75`).
+- **I-6 (Info, belegt):** `//kontakt`, `///kontakt`, `/\kontakt` → **200 Startseite**. `new URL('//x', base)` (`server/server.mjs`, `handle`) liest die Request-Target als Authority, der Pfad wird `/`. Es gibt keine Weiterleitung und keine fremde Ressource, also kein Risiko. Optional: `req.url` mit `//` am Anfang auf 404 setzen.
+
+#### L-2 · behoben (belegt, Server A)
+
+- `TRACE`, `PROPFIND`, `MKCOL`, `LOCK`, `SEARCH`, `PURGE`, `QUERY` auf `/api/contact`, `/api/csrf`, `/api/x` → **405 `Allow: GET, HEAD, POST`**. Auf `/kontakt/` → 405 `Allow: GET, HEAD` (`server/server.mjs:52`, `:79`). `TRACK` → 400 (Node). `CONNECT` → Verbindung ohne Antwort beendet (Node).
+- `OPTIONS`/`PUT`/`DELETE`/`PATCH`/`HEAD` erreichen die Routen und erhalten dort 405 mit eigenem `Allow`. Das Server-Log von A enthält **0** Zeilen mit `error`/Stack.
+- **I-7 (Info):** `HEAD /api/altcha` → 405 `Allow: GET`. Das ist uneinheitlich mit dem Server-`Allow`, aber kein Risiko.
+- **Keystatic (Regression):** `/keystatic`, `/api/keystatic/github/login`, `/%6Beystatic`, `/api/%6Beystatic`, `/api//keystatic`, `/api/./keystatic`, `/API/keystatic` → 404. `dist/server` enthält keine Keystatic-Route.
+
+#### L-3 · behoben (belegt am erzeugten Header, nodemailer MailComposer)
+
+- Der Original-Payload ergibt `Reply-To: "Eve Boss ceo firma.de x y.de utf-8?B?QmNjOiB2QHguZGU =" <e@f.de>`, ohne `=?…?=`.
+- `==??utf-8?B?QQ==?==?=` → `"= ?utf-8?B?QQ= = ="`. Zero-Width zwischen `=` und `?` → entfernt, kein neues Paar. Bidi-Override (U+202E) → entfernt.
+- Umlaute werden von nodemailer selbst kodiert (`=?UTF-8?Q?J=C3=BCrgen…?=`), wie erwartet. `src/lib/mail/kontakt-mails.ts:21-26`.
+
+#### L-4 · behoben (Code, Unit-Test)
+
+- `darfBestaetigen` (`src/lib/security/kontakt-ablauf.ts:206-211`): erst das Limit je Adresse, dann gesamt 20/h (`api.ts:62`). Bestätigt wird nur nach erfolgreichem Versand der Anfrage. Ohne SMTP wurde das nicht dynamisch geprüft. Die Unit-Tests sind grün.
+
+#### Kompression · ohne Befund (belegt, Server A)
+
+- **Pfade:** `/index.html.br`, `.gz`, `/_astro/*.js.br`/`.gz`, `/index.html.BR`, `/index.html.br/`, `/index.html%2ebr`, `/index.html.b%72`, `/index.html.br.`, `/sitemap-index.xml.gz`, `/kontakt/index.html.br` → 404 (`server/static.mjs:66`, Prüfung nach dem Dekodieren).
+- **Aushandlung:**
+  - `br, gzip` → br; `gzip` → gzip; ohne Header, `identity` oder `br;q=0, gzip;q=0` → unkomprimiert; `*` → br; `*, br;q=0` → gzip.
+  - Content-Type kommt immer vom Original. CSP der Seite auch bei br; 404 auch als br mit 404.
+  - `Vary: Accept-Encoding` bei 200 und 304 (`:152`). Ein br-ETag liefert bei `If-None-Match` 304, bei `gzip` nicht (eigenes ETag).
+  - woff2/png ohne Vary und ohne Kodierung.
+- **Integrität:** Alle 124 Varianten in `dist/client` dekomprimieren byte-gleich zum Original, es gibt keine Variante ohne Original.
+- **API:** `/api/csrf` und `/api/altcha` mit `Accept-Encoding: br, gzip` → kein `Content-Encoding`. Die Token-Antworten sind damit nicht BREACH-anfällig. Statische Dateien enthalten keine Geheimnisse.
+- **Fremd-Fallback:** Nicht-HTML-Antworten behalten `default-src 'none'`.
+
+#### N-3 · Info · libheif-Ausgaben im Server-Log (belegt)
+
+- **Ort:** Im Worker-Code (`src/lib/uploads/heic.ts:36-66`) werden `print`/`printErr` stummgeschaltet, `console.log` aber nicht. Der JS-Wrapper von libheif-js loggt damit selbst.
+- **Reproduktion:** Ein abgeschnittenes HEIC erzeugt 5 Zeilen `Decoding image failed heif_image_handle {} { … message: 'Invalid input: … file position 381' }` je Bild.
+- **Wirkung:** Keine personenbezogenen Daten, aber Interna und Zeilen, die ein Client auslöst (begrenzt durch ALTCHA und Limits). Das widerspricht der Vorgabe „Log nur Ereignisnamen".
+- **Fix:** Am Anfang des Worker-Codes `console.log = console.warn = console.error = () => {};` setzen.
+
+#### Nicht geprüft / Grenzen
+
+- Ohne Mailpit und Docker gab es keinen erfolgreichen Versand. Mail-Inhalt, Anhänge und L-4 dynamisch sowie der volle E2E-Lauf fehlen (CI oder Docker).
+- Kein Produktions-Build (`check:launch` offen). Die Produktions-Hosts wurden über `Host`/`Origin` nachgestellt.
+- Kein IPv6-Socket-Test (Server nur auf 127.0.0.1). PNG/JPEG-Speicher unter gleichzeitiger HEIC-Last wurde nicht gemessen.
+- Ein Neustart von Server B schlug im Messlauf einmal ohne Logzeile fehl, das ließ sich in 8 Wiederholungen nicht reproduzieren. Ich werte das als Effekt des Test-Harness (Neustart nach 1 s), nicht als Befund.
+
+#### Rückgabe
+
+- **backend-api:** N-1 (Budget erst vor `sende` verbrauchen), N-2 (`ANNAHME` nach dem Lesen freigeben, Byte-Budget bzw. Mindestrate), M-2-Rest (`await terminate`, Slot bis nach sharp), N-3.
+- **architect (Phase 6):** Container-Speicher und Allokator (M-2), Port nicht öffentlich bei `TRUST_PROXY=true` (M-1), optional I-6.
+- Nach den Fixes prüft der security-auditor N-1, N-2 und M-2 mit den obigen Reproduktionen erneut.
