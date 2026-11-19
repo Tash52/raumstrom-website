@@ -19,6 +19,9 @@ export const HAUPTNAVIGATION: NavEintrag[] = [
 /** Primary call to action in header and menu (one label for the "contact" intent site-wide). */
 export const ANFRAGE: NavEintrag = { href: '/kontakt/', text: 'Anfrage stellen' };
 
+/** Additional footer-only entries (kept out of the header to keep it short). */
+export const FUSS_ZUSATZ: NavEintrag[] = [{ href: '/partner/', text: 'Partner werden' }];
+
 export const RECHTLICHES: NavEintrag[] = [
   { href: '/impressum/', text: 'Impressum' },
   { href: '/datenschutz/', text: 'Datenschutz' },

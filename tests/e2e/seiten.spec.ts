@@ -1,5 +1,5 @@
 // page-builder (Phase 2c): every route, Gewerke-Kennzeichnung, accessibility, contact form UI.
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 import { parse } from 'yaml';
@@ -171,4 +171,33 @@ test.describe('Kontakt-Rueckmeldeseiten (ohne JavaScript)', () => {
       await expect(page.locator('[data-altcha-platz] .noscript-hinweis')).toContainText('benötigt JavaScript');
     });
   });
+});
+
+test('Jede indexierbare Seite ist von mindestens einer anderen Seite intern verlinkt', () => {
+  const dist = ['dist/client', 'dist'].find((d) => existsSync(`${d}/index.html`))!;
+  const dateien: string[] = [];
+  const sammle = (d: string) => {
+    for (const e of readdirSync(d, { withFileTypes: true })) {
+      if (e.isDirectory()) sammle(`${d}/${e.name}`);
+      else if (e.name.endsWith('.html')) dateien.push(`${d}/${e.name}`);
+    }
+  };
+  sammle(dist);
+  const route = (f: string) => f.slice(dist.length).replace(/index\.html$/, '').replace(/\.html$/, '/');
+  const indexierbar: string[] = [];
+  const verlinkt = new Set<string>();
+  for (const f of dateien) {
+    const html = readFileSync(f, 'utf8');
+    const von = route(f);
+    if (/<meta[^>]+name="robots"[^>]+noindex/i.test(html)) continue;
+    indexierbar.push(von);
+    for (const m of html.matchAll(/<a\s[^>]*href="([^"#?]*)/g)) {
+      const ziel = new URL(m[1]!, `http://x${von}`);
+      if (ziel.origin !== 'http://x') continue;
+      const p = ziel.pathname.endsWith('/') ? ziel.pathname : `${ziel.pathname}/`;
+      if (p !== von) verlinkt.add(p);
+    }
+  }
+  expect(indexierbar).toContain('/partner/');
+  expect(indexierbar.filter((p) => p !== '/' && !verlinkt.has(p))).toEqual([]);
 });

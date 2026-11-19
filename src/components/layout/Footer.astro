@@ -4,7 +4,7 @@
 import Logo from '../base/Logo.astro';
 import MonoLabel from '../base/MonoLabel.astro';
 import { getFirma, isPlaceholder } from '../../lib/content/index.ts';
-import { HAUPTNAVIGATION, RECHTLICHES, ANFRAGE, nurVorhandene } from './navigation.ts';
+import { HAUPTNAVIGATION, RECHTLICHES, FUSS_ZUSATZ, ANFRAGE, nurVorhandene } from './navigation.ts';
 
 const firma = await getFirma();
 const zeige = (v: string | undefined | null): v is string => Boolean(v) && !isPlaceholder(v);
@@ -15,7 +15,7 @@ const zeiten = firma.erreichbarkeit.filter((e) => zeige(e.zeiten));
 // Only confirmed places (bestaetigt: true); the description if it is filled in.
 const gebiet = zeige(firma.einzugsgebiet.beschreibung) ? firma.einzugsgebiet.beschreibung : null;
 const orte = firma.einzugsgebiet.orte.filter((o) => o.bestaetigt).map((o) => o.name);
-const navigation = nurVorhandene([...HAUPTNAVIGATION, ANFRAGE]);
+const navigation = nurVorhandene([...HAUPTNAVIGATION, ...FUSS_ZUSATZ, ANFRAGE]);
 const rechtliches = nurVorhandene(RECHTLICHES);
 const jahr = new Date().getFullYear();
 ---
