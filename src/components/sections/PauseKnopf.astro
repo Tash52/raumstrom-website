@@ -1,0 +1,12 @@
+---
+// Pause control for self-running animations (WCAG 2.2.2). Hidden until a loop actually runs
+// (src/lib/motion/pause.ts shows it); one switch for the whole site, persisted locally.
+interface Props {
+  class?: string;
+}
+const { class: className } = Astro.props;
+---
+<button type="button" class:list={['motion-pause', className]} data-motion-pause aria-pressed="false" hidden>
+  <span class="motion-pause-symbol" aria-hidden="true"></span>
+  <span>Animation anhalten</span>
+</button>

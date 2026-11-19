@@ -20,7 +20,7 @@ Projektregel: nur MIT, Apache-2.0, BSD, ISC (und gleich oder freizügigere Lizen
 
 LGPL-Bibliotheken werden unverändert und als austauschbare Einheit genutzt (dynamisch gelinkt bzw. eigener Chunk). MPL-2.0-Werkzeuge werden unverändert genutzt und nicht ausgeliefert.
 
-## Laufzeit- und Build-Abhängigkeiten (308)
+## Laufzeit- und Build-Abhängigkeiten (323)
 
 Plattform-spezifische optionale Pakete (z. B. `@img/sharp-*`, `lightningcss-*`) werden nur für das jeweilige Betriebssystem installiert.
 
@@ -51,6 +51,7 @@ Plattform-spezifische optionale Pakete (z. B. `@img/sharp-*`, `lightningcss-*`) 
 | @babel/helper-string-parser | 7.29.14 | MIT |
 | @babel/helper-validator-identifier | 7.29.7 | MIT |
 | @babel/parser | 7.29.14 | MIT |
+| @babel/runtime | 7.29.14 | MIT |
 | @babel/types | 7.29.14 | MIT |
 | @bruits/satteri-android-arm64 | 0.11.7 | MIT |
 | @bruits/satteri-darwin-arm64 | 0.11.7 | MIT |
@@ -107,6 +108,7 @@ Plattform-spezifische optionale Pakete (z. B. `@img/sharp-*`, `lightningcss-*`) 
 | @napi-rs/wasm-runtime | 1.2.7 | MIT |
 | @oslojs/encoding | 1.1.0 | MIT |
 | @oxc-project/types | 0.156.0 | MIT |
+| @react-three/fiber | 9.8.2 | MIT |
 | @rolldown/binding-android-arm-eabi | 1.2.19 | MIT |
 | @rolldown/binding-android-arm64 | 1.2.19 | MIT |
 | @rolldown/binding-darwin-arm64 | 1.2.19 | MIT |
@@ -142,8 +144,10 @@ Plattform-spezifische optionale Pakete (z. B. `@img/sharp-*`, `lightningcss-*`) 
 | @types/node | 22.20.5 | MIT |
 | @types/react | 19.3.0 | MIT |
 | @types/react-dom | 19.3.0 | MIT |
+| @types/react-reconciler | 0.28.9 | MIT |
 | @types/sax | 1.2.7 | MIT |
 | @types/unist | 3.0.3 | MIT |
+| @types/webxr | 0.5.24 | MIT |
 | @ungap/structured-clone | 1.4.0 | ISC |
 | @vitejs/plugin-react | 6.3.0 | MIT |
 | altcha | 3.6.0 | MIT |
@@ -154,7 +158,9 @@ Plattform-spezifische optionale Pakete (z. B. `@img/sharp-*`, `lightningcss-*`) 
 | astro | 7.4.12 | MIT |
 | axobject-query | 4.1.0 | Apache-2.0 |
 | bail | 2.0.2 | MIT |
+| base64-js | 1.5.1 | MIT |
 | boolbase | 1.0.0 | ISC |
+| buffer | 6.0.3 | MIT |
 | ccount | 2.0.1 | MIT |
 | character-entities-html4 | 2.1.0 | MIT |
 | character-entities-legacy | 3.0.0 | MIT |
@@ -206,6 +212,7 @@ Plattform-spezifische optionale Pakete (z. B. `@img/sharp-*`, `lightningcss-*`) 
 | fsevents | 2.3.3 | MIT |
 | get-tsconfig | 5.0.0-beta.6 | MIT |
 | github-slugger | 2.0.0 | ISC |
+| gsap | 3.15.1 | Standard 'no charge' license: https://gsap.com/standard-license. ⚑ |
 | h3 | 1.15.11 | MIT |
 | hash-wasm | 4.13.0 | MIT |
 | hast-util-to-html | 9.0.6 | MIT |
@@ -215,10 +222,13 @@ Plattform-spezifische optionale Pakete (z. B. `@img/sharp-*`, `lightningcss-*`) 
 | http-cache-semantics | 4.3.0 | BSD-2-Clause |
 | http-errors | 2.0.1 | MIT |
 | idb-keyval | 6.3.0 | Apache-2.0 |
+| ieee754 | 1.2.1 | BSD-3-Clause |
+| immer | 9.0.21 | MIT |
 | inherits | 2.0.4 | ISC |
 | iron-webcrypto | 1.2.1 | MIT |
 | is-docker | 4.0.0 | MIT |
 | is-plain-obj | 4.1.0 | MIT |
+| its-fine | 2.1.1 | MIT |
 | jsonc-parser | 3.3.1 | MIT |
 | libheif-js | 1.23.5 | LGPL-3.0 ⚑ |
 | lightningcss | 1.33.0 | MPL-2.0 ⚑ |
@@ -277,6 +287,7 @@ Plattform-spezifische optionale Pakete (z. B. `@img/sharp-*`, `lightningcss-*`) 
 | range-parser | 1.3.0 | MIT |
 | react | 19.3.1 | MIT |
 | react-dom | 19.3.1 | MIT |
+| react-use-measure | 2.1.7 | MIT |
 | readdirp | 5.1.1 | MIT |
 | regex | 6.1.0 | MIT |
 | regex-recursion | 6.0.2 | MIT |
@@ -301,7 +312,9 @@ Plattform-spezifische optionale Pakete (z. B. `@img/sharp-*`, `lightningcss-*`) 
 | statuses | 2.0.2 | MIT |
 | std-env | 4.3.0 | MIT |
 | stringify-entities | 4.0.4 | MIT |
+| suspend-react | 0.1.3 | MIT |
 | svgo | 4.1.0 | MIT |
+| three | 0.187.0 | MIT |
 | tiny-inflate | 1.0.3 | MIT |
 | tinyclip | 1.0.3 | MIT |
 | tinyexec | 1.3.1 | MIT |
@@ -324,6 +337,7 @@ Plattform-spezifische optionale Pakete (z. B. `@img/sharp-*`, `lightningcss-*`) 
 | unist-util-visit | 5.2.0 | MIT |
 | unist-util-visit-parents | 6.1.0 | MIT |
 | unstorage | 1.17.6 | MIT |
+| use-sync-external-store | 1.7.0 | MIT |
 | verkit | 0.5.0 | MIT |
 | vfile | 6.0.3 | MIT |
 | vfile-message | 4.0.4 | MIT |
@@ -333,9 +347,10 @@ Plattform-spezifische optionale Pakete (z. B. `@img/sharp-*`, `lightningcss-*`) 
 | yaml | 2.9.1 | ISC |
 | yocto-queue | 1.2.2 | MIT |
 | zod | 4.6.7 | MIT |
+| zustand | 5.1.0 | MIT |
 | zwitch | 2.0.4 | MIT |
 
-## Nur Entwicklung und Tests (257)
+## Nur Entwicklung und Tests (260)
 
 | Paket | Version | Lizenz |
 |---|---|---|
@@ -345,8 +360,8 @@ Plattform-spezifische optionale Pakete (z. B. `@img/sharp-*`, `lightningcss-*`) 
 | @astrojs/language-server | 2.17.3 | MIT |
 | @astrojs/yaml2ts | 0.2.4 | MIT |
 | @axe-core/playwright | 4.14.0 | MPL-2.0 ⚑ |
-| @babel/runtime | 7.29.14 | MIT |
 | @braintree/sanitize-url | 6.0.4 | MIT |
+| @dimforge/rapier3d-compat | 0.12.0 | Apache-2.0 |
 | @emmetio/abbreviation | 2.3.3 | MIT |
 | @emmetio/css-abbreviation | 2.1.8 | MIT |
 | @emmetio/css-parser | 0.4.1 | MIT |
@@ -388,6 +403,7 @@ Plattform-spezifische optionale Pakete (z. B. `@img/sharp-*`, `lightningcss-*`) 
 | @swc/helpers | 0.5.24 | Apache-2.0 |
 | @toeverything/y-indexeddb | 0.10.0-canary.9 | MIT |
 | @ts-gql/tag | 0.7.3 | MIT |
+| @tweenjs/tween.js | 23.1.3 | MIT |
 | @types/chai | 5.2.3 | MIT |
 | @types/debug | 4.1.13 | MIT |
 | @types/deep-eql | 4.0.2 | MIT |
@@ -397,6 +413,8 @@ Plattform-spezifische optionale Pakete (z. B. `@img/sharp-*`, `lightningcss-*`) 
 | @types/markdown-it | 12.2.3 | MIT |
 | @types/mdurl | 2.0.0 | MIT |
 | @types/ms | 2.1.0 | MIT |
+| @types/stats.js | 0.17.4 | MIT |
+| @types/three | 0.187.0 | MIT |
 | @types/unist | 2.0.11 | MIT |
 | @urql/core | 5.2.0 | MIT |
 | @urql/exchange-auth | 2.2.1 | MIT |
@@ -450,13 +468,13 @@ Plattform-spezifische optionale Pakete (z. B. `@img/sharp-*`, `lightningcss-*`) 
 | facepaint | 1.2.1 | MIT |
 | fast-deep-equal | 3.1.3 | MIT |
 | fast-uri | 3.1.9 | BSD-3-Clause |
+| fflate | 0.8.3 | MIT |
 | get-caller-file | 2.0.5 | ISC |
 | get-east-asian-width | 1.7.0 | MIT |
 | graphql | 16.15.0 | MIT |
 | graphql-tag | 2.12.7 | MIT |
 | idb | 7.1.1 | ISC |
 | ignore | 5.3.2 | MIT |
-| immer | 9.0.21 | MIT |
 | is-alphabetical | 2.0.1 | MIT |
 | is-alphanumerical | 2.0.1 | MIT |
 | is-decimal | 2.0.1 | MIT |
@@ -488,6 +506,7 @@ Plattform-spezifische optionale Pakete (z. B. `@img/sharp-*`, `lightningcss-*`) 
 | mdast-util-phrasing | 4.1.0 | MIT |
 | mdast-util-to-markdown | 2.2.3 | MIT |
 | mdast-util-to-string | 4.0.0 | MIT |
+| meshoptimizer | 1.1.1 | MIT |
 | micromark | 4.0.3 | MIT |
 | micromark-core-commonmark | 2.0.4 | MIT |
 | micromark-extension-gfm-autolink-literal | 2.1.0 | MIT |
@@ -560,7 +579,6 @@ Plattform-spezifische optionale Pakete (z. B. `@img/sharp-*`, `lightningcss-*`) 
 | typescript-auto-import-cache | 0.3.6 | MIT |
 | unist-util-position-from-estree | 2.0.0 | MIT |
 | urql | 4.2.2 | MIT |
-| use-sync-external-store | 1.7.0 | MIT |
 | vitest | 5.1.1 | MIT |
 | volar-service-css | 0.0.71 | MIT |
 | volar-service-emmet | 0.0.71 | MIT |

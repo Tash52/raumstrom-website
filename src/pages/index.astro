@@ -9,7 +9,9 @@ import Section from '../components/base/Section.astro';
 import CtaBand from '../components/sections/CtaBand.astro';
 import GewerkeListe from '../components/sections/GewerkeListe.astro';
 import Markdown from '../components/sections/Markdown.astro';
-import WandSchnitt from '../components/sections/WandSchnitt.astro';
+import HeroVisual from '../components/sections/HeroVisual.astro';
+import SaeulenJourney from '../components/sections/SaeulenJourney.astro';
+import WandSlider from '../components/sections/WandSlider.astro';
 import { getGewerke } from '../lib/content/index.ts';
 import { abschnitt, getFirma, getLeistungen, getSeite, SAEULEN_TEXT } from '../components/sections/seiten.ts';
 
@@ -41,30 +43,18 @@ const region = abschnitt(seite, 'region');
           <Button href="/raumplaner/" variante="sekundaer" groesse="l" icon="cube-3d-sphere">Raumplaner öffnen</Button>
         </div>
       </div>
-      <WandSchnitt class="hero-bild" />
+      <HeroVisual class="hero-bild" />
     </div>
   </section>
 
   <Section id={einstieg.id} titel={einstieg.titel} leitung>
     <Markdown text={einstieg.text} />
+    <WandSlider />
   </Section>
 
   <Section id={saeulenText.id} titel={saeulenText.titel} flaeche="kalk-tief" leitung>
     <Fragment slot="einleitung"><Markdown text={saeulenText.text} /></Fragment>
-    <div class="saeulen">
-      {
-        saeulen.map((s) => (
-          <Karte titel={s.titel} ebene={3} variante="flaeche">
-            <ul class="saeule-liste" role="list">
-              {s.liste.map((l) => (
-                <li><a href={`/leistungen/${l.id}/`}>{l.data.titel}</a></li>
-              ))}
-            </ul>
-            <GewerkeHinweis slot="fuss" gewerke={s.gewerke} />
-          </Karte>
-        ))
-      }
-    </div>
+    <SaeulenJourney saeulen={saeulen} />
   </Section>
 
   <Section id={eingaenge.id} titel={eingaenge.titel} leitung>
@@ -109,7 +99,7 @@ const region = abschnitt(seite, 'region');
   .hero-inner {
     display: grid;
     gap: var(--space-8);
-    align-items: center;
+    align-items: start; /* font swap in the text must not move the 3D visual (CLS) */
   }
 
   .hero-text {
@@ -134,30 +124,6 @@ const region = abschnitt(seite, 'region');
     }
   }
 
-  .saeulen {
-    display: grid;
-    gap: var(--space-5);
-  }
-
-  @media (min-width: 64em) {
-    .saeulen {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-  }
-
-  .saeule-liste {
-    display: grid;
-    gap: var(--space-2);
-  }
-
-  .saeule-liste a {
-    color: var(--text);
-    text-underline-offset: 0.22em;
-  }
-
-  .saeule-liste a:hover {
-    color: var(--accent-text);
-  }
 
   .eingaenge {
     display: grid;

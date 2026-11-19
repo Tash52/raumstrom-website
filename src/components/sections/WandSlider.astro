@@ -1,0 +1,341 @@
+---
+// Three-state slider "Vorher / Hinter der Wand / Nachher" (motion-3d). Schematic illustrations as
+// inline SVG (classes only, CSP). Without JS: native radio group, keyboard with arrow keys, CSS switches
+// the state via :has(). src/lib/motion/slider.ts adds dragging on the picture (continuous wipe).
+interface Props {
+  id?: string;
+  class?: string;
+}
+const { id = 'wand-zustand', class: className } = Astro.props;
+const ZUSTAENDE = [
+  { wert: 0, label: 'Vorher', text: 'Vorher: Leitungen auf Putz, alte Dosen, Risse in der Wand.' },
+  {
+    wert: 1,
+    label: 'Hinter der Wand',
+    text: 'Hinter der Wand: neue Leitungen in den Installationszonen, Dosen und Unterverteilung, bevor die Wand geschlossen wird.',
+  },
+  { wert: 2, label: 'Nachher', text: 'Nachher: geschlossene, gestrichene Wand mit neuen Dosen, Schalter und Deckenlicht.' },
+];
+const p = id; // prefix for SVG ids (unique per page)
+---
+<figure class:list={['wslider', className]} data-wslider>
+  <div class="wslider-buehne" data-wslider-buehne>
+    <svg class="wslider-bild wslider-vorher" viewBox="0 0 640 400" role="img" aria-labelledby={`${p}-t0`} focusable="false">
+      <title id={`${p}-t0`}>Vorher: Wand mit Aufputz-Kanal, alter Dose und Rissen im Putz</title>
+      <rect class="v-wand" width="640" height="340" />
+      <ellipse class="v-fleck" cx="180" cy="80" rx="70" ry="34" />
+      <ellipse class="v-fleck" cx="540" cy="270" rx="60" ry="40" />
+      <path class="v-riss" d="M520 0 L506 40 L522 70 L500 118 L512 150" />
+      <path class="v-riss" d="M90 340 L104 300 L92 270 L110 236" />
+      <rect class="v-kanal" x="0" y="104" width="306" height="14" />
+      <rect class="v-kanal" x="292" y="104" width="14" height="128" />
+      <rect class="v-kanal" x="306" y="104" width="172" height="14" />
+      <rect class="v-kanal" x="464" y="118" width="14" height="56" />
+      <g transform="rotate(-6 299 252)">
+        <rect class="v-dose" x="280" y="232" width="38" height="40" rx="5" />
+        <circle class="v-loch" cx="292" cy="252" r="3" />
+        <circle class="v-loch" cx="306" cy="252" r="3" />
+      </g>
+      <rect class="v-dose" x="455" y="174" width="32" height="36" rx="4" />
+      <rect class="v-loch" x="467" y="184" width="8" height="16" />
+      <path class="v-draht" d="M420 0 V58" />
+      <circle class="v-birne" cx="420" cy="68" r="11" />
+      <rect class="v-boden" y="340" width="640" height="60" />
+      <path class="v-fuge" d="M0 370 H640 M120 340 V370 M330 340 V370 M520 340 V370 M40 370 V400 M250 370 V400 M440 370 V400" />
+      <g class="v-text" aria-hidden="true">
+        <text x="16" y="96">Aufputz-Kanal</text>
+        <text x="330" y="290">alte Dose</text>
+        <text x="530" y="168">Risse</text>
+      </g>
+    </svg>
+    <svg class="wslider-bild wslider-hinter" viewBox="0 0 640 400" role="img" aria-labelledby={`${p}-t1`} focusable="false">
+      <title id={`${p}-t1`}>Hinter der Wand: Mauerwerk mit neuen Leitungen in den Installationszonen, Dosen und Unterverteilung</title>
+      <defs>
+        <pattern id={`${p}-ziegel`} width="64" height="32" patternUnits="userSpaceOnUse">
+          <path class="h-fuge" d="M0 0 H64 M0 16 H64 M0 32 H64 M32 0 V16 M0 16 V32 M64 16 V32" />
+        </pattern>
+      </defs>
+      <rect class="h-mauer" width="640" height="340" />
+      <rect width="640" height="340" fill={`url(#${p}-ziegel)`} />
+      <rect class="h-zone" x="0" y="26" width="640" height="38" />
+      <rect class="h-zone" x="282" y="64" width="38" height="276" />
+      <rect class="h-zone" x="452" y="64" width="38" height="276" />
+      <rect class="h-uv" x="34" y="150" width="86" height="130" rx="3" />
+      <rect class="h-sicherung" x="48" y="172" width="12" height="26" />
+      <rect class="h-sicherung" x="64" y="172" width="12" height="26" />
+      <rect class="h-sicherung" x="80" y="172" width="12" height="26" />
+      <rect class="h-sicherung" x="96" y="172" width="12" height="26" />
+      <rect class="h-sicherung" x="48" y="214" width="12" height="26" />
+      <rect class="h-sicherung" x="64" y="214" width="12" height="26" />
+      <path class="h-glow" d="M77 150 V45 H471 V191 M301 45 V251 M420 45 V8" />
+      <path class="h-kabel" d="M77 150 V45 H471 V191 M301 45 V251 M420 45 V8" />
+      <circle class="h-dose" cx="301" cy="252" r="17" />
+      <circle class="h-dose" cx="471" cy="192" r="15" />
+      <circle class="h-punkt" cx="301" cy="252" r="5" />
+      <circle class="h-punkt" cx="471" cy="192" r="5" />
+      <circle class="h-punkt" cx="420" cy="8" r="5" />
+      <rect class="h-estrich" y="340" width="640" height="60" />
+      <g class="h-text" aria-hidden="true">
+        <text x="500" y="20">Installationszone</text>
+        <text x="34" y="300">Unterverteilung</text>
+        <text x="330" y="270">Dose</text>
+        <text x="140" y="38">Leitung</text>
+      </g>
+    </svg>
+    <svg class="wslider-bild wslider-nachher" viewBox="0 0 640 400" role="img" aria-labelledby={`${p}-t2`} focusable="false">
+      <title id={`${p}-t2`}>Nachher: gestrichene Wand mit neuer Steckdose, Schalter und Deckenleuchte</title>
+      <defs>
+        <radialGradient id={`${p}-licht`} cx="0.5" cy="0" r="0.8">
+          <stop offset="0" class="n-licht-a" />
+          <stop offset="1" class="n-licht-b" />
+        </radialGradient>
+      </defs>
+      <rect class="n-wand" width="640" height="340" />
+      <ellipse cx="420" cy="80" rx="230" ry="180" fill={`url(#${p}-licht)`} />
+      <rect class="n-bild" x="120" y="120" width="120" height="86" />
+      <rect class="n-bild-innen" x="132" y="132" width="96" height="62" />
+      <path class="n-draht" d="M420 0 V44" />
+      <path class="n-lampe" d="M396 66 A24 24 0 0 1 444 66 Z" />
+      <rect class="n-dose" x="282" y="233" width="38" height="38" rx="3" />
+      <circle class="n-ring" cx="301" cy="252" r="11" />
+      <circle class="n-punkt" cx="301" cy="252" r="3" />
+      <rect class="n-dose" x="453" y="174" width="36" height="36" rx="3" />
+      <rect class="n-wippe" x="461" y="182" width="20" height="20" rx="2" />
+      <rect class="n-leiste" y="328" width="640" height="12" />
+      <rect class="n-boden" y="340" width="640" height="60" />
+      <path class="n-fuge" d="M0 360 H640 M0 380 H640 M90 340 V360 M260 340 V360 M470 340 V360 M180 360 V380 M380 360 V380 M560 360 V380 M60 380 V400 M300 380 V400 M520 380 V400" />
+      <g class="n-text" aria-hidden="true">
+        <text x="330" y="290">neue Dose</text>
+        <text x="500" y="226">Schalter</text>
+      </g>
+    </svg>
+    <span class="wslider-griff" aria-hidden="true"></span>
+  </div>
+  <fieldset class="wslider-wahl">
+    <legend class="visually-hidden">Zustand der Wand anzeigen</legend>
+    {
+      ZUSTAENDE.map((z) => (
+        <label class="wslider-option">
+          <input type="radio" name={id} value={String(z.wert)} checked={z.wert === 0} />
+          <span>{z.label}</span>
+        </label>
+      ))
+    }
+  </fieldset>
+  <figcaption class="wslider-text" aria-live="polite">
+    {ZUSTAENDE.map((z) => <span class="wslider-satz" data-zustand={String(z.wert)}>{z.text}</span>)}
+    <span class="wslider-hinweis">Schematische Darstellung.</span>
+  </figcaption>
+</figure>
+
+<style>
+  @property --wpos {
+    syntax: '<number>';
+    inherits: true;
+    initial-value: 0;
+  }
+
+  .wslider {
+    --wpos: 0;
+    margin: var(--space-7) 0 0;
+    display: grid;
+    gap: var(--space-4);
+    max-width: 56rem;
+    transition: --wpos 720ms cubic-bezier(0.77, 0, 0.175, 1);
+  }
+
+  .wslider:has(input[value='1']:checked) {
+    --wpos: 1;
+  }
+
+  .wslider:has(input[value='2']:checked) {
+    --wpos: 2;
+  }
+
+  .wslider:global(.wslider-zieht) {
+    transition: none;
+  }
+
+  .wslider-buehne {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    border-radius: var(--radius-s);
+    container-type: inline-size;
+    background: var(--color-graphit-2);
+  }
+
+  .wslider:global(.wslider-js) .wslider-buehne {
+    cursor: grab;
+    touch-action: pan-y;
+    user-select: none;
+  }
+
+  .wslider:global(.wslider-zieht) .wslider-buehne {
+    cursor: grabbing;
+  }
+
+  .wslider-bild {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Layers above wipe in from the left: Hinter der Wand over Vorher (0→1), Nachher over it (1→2). */
+  .wslider-hinter {
+    clip-path: inset(0 calc((1 - clamp(0, var(--wpos), 1)) * 100%) 0 0);
+  }
+
+  .wslider-nachher {
+    clip-path: inset(0 calc((1 - clamp(0, var(--wpos) - 1, 1)) * 100%) 0 0);
+  }
+
+  .wslider-griff {
+    position: absolute;
+    inset-block: 0;
+    left: -1.5px;
+    width: 3px;
+    background: var(--color-strom);
+    box-shadow: 0 0 14px 3px rgb(197 240 30 / 0.55);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  @supports (width: calc(mod(3px, 2px))) {
+    .wslider-griff {
+      translate: calc(mod(var(--wpos), 1) * 100cqw) 0;
+      opacity: calc(min(mod(var(--wpos), 1), 1 - mod(var(--wpos), 1)) * 14);
+    }
+  }
+
+  .wslider-wahl {
+    display: inline-flex;
+    flex-wrap: wrap;
+    justify-self: start;
+    gap: 0;
+    margin: 0;
+    padding: 0;
+    border: var(--border-strong) solid var(--text);
+    border-radius: var(--radius-s);
+  }
+
+  .wslider-option {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    padding: var(--space-2) var(--space-4);
+    font-weight: var(--weight-ui);
+    font-stretch: var(--wdth-ui);
+    cursor: pointer;
+    transition:
+      background-color 160ms ease,
+      color 160ms ease;
+  }
+
+  .wslider-option + .wslider-option {
+    border-left: var(--border) solid var(--text);
+  }
+
+  .wslider-option input {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .wslider-option:has(input:checked) {
+    background: var(--text);
+    color: var(--surface);
+  }
+
+  .wslider-option:has(input:focus-visible) {
+    outline: 3px solid var(--focus);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 6px var(--focus-glow);
+    z-index: 1;
+  }
+
+  @media (hover: hover) {
+    .wslider-option:not(:has(input:checked)):hover {
+      background: var(--surface-2);
+    }
+  }
+
+  .wslider-text {
+    color: var(--text-muted);
+    max-width: 60ch;
+  }
+
+  .wslider-satz {
+    display: none;
+    color: var(--text);
+  }
+
+  .wslider:has(input[value='0']:checked) .wslider-satz[data-zustand='0'],
+  .wslider:has(input[value='1']:checked) .wslider-satz[data-zustand='1'],
+  .wslider:has(input[value='2']:checked) .wslider-satz[data-zustand='2'] {
+    display: inline;
+  }
+
+  .wslider-hinweis {
+    margin-left: 0.4em;
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+  }
+
+  /* --- Illustration colours --- */
+  .v-wand { fill: #d8cfb9; }
+  .v-fleck { fill: #c5b99c; opacity: 0.55; }
+  .v-riss { fill: none; stroke: #8f846c; stroke-width: 2; stroke-linejoin: round; }
+  .v-kanal { fill: #b9b2a4; stroke: #9a9385; stroke-width: 1; }
+  .v-dose { fill: #ece4cf; stroke: #8f866f; stroke-width: 2; }
+  .v-loch { fill: #5b564b; }
+  .v-draht { stroke: #4b4a45; stroke-width: 2; }
+  .v-birne { fill: #efe7c9; stroke: #8f866f; stroke-width: 2; }
+  .v-boden { fill: #7d6d58; }
+  .v-fuge { fill: none; stroke: #66584a; stroke-width: 2; }
+  .v-text text,
+  .h-text text,
+  .n-text text {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    letter-spacing: 0.02em;
+  }
+  .v-text text { fill: #3f3a31; }
+
+  .h-mauer { fill: var(--color-graphit-2); }
+  .h-fuge { fill: none; stroke: var(--color-kalk); stroke-opacity: 0.16; stroke-width: 1.5; }
+  .h-zone { fill: rgb(244 241 235 / 0.04); stroke: var(--color-kalk); stroke-opacity: 0.4; stroke-width: 1.5; stroke-dasharray: 6 6; }
+  .h-uv { fill: var(--color-graphit); stroke: var(--color-kalk); stroke-opacity: 0.7; stroke-width: 2; }
+  .h-sicherung { fill: var(--color-kalk); opacity: 0.85; }
+  .h-glow { fill: none; stroke: var(--color-strom); stroke-opacity: 0.28; stroke-width: 14; stroke-linejoin: round; }
+  .h-kabel { fill: none; stroke: var(--color-strom); stroke-width: 5; stroke-linejoin: round; }
+  .h-dose { fill: var(--color-graphit); stroke: var(--color-kalk); stroke-width: 2.5; }
+  .h-punkt { fill: var(--color-strom); }
+  .h-estrich { fill: #3f454b; }
+  .h-text text { fill: var(--color-kalk); }
+
+  .n-wand { fill: var(--color-kalk); }
+  .n-licht-a { stop-color: #fff8dc; stop-opacity: 0.9; }
+  .n-licht-b { stop-color: #fff8dc; stop-opacity: 0; }
+  .n-bild { fill: var(--color-graphit); }
+  .n-bild-innen { fill: var(--color-kalk-tief); }
+  .n-draht { stroke: var(--color-graphit); stroke-width: 2; }
+  .n-lampe { fill: var(--color-graphit); }
+  .n-dose { fill: #fbfaf7; stroke: #b9b2a4; stroke-width: 1.5; }
+  .n-ring { fill: none; stroke: #b9b2a4; stroke-width: 1.5; }
+  .n-punkt { fill: var(--color-strom); stroke: var(--color-kabelgruen); stroke-width: 1; }
+  .n-wippe { fill: #f1eee7; stroke: #c9c3b6; stroke-width: 1; }
+  .n-leiste { fill: #fbfaf7; }
+  .n-boden { fill: #cdb894; }
+  .n-fuge { fill: none; stroke: #b49f79; stroke-width: 1.5; }
+  .n-text text { fill: var(--color-grau-text); }
+
+  @media (forced-colors: active) {
+    .h-kabel { stroke: CanvasText; }
+    .wslider-option:has(input:checked) { outline: 3px solid Highlight; }
+  }
+</style>
