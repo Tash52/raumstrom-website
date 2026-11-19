@@ -12,9 +12,17 @@ import type { NeuesBild } from '../uploads/bild.ts';
 
 const zeigbar = (v: string | undefined) => Boolean(v) && !isPlaceholder(v);
 
-/** Display name for Reply-To: printable, no quotes/angle brackets/commas, so the address cannot change. */
+/**
+ * Display name for Reply-To: printable, no quotes/angle brackets/commas, so the address cannot change.
+ * Control and format characters (incl. bidi overrides, zero-width, line/paragraph separators) and the
+ * RFC 2047 markers `=?` / `?=` are neutralised (SECURITY-REPORT L-3): some clients decode encoded
+ * words even inside quoted strings and would show a display name of the sender's choosing.
+ */
 export function anzeigeName(name: string): string {
-  return name.replace(/[\p{Cc}"<>,;:\\@]/gu, ' ').replace(/\s+/g, ' ').trim().slice(0, 100);
+  const ohneSteuer = name.replace(/[\p{Cc}\p{Cf}\p{Zl}\p{Zp}\p{Co}\p{Cn}"<>,;:\\@]/gu, ' ');
+  // Replacing with a space can never create a new "=?" or "?=" pair.
+  const ohneEncodedWord = ohneSteuer.replace(/=\?|\?=/g, ' ');
+  return Array.from(ohneEncodedWord.replace(/\s+/g, ' ').trim()).slice(0, 100).join('').trim();
 }
 
 export interface AnfrageKontext {

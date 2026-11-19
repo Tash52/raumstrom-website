@@ -3,7 +3,7 @@
 import { getServerEnv } from '../../../server/env.mjs';
 import { altchaSchluessel, type AltchaSchluessel } from './altcha.ts';
 import { ableiten, clientAdresse, clientSchluessel } from './schluessel.ts';
-import { EinmalSpeicher, Parallelitaet, RateLimiter, type LimitErgebnis } from './speicher.ts';
+import { EinmalSpeicher, Parallelitaet, RateLimiter, SchluesselParallelitaet, type LimitErgebnis } from './speicher.ts';
 
 export interface ApiEnv {
   TRUST_PROXY: boolean;
@@ -42,7 +42,12 @@ export function apiKontext(): ApiKontext {
 }
 
 const MIN = 60_000;
-/** Limits per client network (keyed hash). Values: see docs/agent-reports/2-backend-api.md. */
+/**
+ * Limits. Values and reasoning: docs/agent-reports/2-backend-api.md and 2-backend-api-fixes.md.
+ * Only `kontakt` (per client) counts every attempt. `kontaktGesamt` protects the SMTP quota and counts
+ * only requests that passed origin, CSRF, validation and ALTCHA (SECURITY-REPORT H-1), so rejected
+ * requests can never lock out legitimate users.
+ */
 export const LIMITS = {
   kontakt: new RateLimiter(5, 15 * MIN),
   kontaktGesamt: new RateLimiter(60, 60 * MIN),
@@ -53,12 +58,24 @@ export const LIMITS = {
    * 23 h so that the hash is deleted within 24 h (window + cleanup interval, see speicher.ts).
    */
   bestaetigung: new RateLimiter(2, 23 * 60 * MIN),
+  /** All confirmation mails together (L-4): caps backscatter to third-party addresses. */
+  bestaetigungGesamt: new RateLimiter(20, 60 * MIN),
 };
 export const EINMAL = new EinmalSpeicher();
-export const PARALLEL = new Parallelitaet(4);
+/** Reading request bodies (memory: at most 8 x MAX_BODY); per client at most 2 at a time. */
+export const ANNAHME = new Parallelitaet(8);
+export const ANNAHME_PRO_CLIENT = new SchluesselParallelitaet(2);
+/** Expensive work after all checks (image re-encoding, SMTP); short queue instead of an instant 503. */
+export const PARALLEL = new Parallelitaet(4, 8);
+export const PARALLEL_WARTEZEIT_MS = 20_000;
+
+/** Pseudonymous rate-limit key of the client (keyed hash of its network). */
+export function clientKennung(request: Request, socketAdresse: string | undefined, k: ApiKontext): string {
+  return clientSchluessel(k.clientKey, clientAdresse(request, socketAdresse, k.env.TRUST_PROXY));
+}
 
 export function begrenze(limiter: RateLimiter, request: Request, socketAdresse: string | undefined, k: ApiKontext): LimitErgebnis {
-  return limiter.pruefe(clientSchluessel(k.clientKey, clientAdresse(request, socketAdresse, k.env.TRUST_PROXY)));
+  return limiter.pruefe(clientKennung(request, socketAdresse, k));
 }
 
 export const KEIN_CACHE = { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' } as const;

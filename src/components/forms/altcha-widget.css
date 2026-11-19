@@ -17,3 +17,11 @@ altcha-widget {
   display: block;
   font-family: var(--font-sans);
 }
+
+/*
+ * Mount point: never give it the class "altcha". altcha.css hides `.altcha` (display: none) and resets
+ * all descendants (`.altcha * { all: revert-layer }`), which hid the widget and the noscript note (QA B1).
+ */
+[data-altcha-platz] {
+  display: block;
+}

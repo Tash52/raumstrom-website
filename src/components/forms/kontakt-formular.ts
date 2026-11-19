@@ -2,6 +2,7 @@
 // Without this script the form still works with native validation and a plain POST.
 import { FELD, type KontaktAntwort } from './kontakt-schnittstelle.ts';
 import type { AltchaElement } from './altcha-widget.ts';
+import { erstesFehlerfeld, fehlerName } from './formular-hilfen.ts';
 
 const form = document.getElementById('kontakt-formular') as HTMLFormElement | null;
 
@@ -49,8 +50,9 @@ if (form) {
   const fehlerEl = (name: string) => document.getElementById(`feld-${name}-fehler`);
 
   function labelText(el: HTMLElement): string {
-    const l = el.id ? document.querySelector(`label[for="${el.id}"]`) : null;
-    return (l?.firstChild?.textContent ?? el.getAttribute('name') ?? '').trim();
+    const name = el.getAttribute('name') ?? '';
+    const l = el.id ? document.querySelector(`label[for="${CSS.escape(el.id)}"]`) : null;
+    return fehlerName(name, l, el.dataset.fehlername);
   }
 
   function setFehler(name: string, text: string) {
@@ -103,7 +105,13 @@ if (form) {
       summaryListe.append(li);
     }
     summary.hidden = false;
-    summary.focus();
+    // Focus goes to the first field with an error (document order); the summary (role=alert) is
+    // announced anyway and its links lead to every field. Without field errors: focus the summary.
+    const reihenfolge = [...form!.elements].map((e) => e.getAttribute('name') ?? '').filter(Boolean);
+    const erstes = erstesFehlerfeld(reihenfolge, fehler);
+    const ziel = erstes ? feld(erstes) : null;
+    if (ziel && !ziel.disabled) ziel.focus();
+    else summary.focus();
   }
 
   function pruefe(): Record<string, string> {
