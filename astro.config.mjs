@@ -1,5 +1,6 @@
 // @ts-check
 import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { defineConfig, fontProviders } from 'astro/config';
 import node from '@astrojs/node';
 import react from '@astrojs/react';
@@ -8,6 +9,7 @@ import { parse } from 'yaml';
 import { CSP_DIRECTIVES } from './server/csp.mjs';
 import { siteConfig } from './server/site.mjs';
 import { indexierbar } from './scripts/lib/noindex.mjs';
+import { precompress } from './scripts/lib/precompress.mjs';
 
 // Single source for the domain: src/content/settings/firma.yaml
 const { domain } = parse(readFileSync(new URL('./src/content/settings/firma.yaml', import.meta.url), 'utf8'));
@@ -67,6 +69,22 @@ function stagingOnlyPages() {
           await rm(new URL(`.${route}`, dir), { recursive: true, force: true });
           logger.info(`${route} nicht im Produktions-Build (nur dev/staging)`);
         }
+      },
+    },
+  };
+}
+
+// Last build step (keep last in `integrations`, hooks run in order): .br/.gz for text files,
+// served by server/static.mjs according to Accept-Encoding.
+/** @returns {import('astro').AstroIntegration} */
+function precompressStatic() {
+  return {
+    name: 'raumstrom:precompress',
+    hooks: {
+      'astro:build:done': async ({ dir, logger }) => {
+        const r = await precompress(fileURLToPath(dir));
+        const kb = (/** @type {number} */ n) => `${Math.round(n / 1024)} KB`;
+        logger.info(`${r.written} vorkomprimierte Dateien (${r.files} Quellen, ${kb(r.bytesIn)} -> br ${kb(r.bytesBr)})`);
       },
     },
   };
@@ -133,6 +151,7 @@ export default defineConfig({
     sitemap({ filter: (page) => (clientDir ? indexierbar(clientDir, page) : false) }),
     keystaticDevOnly(),
     stagingOnlyPages(),
+    precompressStatic(),
   ],
   // Cast: the config type cannot infer provider options from a variable (runtime validated by Astro).
   fonts: /** @type {any} */ (FONTS),
