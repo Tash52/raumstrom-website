@@ -198,8 +198,9 @@
   cursor: pointer;
 }
 
+/* Hidden until a loop runs, but keeps its space so showing it never shifts the layout (CLS). */
 .motion-pause[hidden] {
-  display: none;
+  visibility: hidden;
 }
 
 .motion-pause:hover {

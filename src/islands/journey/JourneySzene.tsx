@@ -1,4 +1,4 @@
-// 3D stage of the "Säulen" journey: a turntable with one object per pillar, scrubbed by scroll.
+// 3D stage of the "Säulen" journey: one object per pillar on a rail, scrubbed by scroll.
 // 0 Modernisieren: the RAUMSTROM mark as a room (floor plan with door, cable comes in, ends in a dot)
 // 1 Elektrifizieren: wallbox with charging cable
 // 2 Sicher betreiben: test device with probes and a test record (Prüfprotokoll)
@@ -23,8 +23,8 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 import { FARBE, kabelMaterial } from '../hero/kabel-material.ts';
 import { Takt, daempfung, type SzenenSteuerung } from '../hero/takt.tsx';
 
-const SCHRITT = (Math.PI * 2) / 3;
-const RADIUS = 2.3;
+/** Objects sit on a rail that moves in step with the horizontal text track. */
+const ABSTAND = 3.2;
 
 function useAufraeumen(dinge: Array<BufferGeometry | Material>) {
   useEffect(() => () => dinge.forEach((d) => d.dispose()), [dinge]);
@@ -211,10 +211,9 @@ function Pruefung({ m }: { m: Mat }) {
   );
 }
 
-function Drehteller({ s }: { s: SzenenSteuerung }) {
+function Schiene({ s }: { s: SzenenSteuerung }) {
   const m = useMaterialien();
   useAufraeumen(Object.values(m));
-  const teller = useRef<Group>(null);
   const objekte = useRef<Array<Group | null>>([]);
   const t = useRef(s.ziel);
   const zeit = useRef(0);
@@ -223,15 +222,14 @@ function Drehteller({ s }: { s: SzenenSteuerung }) {
     if (s.poster) t.current = s.ziel;
     else t.current += (s.ziel - t.current) * daempfung(dt, 6);
     if (!s.pausiert && !s.poster) zeit.current += dt;
-    if (teller.current) teller.current.rotation.y = -t.current * SCHRITT;
     objekte.current.forEach((o, i) => {
       if (!o) return;
-      const abstand = Math.min(1, Math.abs(t.current - i));
-      const sk = 1 - 0.55 * abstand;
-      o.scale.setScalar(sk);
-      o.visible = s.poster ? i === Math.round(s.ziel) : abstand < 0.999;
-      o.rotation.y = Math.sin(zeit.current * 0.6 + i) * 0.12;
-      o.position.y = Math.sin(zeit.current * 0.9 + i * 2) * 0.04;
+      const d = i - t.current; // −1 … 1 around the active object
+      const abstand = Math.min(1, Math.abs(d));
+      o.position.set(d * ABSTAND, Math.sin(zeit.current * 0.9 + i * 2) * 0.04, -abstand * 1.2);
+      o.rotation.set(0, d * 0.7 + Math.sin(zeit.current * 0.6 + i) * 0.12, 0);
+      o.scale.setScalar(1 - 0.3 * abstand);
+      o.visible = s.poster ? i === Math.round(s.ziel) : Math.abs(d) < 1.4;
     });
     m.kabel.uniforms.uZeit!.value = zeit.current;
     m.glow.opacity = 0.28 + 0.1 * Math.sin(zeit.current * 2.2);
@@ -242,18 +240,15 @@ function Drehteller({ s }: { s: SzenenSteuerung }) {
   return (
     <>
       <Takt s={s} schritt={schritt} />
-      <group ref={teller} position={[0, 0, -RADIUS]}>
+      <group>
         {inhalte.map((Inhalt, i) => (
-          <group key={i} rotation={[0, i * SCHRITT, 0]}>
-            <group position={[0, 0, RADIUS]}>
-              <group
-                ref={(el) => {
-                  objekte.current[i] = el;
-                }}
-              >
-                <Inhalt m={m} />
-              </group>
-            </group>
+          <group
+            key={i}
+            ref={(el) => {
+              objekte.current[i] = el;
+            }}
+          >
+            <Inhalt m={m} />
           </group>
         ))}
       </group>
@@ -277,7 +272,7 @@ export function JourneySzene({ s, dpr }: { s: SzenenSteuerung; dpr: [number, num
       <hemisphereLight args={['#fbfaf7', '#6b6458', 1.5]} />
       <directionalLight position={[-3, 4, 5]} intensity={2.1} />
       <directionalLight position={[3, 1, -2]} intensity={0.6} />
-      <Drehteller s={s} />
+      <Schiene s={s} />
     </Canvas>
   );
 }

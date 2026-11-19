@@ -19,18 +19,14 @@ function leitungen(ctx: gsap.Context) {
   ctx.add(() => {
     for (const linie of document.querySelectorAll<HTMLElement>('[data-leitung]')) {
       const section = linie.closest('section') ?? linie.parentElement!;
-      gsap.fromTo(
-        linie,
-        { scaleY: 0 },
-        {
-          scaleY: 1,
-          ease: 'none',
-          scrollTrigger: { trigger: section, start: KOPF, end: 'bottom 82%', scrub: 0.35 },
-        },
-      );
+      // Opacity snaps in at the start so the glow is not smeared while the line has zero height.
+      gsap
+        .timeline({ scrollTrigger: { trigger: section, start: KOPF, end: 'bottom 82%', scrub: 0.35 } })
+        .fromTo(linie, { scaleY: 0 }, { scaleY: 1, ease: 'none', duration: 1 }, 0)
+        .fromTo(linie, { opacity: 0 }, { opacity: 1, ease: 'none', duration: 0.02 }, 0);
       const knoten = section.querySelector<HTMLElement>('[data-leitung-knoten]');
       if (knoten) {
-        ScrollTrigger.create({ trigger: knoten, start: KOPF, toggleClass: { targets: knoten, className: 'ist-an' } });
+        ScrollTrigger.create({ trigger: knoten, start: KOPF, end: 'max', toggleClass: { targets: knoten, className: 'ist-an' } });
       }
     }
   });
@@ -65,7 +61,7 @@ function prozesse(ctx: gsap.Context) {
         },
       );
       for (const s of schritte) {
-        ScrollTrigger.create({ trigger: s, start: 'top 70%', toggleClass: { targets: s, className: 'ist-an' } });
+        ScrollTrigger.create({ trigger: s, start: 'top 70%', end: 'max', toggleClass: { targets: s, className: 'ist-an' } });
       }
     }
   });

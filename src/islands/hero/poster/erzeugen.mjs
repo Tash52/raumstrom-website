@@ -8,6 +8,7 @@
 // Uses SwiftShader (software WebGL) when no GPU is present; ?poster=… skips the weak-device checks.
 import { chromium } from '@playwright/test';
 import { fileURLToPath } from 'node:url';
+import sharp from 'sharp';
 
 const basis = process.argv[2] ?? 'http://127.0.0.1:4321';
 const ziel = (name) => fileURLToPath(new URL(name, import.meta.url));
@@ -21,6 +22,7 @@ const AUFTRAEGE = [
     warten: '[data-journey-zustand="poster-fertig"]',
     element: '[data-journey] .journey-buehne',
     datei: journeyZiel(i),
+    quadrat: true,
   })),
 ];
 
@@ -35,7 +37,12 @@ try {
     await el.scrollIntoViewIfNeeded();
     await page.waitForSelector(a.warten, { state: 'attached', timeout: 60_000 });
     await page.waitForTimeout(1200); // poster image fade-out under the canvas
-    await el.screenshot({ path: a.datei, animations: 'disabled' });
+    const png = await el.screenshot({ animations: 'disabled' });
+    // Subpixel layout can add a pixel row; journey stills are exactly square.
+    const bild = sharp(png);
+    const { width, height } = await bild.metadata();
+    const seite = Math.min(width, height);
+    await (a.quadrat ? bild.extract({ left: 0, top: 0, width: seite, height: seite }) : bild).png({ compressionLevel: 9 }).toFile(a.datei);
     console.log(`${a.datei}`);
     await page.close();
   }

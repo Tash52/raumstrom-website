@@ -1,7 +1,7 @@
 ---
 // The three pillars as a customer journey (motion-3d). Static markup = an ordered list of three cards
 // with a poster each (works without JS, on touch and with reduced motion). On desktop with motion,
-// src/islands/journey/steuerung.ts pins the block and scrolls the cards horizontally; a 3D turntable
+// src/islands/journey/steuerung.ts pins the block and scrolls the cards horizontally; a 3D stage
 // (room, wallbox, test device) runs on the stage when the device allows it, posters underneath.
 import { Picture } from 'astro:assets';
 import GewerkeHinweis from '../base/GewerkeHinweis.astro';
@@ -157,7 +157,7 @@ const ALT = [
     color: var(--accent-text);
   }
 
-  .journey-pause {
+  .journey :global(.journey-pause) {
     margin-top: var(--space-5);
   }
 
@@ -281,12 +281,14 @@ const ALT = [
 
   .journey:global(.journey-aktiv) .journey-fenster {
     overflow: hidden;
+    overflow: clip; /* no focus-induced scrolling of the window; the track moves by transform only */
     min-height: 0;
     display: flex;
   }
 
   .journey:global(.journey-aktiv) .journey-spur {
     display: flex;
+    flex: 0 0 auto;
     gap: 0;
     width: calc(var(--n) * 100%);
     will-change: transform;
@@ -295,6 +297,8 @@ const ALT = [
   .journey:global(.journey-aktiv) .journey-panel {
     flex: 0 0 calc(100% / var(--n));
     align-content: center;
+    max-height: 100%;
+    overflow-y: auto; /* never cut content if a pillar gets a long list */
     padding-right: var(--space-6);
     opacity: 0.3;
     transition: opacity 360ms ease;
@@ -310,14 +314,11 @@ const ALT = [
   }
 
   .journey:global(.journey-aktiv) .journey-titel {
-    font-size: var(--step-5);
+    font-size: var(--step-4);
+    font-stretch: 112%;
   }
 
-  .journey:global(.journey-aktiv) .journey-liste {
-    font-size: var(--step-1);
-  }
-
-  .journey:global(.journey-aktiv) .journey-pause {
+  .journey:global(.journey-aktiv) :global(.journey-pause) {
     margin-top: 0;
     justify-self: start;
   }
