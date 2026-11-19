@@ -35,6 +35,9 @@ const eintraege = await Promise.all(gewerke.map((id) => getGewerk(id)));
   .gewerke-liste {
     display: grid;
     gap: 0;
+    list-style: none;
+    margin: 0;
+    padding: 0;
     max-width: 40rem;
     border-top: var(--border) solid var(--line-strong);
   }
