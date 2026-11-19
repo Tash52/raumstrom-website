@@ -20,9 +20,9 @@ export function gleich(a: string, b: string): boolean {
 
 /**
  * Normalises a client address for rate limiting: IPv4 as is, IPv6 reduced to its /64 prefix
- * (one subscriber usually owns a whole /64). IPv4-mapped IPv6 becomes IPv4.
+ * (one subscriber usually owns a whole /64; /48 for the coarser network limit). IPv4-mapped IPv6 becomes IPv4.
  */
-export function netzKennung(ip: string): string {
+export function netzKennung(ip: string, praefix: 64 | 48 = 64): string {
   let a = ip.trim();
   if (a.startsWith('::ffff:') && isIP(a.slice(7)) === 4) a = a.slice(7);
   if (isIP(a) === 4) return a;
@@ -32,7 +32,7 @@ export function netzKennung(ip: string): string {
   const rechts = rest ? rest.split(':') : [];
   const fehlend = rest === undefined ? 0 : 8 - links.length - rechts.length;
   const gruppen = [...links, ...Array(Math.max(0, fehlend)).fill('0'), ...rechts];
-  return `${gruppen.slice(0, 4).map((g) => g.padStart(4, '0')).join(':')}::/64`;
+  return `${gruppen.slice(0, praefix / 16).map((g) => g.padStart(4, '0')).join(':')}::/${praefix}`;
 }
 
 /**
@@ -51,4 +51,13 @@ export function clientAdresse(request: Request, socketAdresse: string | undefine
 /** Keyed, truncated hash of the client network; cannot be reversed without the secret. */
 export function clientSchluessel(key: Buffer, adresse: string): string {
   return hmacB64(key, netzKennung(adresse)).slice(0, 22);
+}
+
+/**
+ * Keyed hash of the IPv6 /48 (null for IPv4 and unknown): one site usually owns a /48, so many /64
+ * buckets from one /56 or /48 share an additional, more generous limit (SECURITY-REPORT N-1/N-2).
+ */
+export function netzSchluessel48(key: Buffer, adresse: string): string | null {
+  const n = netzKennung(adresse, 48);
+  return n.endsWith('::/48') ? hmacB64(key, `48:${n}`).slice(0, 22) : null;
 }

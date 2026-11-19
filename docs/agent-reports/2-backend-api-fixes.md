@@ -76,3 +76,138 @@ Stand: Branch `worktree-agent-adb86e4b82479b7af`, Basis `9eb85d9`. Quellen: `doc
   - I-1 (`X-Forwarded-Host` erster Eintrag in `herkunft.ts`) ist unverändert, weil es nicht beauftragt war. Es ist ein Info-Befund und betrifft nur `TRUST_PROXY=true`.
 - **page-builder:** Klasse in `KontaktFormular.astro` und zwei Assertions in `seiten.spec.ts` wurden geändert (siehe oben). Bitte übernehmen. Der Kommentar in `kontakt-schnittstelle.ts` zu den Statuscodes nennt 408 noch nicht. Das Formular-Skript behandelt 408 wie jeden anderen Fehler mit `nachricht`.
 - **security-auditor:** Nachtest von H-1, M-1 (zusammen mit dem architect-Branch) und M-2 (VmHWM mit `flach.heic`). I-3 neu bewertet: Einträge im Einmal-Speicher entstehen nur mit gelöstem ALTCHA bzw. gültigem CSRF und unter dem Per-Client-Limit. Eine Verdrängung bleibt damit unpraktikabel.
+
+---
+
+# Nachtrag: Restbefunde der Security-Nachprüfung (N-1, N-2, M-2-Rest, N-3, I-7)
+
+Stand: Branch `worktree-agent-a354c603cc1fbd909`, Basis `6c2e9fc`. Quelle: `docs/SECURITY-REPORT.md`, Abschnitt „Phase 2 – Nachprüfung“.
+
+## Geändert
+
+### N-1 · Globales Budget erst beim Versand (`kontakt-ablauf.ts`, `api.ts`, `speicher.ts`, `schluessel.ts`)
+- `RateLimiter.stand()` liest ohne zu zählen. `kontaktGesamt` wird vor der Bildarbeit nur gelesen. Ist es erschöpft, gibt es sofort 429 ohne Arbeit. Gezählt wird **erst unmittelbar vor `d.sende`**, nachdem alle Fotos neu kodiert sind. Ein gescheiterter Versand (502) zählt mit, weil das SMTP-Kontingent dann schon berührt ist.
+- Neu: `LIMITS.fotoAbgelehnt` (3 je Client und Stunde). Nach 3 abgewiesenen Fotos erhält derselbe Client für Anfragen **mit** Fotos 429, bevor Bildarbeit beginnt. Anfragen ohne Foto bleiben möglich. „ausgelastet“ (503) zählt nicht als Abweisung.
+- Neu: `LIMITS.kontaktNetz` (nur IPv6). Alle /64 eines /48 haben zusammen höchstens 20 Versuche je 15 min (`netzSchluessel48`). Ein /56 bringt damit nicht mehr 256 eigene Buckets.
+
+### N-2 · Annahme nur während des Lesens (`kontakt-ablauf.ts`, `api.ts`, `body.ts`, `speicher.ts`)
+- Der Lese-Slot wird **direkt nach `leseBody`** freigegeben, nicht mehr erst nach Bildarbeit und SMTP. `ANNAHME_PRO_CLIENT` (2 je Client) gilt weiter für die ganze Anfrage, trifft aber nur den eigenen Client.
+- Zwei Pools (neue Klasse `Annahme`):
+  - `ANNAHME_KLEIN`: Bodys mit `Content-Length` ≤ 256 KB (Text, reservierte Skizze), 64 Plätze. Uploads können normale Anfragen damit nie blockieren.
+  - `ANNAHME`: größere Bodys und Bodys ohne Länge. 16 Plätze, höchstens 8 × `MAX_BODY` reserviert (Reservierung = `Content-Length`, sonst `MAX_BODY`). Ist der Pool voll, wird der **langsamste Leser unter 256 KB/s nach der Schonfrist verdrängt** (er erhält 503 „ausgelastet“), statt die neue Anfrage abzuweisen. Reicht auch die Verdrängung nicht, wird niemand abgebrochen und die neue Anfrage erhält 503.
+- Mindestrate 64 KB/s (0,5 Mbit/s) nach 5 s statt 16 KB/s nach 10 s. Frist = min(55 s, 5 s + `Content-Length` / 64 KB/s). `maxBytes` = min(`MAX_BODY`, `Content-Length`).
+- Eigene Warteschlangen für die Arbeit:
+  - `PARALLEL` (3 laufend, 6 wartend, 30 s) nur noch für Anfragen **mit** Fotos. Die Fotos selbst laufen seriell über `BILD_SLOT`.
+  - SMTP über `VERSAND` (4 laufend, 16 wartend, 20 s).
+  - Anfragen ohne Foto warten nie auf Bildarbeit.
+
+### M-2-Rest · Speicher bei HEIC (`uploads/heic.ts`, `uploads/bild.ts`)
+- `await worker.terminate()`: Ergebnis oder Fehler kommen erst zurück, wenn der Worker samt WASM-Speicher beendet ist.
+- `BILD_SLOT = Parallelitaet(1, 8)` gilt serverweit für **jedes** Bild, vom Dekodieren bis zum fertigen JPEG. Damit gibt es höchstens einen Pixelpuffer in voller Größe. Danach wird der Puffer per `ArrayBuffer.transfer(0)` sofort freigegeben, statt auf den GC zu warten. `sharp.concurrency(1)`, der Cache bleibt aus.
+- Der Worker dekodiert direkt über `heif_js_decode_image2` als interleaved **RGB** (RGBA nur bei Alphakanal). Vorher lief es über `display()` mit RGBA und einer zusätzlichen Kopie. Das WASM-Bild wird vor dem Versand der Kopie freigegeben.
+- Das WASM-Modul wird einmal im Hauptthread kompiliert und an jeden Worker übergeben (`instantiateWasm`). Es wird also nicht mehr je Bild neu kompiliert.
+- Neues Limit `MAX_PIXEL_HEIC_ALPHA = 16 MP` für HEIC mit Alphakanal (Grafiken, keine Kamerafotos). 5 × 10-Bit-RGBA mit 24 MP erreichten sonst 632 MB. Kamerafotos ohne Alpha bleiben bei 25 MP.
+
+### N-3 · libheif-Ausgaben (`uploads/heic.ts`)
+- Im Worker sind `console.*` sowie `print` und `printErr` stummgeschaltet.
+- stdout und stderr des Workers werden abgefangen und verworfen (`stdout: true`, `stderr: true`).
+- Der eigene Dekodierpfad nutzt den loggenden `display()`-Wrapper nicht mehr.
+
+### I-7 · HEAD (`src/pages/api/altcha.ts`, `csrf.ts`)
+- `HEAD /api/altcha` und `HEAD /api/csrf` antworten mit Status und Headern wie GET (200, bzw. 429 mit `Retry-After`), aber ohne Body.
+- Dabei entsteht weder Challenge noch Token, und das Limit wird nur gelesen.
+- Andere Methoden erhalten 405 mit `Allow: GET, HEAD`.
+
+## Messung (gebauter Server, Staging-Build)
+
+- **Aufbau wie im Bericht:**
+  - `node server/server.mjs` mit `TRUST_PROXY=true` und wechselnder XFF.
+  - SMTP zeigt auf einen geschlossenen Port, 502 heißt also „alle Prüfungen bestanden“.
+  - ALTCHA mit `altcha-lib` gelöst.
+  - HEIC aus pillow-heif 1.1.1 (libheif 1.20.2, Scratch-venv).
+- **Messgrößen:** VmHWM aus `/proc/<pid>/status`, `/healthz` alle 50 ms, für jede Messung ein frischer Server.
+- **„vorher“** = Build von `6c2e9fc` auf derselben Maschine.
+
+| Szenario | vorher VmHWM | nachher VmHWM | nachher RSS danach | Ergebnis nachher | `/healthz` max |
+|---|---|---|---|---|---|
+| 1 × 1 × flach-24mp | – | 350 MB | 140 MB | 502, 0,9 s | 73 ms |
+| 1 × 5 × flach-24mp | 661 MB | **454 MB** | 247 MB | 502, 3,5 s | 38 ms |
+| 1 × 5 × rausch-24mp (0,3 MB je Bild) | 695 MB | **492 MB** | 284 MB | 502, 6,3 s | 65 ms |
+| 4 × 5 × rausch-24mp | – | 535 MB | 300 MB | 4 × 502, 24,6 s | 93 ms |
+| 8 × 5 × flach-25mp | 770 MB | **519–544 MB** | 284 MB | 8 × 502, 29,5 s | 83 ms |
+| 1 × 1 × 10-Bit-RGBA 24 MP | 511 MB | 120 MB | – | 422 „zu hohe Auflösung“ (Alpha-Limit) | – |
+| 1 × 5 × 10-Bit-RGB 24 MP | – | 530 MB | 236 MB | 502, 4,2 s | 72 ms |
+| 1 × 5 × 10-Bit-RGBA 16 MP | – | 488 MB | 231 MB | 502, 4,3 s | 86 ms |
+| 1 × 5 × flach-40mp | – | 124 MB | – | 422 | – |
+| 1 × 2 × JPEG 40 MP (9 MB) | 316 MB | 318 MB | – | 502, 2,8 s | 54 ms |
+| 3 × 5 × PNG 40 MP | – | 334 MB | – | 3 × 502, 5,0 s | 99 ms |
+
+- **Ziel < 600 MB:** in allen Szenarien erreicht, Spitze 544 MB. Zwischen Läufen schwanken die Werte um etwa ± 25 MB.
+- **`MALLOC_ARENA_MAX=2`:** senkt die Spitze weiter. 4 × 5 × rausch kommt auf 435 MB, 8 × 5 × flach-25mp auf 427 MB, RSS danach etwa 200 MB. Der Wert lässt sich nur beim Prozessstart setzen, deshalb als Empfehlung für Phase 6 (Dockerfile oder Startskript).
+- **Wirkung der einzelnen Maßnahmen** (1 × 5 × rausch / 8 × 5 × flach-25mp):
+  - Slot, RGB und `await terminate`: 602 MB / – .
+  - Dazu sofortige Pufferfreigabe: 539 / 598 MB.
+  - Dazu geteiltes WASM-Modul: 493 / 519 MB.
+
+## Reproduktionen am gebauten Server
+
+- **N-1:** 12 Adressen × 5 Anfragen mit dem Foto „kein bild“ als `image/jpeg`, gültigem CSRF und gelöstem ALTCHA.
+  - Ergebnis: 36 × 422 und 24 × 429 („rate-limit fotos“, ab der 4. Anfrage je Adresse).
+  - Danach eine legitime Anfrage ohne Foto: **502 nach 15 ms**. Mit 12-MP-JPEG: **502 nach 1,4 s**.
+  - Vorher: 429 mit `Retry-After: 3321`.
+- **N-2, Reproduktion 1:** 4 Adressen × 2 Verbindungen mit 20 KB/s, `Content-Length: 20000000`.
+  - Die legitime Anfrage einer 5. Adresse erhält **502 nach 27 ms** (vorher 503).
+  - Die langsamen Verbindungen erhalten 408 nach 5,1 s.
+  - Der Server schließt den Socket erst nach etwa 11 s. Das ist der offene Punkt bei architect.
+- **N-2, Variante oberhalb der Mindestrate:** 8 Adressen × 2 Verbindungen mit 80 KB/s, je 20 MB.
+  - 9 Verbindungen werden angenommen (Byte-Budget), 7 erhalten sofort 503.
+  - Eine legitime Anfrage mit 12-MP-Foto 6 s später: **502**. Dafür wird der langsamste Leser verdrängt und erhält 503.
+  - Eine legitime Anfrage ohne Foto: **502 nach 13 ms**.
+  - Die übrigen Angreifer enden bei 55 s mit 408.
+- **N-2, Reproduktion 2:** 8 Anfragen von 4 Adressen mit je 5 × HEIC 24 MP Rauschen, 1 s später eine Anfrage ohne Foto.
+  - Die Anfrage ohne Foto erhält **502 nach 33 ms** (vorher 503 nach 0,0 s).
+  - Von den Last-Anfragen erhalten 6 × 502 und 2 × 503 nach 30 s (Warteschlange `PARALLEL`).
+- **N-3:** Ein abgeschnittenes HEIC (3 Bilder) ergibt 422. Im Log steht nur `kontakt: foto abgelehnt defekt`. Vorher standen dort Zeilen wie `Decoding image failed heif_image_handle {} { … message: 'Invalid input: …' }`.
+- **I-7:** `curl -I` auf `/api/altcha` und `/api/csrf` ergibt 200 mit JSON-Content-Type und `no-store`. `PUT /api/altcha` ergibt 405 mit `Allow: GET, HEAD`.
+
+## Tests
+- Neu: `tests/unit/backend-api-nachpruefung.test.ts` mit 19 Tests:
+  - **N-1:**
+    - `stand()` zählt nicht.
+    - Reproduktion 12 × 5, danach 200.
+    - 60 defekte Fotos verbrauchen kein Budget.
+    - Die Foto-Sperre trifft nur den eigenen Client.
+    - Das Budget wird vor dem Versand verbucht, auch bei 502.
+    - IPv6-/48-Limit.
+  - **N-2:**
+    - Mindestrate und Frist.
+    - Slots sind während Bildarbeit und Versand frei.
+    - Ein voller Upload-Pool und volle Bild-Warteschlangen blockieren keine Anfrage ohne Foto.
+    - `Annahme`: Reservierung, Schonfrist und Verdrängung, auch der Fall „verdrängt niemanden, wenn es nicht reicht“.
+    - `leseBody` endet bei Verdrängung. Die verdrängte Anfrage erhält 503 und gibt ihren Client-Slot frei.
+  - **M-2:**
+    - Ergebnis und Fehler kommen erst nach beendetem Worker.
+    - RGB ohne Alpha, Alpha-Limit.
+    - Über 3 parallele Anfragen läuft höchstens ein Bild gleichzeitig.
+  - **N-3:** Ein defektes HEIC schreibt nichts nach stdout, stderr oder console.
+  - **I-7:** `kopfAntwort`, HEAD-Export und `Allow`.
+- `tests/unit/backend-api-fixes.test.ts`: Den M-2-Block auf `BILD_SLOT` und `kodiereNeu` umgestellt (`dekodiereHeic` und `HEIC_SLOT` entfallen).
+- Ergebnisse:
+  - `npm test`: 16 Dateien, 302 Tests grün, Hook-Test 7/7.
+  - `npm run check`: 0 Fehler, 0 Warnungen, 0 Hinweise.
+  - `npm run build:staging` grün, `npm run scan:wording` ohne Befund.
+  - E2E: nicht gelaufen, weil Docker und Mailpit hier fehlen.
+
+## Offen / für andere
+- **architect (Phase 6):**
+  - `MALLOC_ARENA_MAX=2` im Container bzw. im Startskript setzen (spart laut Messung oben etwa 110 MB Spitze).
+  - Container-Limit mindestens 1 GB.
+  - Sockets nach frühem 408 schneller schließen: Die Antwort kommt nach 5,1 s, der Socket bleibt bis etwa 11 s offen.
+  - Optional in CLAUDE.md (Abschnitt Kontakt-API): `HEAD` auf `/api/csrf` und `/api/altcha`.
+- **security-auditor:** Nachtest N-1, N-2 und M-2 mit den Reproduktionen aus dem Bericht. Neu zu prüfen:
+  - Verdrängung im großen Pool: Eine Verbindung mit mindestens 256 KB/s wird nicht verdrängt. Der Pool hat 16 Plätze und 8 × 22 MB Byte-Budget.
+  - Alpha-Limit.
+- **Restrisiken:**
+  - Wer 60 ALTCHA je Stunde löst **und** 60 echte Mails versendet, erschöpft das globale Budget weiterhin. Das ist gewollt: Das Budget schützt das SMTP-Kontingent, und der Betreiber sieht die Mails.
+  - Unter HEIC-Volllast (mehr als 9 Anfragen mit Fotos gleichzeitig) erhalten weitere Foto-Anfragen nach 30 s 503. Anfragen ohne Foto sind nicht betroffen.
+  - Legitime Uploads unter 64 KB/s (0,5 Mbit/s) enden nach 5 s mit 408. Unter Last kann ein Upload unter 256 KB/s verdrängt werden.

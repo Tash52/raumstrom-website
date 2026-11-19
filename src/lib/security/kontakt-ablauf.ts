@@ -8,15 +8,30 @@ import type { Firma } from '../schemas/index.ts';
 import { isPlaceholder } from '../schemas/shared.ts';
 import { BildFehler, kodiereNeu, type NeuesBild } from '../uploads/bild.ts';
 import { pruefeAltcha } from './altcha.ts';
-import { ANNAHME, ANNAHME_PRO_CLIENT, EINMAL, LIMITS, PARALLEL, PARALLEL_WARTEZEIT_MS, clientKennung, protokolliere, type ApiKontext } from './api.ts';
-import { BODY_GRENZEN, formDataAus, leseBody, type BodyGrenzen } from './body.ts';
+import {
+  ANNAHME,
+  ANNAHME_KLEIN,
+  ANNAHME_PRO_CLIENT,
+  EINMAL,
+  KLEIN_BODY,
+  LIMITS,
+  MAX_BODY,
+  PARALLEL,
+  PARALLEL_WARTEZEIT_MS,
+  VERSAND,
+  VERSAND_WARTEZEIT_MS,
+  clientKennung,
+  netzKennungClient,
+  protokolliere,
+  type ApiKontext,
+} from './api.ts';
+import { BODY_GRENZEN, formDataAus, leseBody, leseFrist, type BodyGrenzen } from './body.ts';
 import { pruefeCsrfToken, verbraucheCsrfToken } from './csrf.ts';
 import { istGleicherUrsprung } from './herkunft.ts';
 import { MELDUNG, pruefeDateiLimits, validiere, zerlege, type FeldFehler } from './kontakt-validierung.ts';
 import { hmacB64 } from './schluessel.ts';
 
-/** Server body limit (astro.config.mjs bodySizeLimit is 25 MB); a bit of room for multipart overhead. */
-export const MAX_BODY = FORM_LIMITS.maxGesamtBytes + 2 * 1024 * 1024;
+export { MAX_BODY };
 
 export interface KontaktAbhaengigkeiten {
   kontext: ApiKontext;
@@ -74,44 +89,56 @@ export async function verarbeiteKontakt(request: Request, d: KontaktAbhaengigkei
   if (laenge !== null && (!Number.isSafeInteger(laenge) || laenge < 0 || laenge > MAX_BODY)) return fehler(413, TEXT.gross);
 
   // Per client: every attempt counts (an attacker only exhausts its own bucket). The global budget is
-  // checked much later, for real send attempts only (H-1).
+  // only read before the expensive work and counted right before sending (H-1, N-1).
   const kennung = clientKennung(request, d.socketAdresse, k);
   const proClient = LIMITS.kontakt.pruefe(kennung);
-  if (!proClient.erlaubt) {
+  const netz = netzKennungClient(request, d.socketAdresse, k);
+  const proNetz = netz === null ? proClient : LIMITS.kontaktNetz.pruefe(netz);
+  if (!proClient.erlaubt || !proNetz.erlaubt) {
     protokolliere('kontakt: rate-limit');
-    return fehler(429, TEXT.rate, { retryNachS: proClient.retryNachS });
+    return fehler(429, TEXT.rate, { retryNachS: Math.max(proClient.retryNachS, proNetz.retryNachS) });
   }
 
-  // Slots for reading the body: at most 2 per client, 8 overall. Reading is bounded by size, a
-  // deadline and a minimum rate, so a stalled upload frees its slot within seconds (slowloris).
+  // At most 2 requests per client at a time (whole request).
   const freiClient = ANNAHME_PRO_CLIENT.belege(kennung);
   if (!freiClient) {
     protokolliere('kontakt: rate-limit parallel');
     return fehler(429, TEXT.rate, { retryNachS: 60 });
   }
-  const freiAnnahme = ANNAHME.belege();
-  if (!freiAnnahme) {
-    freiClient();
-    protokolliere('kontakt: ausgelastet annahme');
-    return fehler(503, TEXT.belegt, { retryNachS: 60 });
-  }
   let freiArbeit: (() => void) | null = null;
+  let freiVersand: (() => void) | null = null;
   try {
-    const body = await leseBody(request, { ...BODY_GRENZEN, ...d.bodyGrenzen, maxBytes: MAX_BODY });
-    if (!body.ok) {
-      protokolliere(`kontakt: body ${body.grund}`);
-      if (body.grund === 'zeit') return fehler(408, TEXT.zeit);
-      if (body.grund === 'zu-gross') return fehler(413, TEXT.gross);
-      return fehler(400, TEXT.allgemein);
+    // Reading the body (N-2): a slot only for the read itself. Small bodies have their own pool; large ones
+    // may displace the slowest reader. Bounded by size, a deadline and a minimum rate (slowloris).
+    const grenzen = { ...BODY_GRENZEN, ...d.bodyGrenzen };
+    const klein = laenge !== null && laenge <= KLEIN_BODY;
+    const platz = (klein ? ANNAHME_KLEIN : ANNAHME).belege(laenge ?? MAX_BODY);
+    if (!platz) {
+      protokolliere(`kontakt: ausgelastet annahme${klein ? ' klein' : ''}`);
+      return fehler(503, TEXT.belegt, { retryNachS: 60 });
     }
-    let form: FormData;
+    let form: FormData | undefined;
     try {
-      form = await formDataAus(body.daten, ct);
-    } catch {
-      // Broken multipart or wrong boundary.
-      return fehler(400, TEXT.allgemein);
+      const body = await leseBody(request, { ...grenzen, maxBytes: Math.min(MAX_BODY, laenge ?? MAX_BODY), maxDauerMs: leseFrist(laenge, grenzen) }, platz.vorgang);
+      platz.frei();
+      if (!body.ok) {
+        protokolliere(`kontakt: body ${body.grund}`);
+        if (body.grund === 'zeit') return fehler(408, TEXT.zeit);
+        if (body.grund === 'zu-gross') return fehler(413, TEXT.gross);
+        if (body.grund === 'verdraengt') return fehler(503, TEXT.belegt, { retryNachS: 60 });
+        return fehler(400, TEXT.allgemein);
+      }
+      try {
+        form = await formDataAus(body.daten, ct);
+      } catch {
+        // Broken multipart or wrong boundary.
+        return fehler(400, TEXT.allgemein);
+      }
+    } finally {
+      platz.frei();
     }
-    const roh = zerlege(form);
+    const roh = form ? zerlege(form) : null;
+    form = undefined; // photos live on in roh.dateien only, released after re-encoding
     if (!roh) return fehler(400, TEXT.allgemein);
 
     const csrf = pruefeCsrfToken(k.csrfKey, roh.felder.csrf);
@@ -144,36 +171,59 @@ export async function verarbeiteKontakt(request: Request, d: KontaktAbhaengigkei
       return fehler(403, MELDUNG.csrf);
     }
 
-    // Global budget (SMTP quota): only requests that passed every check above count.
-    const gesamt = LIMITS.kontaktGesamt.pruefe('gesamt');
-    if (!gesamt.erlaubt) {
+    // Global budget (SMTP quota): only read here; counted right before sending (N-1).
+    const budget = LIMITS.kontaktGesamt.stand('gesamt');
+    if (!budget.erlaubt) {
       protokolliere('kontakt: WARNUNG globales limit erreicht');
-      return fehler(429, TEXT.rate, { retryNachS: gesamt.retryNachS });
-    }
-
-    freiArbeit = await PARALLEL.warte(PARALLEL_WARTEZEIT_MS);
-    if (!freiArbeit) {
-      protokolliere('kontakt: ausgelastet');
-      return fehler(503, TEXT.belegt, { retryNachS: 60 });
+      return fehler(429, TEXT.rate, { retryNachS: budget.retryNachS });
     }
 
     const bilder: NeuesBild[] = [];
-    for (const [i, datei] of roh.dateien.entries()) {
-      try {
-        bilder.push(await kodiereNeu(Buffer.from(await datei.arrayBuffer()), i + 1));
-      } catch (e) {
-        const grund = e instanceof BildFehler ? e.grund : 'defekt';
-        protokolliere(`kontakt: foto abgelehnt ${grund}`);
-        if (grund === 'ausgelastet') return fehler(503, TEXT.belegt, { retryNachS: 60 });
-        const meldung = grund === 'typ' ? MELDUNG.fotos : grund === 'zu-gross' ? MELDUNG.fotoZuGross : MELDUNG.fotoDefekt;
-        return fehler(422, 'Bitte prüfen Sie Ihre Fotos.', { fehler: { fotos: meldung } });
+    if (roh.dateien.length > 0) {
+      // Clients whose photos were rejected repeatedly get no more image work (N-1).
+      const abgelehnt = LIMITS.fotoAbgelehnt.stand(kennung);
+      if (!abgelehnt.erlaubt) {
+        protokolliere('kontakt: rate-limit fotos');
+        return fehler(429, TEXT.rate, { retryNachS: abgelehnt.retryNachS });
       }
+      freiArbeit = await PARALLEL.warte(PARALLEL_WARTEZEIT_MS);
+      if (!freiArbeit) {
+        protokolliere('kontakt: ausgelastet');
+        return fehler(503, TEXT.belegt, { retryNachS: 60 });
+      }
+      for (const [i, datei] of roh.dateien.entries()) {
+        try {
+          bilder.push(await kodiereNeu(Buffer.from(await datei.arrayBuffer()), i + 1));
+        } catch (e) {
+          const grund = e instanceof BildFehler ? e.grund : 'defekt';
+          protokolliere(`kontakt: foto abgelehnt ${grund}`);
+          if (grund === 'ausgelastet') return fehler(503, TEXT.belegt, { retryNachS: 60 });
+          LIMITS.fotoAbgelehnt.pruefe(kennung);
+          const meldung = grund === 'typ' ? MELDUNG.fotos : grund === 'zu-gross' ? MELDUNG.fotoZuGross : MELDUNG.fotoDefekt;
+          return fehler(422, 'Bitte prüfen Sie Ihre Fotos.', { fehler: { fotos: meldung } });
+        }
+      }
+      // Originals are no longer needed; the slot is not needed for sending.
+      roh.dateien.length = 0;
+      freiArbeit();
     }
 
     const an = empfaenger(d.firma, k.env.MAIL_TO_STAGING);
     if (!an) {
       protokolliere('kontakt: konfiguration anfragen_empfaenger fehlt');
       return fehler(503, TEXT.versand);
+    }
+
+    freiVersand = await VERSAND.warte(VERSAND_WARTEZEIT_MS);
+    if (!freiVersand) {
+      protokolliere('kontakt: ausgelastet versand');
+      return fehler(503, TEXT.belegt, { retryNachS: 60 });
+    }
+    // Every check passed and the photos are re-encoded: only now the global budget is spent (N-1).
+    const gesamt = LIMITS.kontaktGesamt.pruefe('gesamt');
+    if (!gesamt.erlaubt) {
+      protokolliere('kontakt: WARNUNG globales limit erreicht');
+      return fehler(429, TEXT.rate, { retryNachS: gesamt.retryNachS });
     }
 
     const daten = v.daten;
@@ -196,8 +246,8 @@ export async function verarbeiteKontakt(request: Request, d: KontaktAbhaengigkei
     protokolliere(`kontakt: gesendet (${bilder.length} fotos)`);
     return { status: 200, ok: true };
   } finally {
+    freiVersand?.();
     freiArbeit?.();
-    freiAnnahme();
     freiClient();
   }
 }

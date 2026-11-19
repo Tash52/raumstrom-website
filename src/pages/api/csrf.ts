@@ -1,6 +1,6 @@
 // GET /api/csrf -> { token } (no cookie). Signed, single-use, valid for 2 hours. See src/lib/security/csrf.ts.
 import type { APIRoute } from 'astro';
-import { apiKontext, begrenze, json, LIMITS, methodeNichtErlaubt, protokolliere } from '../../lib/security/api.ts';
+import { apiKontext, clientKennung, begrenze, json, kopfAntwort, LIMITS, methodeNichtErlaubt, protokolliere } from '../../lib/security/api.ts';
 import { erzeugeCsrfToken } from '../../lib/security/csrf.ts';
 import { socketAdresse } from '../../lib/security/anfrage.ts';
 
@@ -16,4 +16,7 @@ export const GET: APIRoute = (context) => {
   return json(200, { token: erzeugeCsrfToken(k.csrfKey) });
 };
 
-export const ALL: APIRoute = () => methodeNichtErlaubt('GET');
+/** HEAD (I-7): status and headers like GET, no body; neither creates a token nor counts against the limit. */
+export const HEAD: APIRoute = (context) => kopfAntwort(LIMITS.csrf.stand(clientKennung(context.request, socketAdresse(context), apiKontext())));
+
+export const ALL: APIRoute = () => methodeNichtErlaubt('GET, HEAD');

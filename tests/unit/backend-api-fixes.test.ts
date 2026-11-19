@@ -15,8 +15,8 @@ import { MAX_BODY, verarbeiteKontakt, type KontaktAbhaengigkeiten } from '../../
 import { ableiten } from '../../src/lib/security/schluessel.ts';
 import { Parallelitaet, SchluesselParallelitaet } from '../../src/lib/security/speicher.ts';
 import { anzeigeName } from '../../src/lib/mail/kontakt-mails.ts';
-import { dekodiereHeic, dekodiereImWorker, HEIC_SLOT, MAX_PIXEL_HEIC } from '../../src/lib/uploads/heic.ts';
-import { kodiereNeu, MAX_PIXEL } from '../../src/lib/uploads/bild.ts';
+import { dekodiereImWorker, MAX_PIXEL_HEIC } from '../../src/lib/uploads/heic.ts';
+import { BILD_SLOT, kodiereNeu, MAX_PIXEL } from '../../src/lib/uploads/bild.ts';
 import { beschriftung, erstesFehlerfeld, fehlerName, type TextKnoten } from '../../src/components/forms/formular-hilfen.ts';
 import type { Firma } from '../../src/lib/schemas/index.ts';
 
@@ -246,32 +246,31 @@ describe('M-1: Client-Adresse nur aus dem Server-Header', () => {
   });
 });
 
-describe('M-2: HEIC im Worker, höchstens eine Dekodierung gleichzeitig', () => {
+describe('M-2: HEIC im Worker, höchstens ein Bild gleichzeitig', () => {
   it('niedrigeres Pixellimit für HEIC', () => {
     expect(MAX_PIXEL_HEIC).toBeLessThan(MAX_PIXEL);
     expect(MAX_PIXEL_HEIC).toBeGreaterThanOrEqual(5712 * 4284); // 24-MP iPhone photo
-    expect(HEIC_SLOT.max).toBe(1);
+    expect(BILD_SLOT.max).toBe(1);
   });
-  it('dekodiert im Worker; Pixellimit und Zeitlimit greifen dort', async () => {
+  it('dekodiert im Worker (RGB ohne Alpha); Pixellimit und Zeitlimit greifen dort', async () => {
     const roh = await dekodiereImWorker(HEIC);
-    expect([roh.breite, roh.hoehe, roh.pixel.byteLength]).toEqual([96, 64, 96 * 64 * 4]);
+    expect([roh.breite, roh.hoehe, roh.kanaele, roh.pixel.byteLength]).toEqual([96, 64, 3, 96 * 64 * 3]);
     await expect(dekodiereImWorker(HEIC, { maxPixel: 100 })).rejects.toMatchObject({ grund: 'zu-gross' });
     await expect(dekodiereImWorker(HEIC, { timeoutMs: 1 })).rejects.toMatchObject({ grund: 'defekt' });
     await expect(dekodiereImWorker(Buffer.concat([HEIC.subarray(0, 40), Buffer.alloc(100)]))).rejects.toMatchObject({ grund: 'defekt' });
   });
-  it('Warteschlange: nie mehr als eine Dekodierung, volle Schlange -> ausgelastet (503)', async () => {
-    const belegt = HEIC_SLOT.belege()!;
-    const wartend = Array.from({ length: HEIC_SLOT.maxWartende }, () => dekodiereHeic(HEIC));
-    await expect(dekodiereHeic(HEIC)).rejects.toMatchObject({ grund: 'ausgelastet' });
-    await expect(kodiereNeu(HEIC, 1)).rejects.toMatchObject({ grund: 'ausgelastet' });
+  it('Warteschlange: nie mehr als ein Bild, volle Schlange -> ausgelastet (503)', async () => {
+    const belegt = BILD_SLOT.belege()!;
+    const wartend = Array.from({ length: BILD_SLOT.maxWartende }, (_, i) => kodiereNeu(HEIC, i + 1));
+    await expect(kodiereNeu(HEIC, 9)).rejects.toMatchObject({ grund: 'ausgelastet' });
     let max = 0;
-    const messung = setInterval(() => (max = Math.max(max, HEIC_SLOT.laufend)), 1);
+    const messung = setInterval(() => (max = Math.max(max, BILD_SLOT.laufend)), 1);
     belegt();
     const ergebnisse = await Promise.all(wartend);
     clearInterval(messung);
-    expect(ergebnisse.every((r) => r.breite === 96)).toBe(true);
+    expect(ergebnisse.every((r) => r.typ === 'image/jpeg' && r.inhalt.byteLength > 0)).toBe(true);
     expect(max).toBeLessThanOrEqual(1);
-    expect(HEIC_SLOT.laufend).toBe(0);
+    expect(BILD_SLOT.laufend).toBe(0);
   });
   it('Event-Loop bleibt während der Dekodierung frei', async () => {
     let ticks = 0;

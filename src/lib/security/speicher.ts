@@ -103,6 +103,15 @@ export class RateLimiter {
     for (const [k, f] of this.#fenster) if (now - f.start >= this.fensterMs) this.#fenster.delete(k);
   }
 
+  /** Reads the state without counting (N-1: check before expensive work, count only when it is spent). */
+  stand(key: string): LimitErgebnis {
+    const now = this.uhr();
+    const f = this.#fenster.get(key);
+    if (!f || now - f.start >= this.fensterMs) return { erlaubt: true, retryNachS: 0 };
+    const retryNachS = Math.max(1, Math.ceil((f.start + this.fensterMs - now) / 1000));
+    return { erlaubt: f.anzahl < this.max, retryNachS };
+  }
+
   pruefe(key: string): LimitErgebnis {
     const now = this.uhr();
     if (now - this.#letzteBereinigung >= BEREINIGUNG_MS) this.raeume();
@@ -186,6 +195,90 @@ export class Parallelitaet {
         this.#laufend -= 1;
       }
     };
+  }
+}
+
+/** A request body being read. leseBody (body.ts) updates `bytes` and sets `abbrechen`. */
+export interface Lesevorgang {
+  readonly start: number;
+  bytes: number;
+  /** Set when the pool displaced this reader; leseBody then stops with grund 'verdraengt'. */
+  verdraengt: boolean;
+  abbrechen?: () => void;
+}
+
+export interface AnnahmeOptionen {
+  maxSlots: number;
+  /** Sum of the reservations (declared Content-Length, else the body limit) of all readers. */
+  maxBytes: number;
+  /** Readers younger than this are never displaced. */
+  schonfristMs: number;
+  /** When the pool is full, readers with an average rate below this may be displaced (slowest first). 0 = never. */
+  verdraengenUnterBytesProS: number;
+  uhr?: Uhr;
+}
+
+/**
+ * Admission for reading request bodies (SECURITY-REPORT N-2): bounded by slots and by reserved bytes.
+ * A slot is held only while the body is read. If the pool is full, the slowest readers (below a rate
+ * floor, past a grace period) are cancelled in favour of the new request instead of rejecting it, so
+ * slow uploads cannot keep the form closed.
+ */
+export class Annahme {
+  readonly #aktiv = new Map<Lesevorgang, number>();
+  #reserviert = 0;
+  readonly o: Required<AnnahmeOptionen>;
+  constructor(o: AnnahmeOptionen) {
+    this.o = { uhr: jetzt, ...o };
+  }
+
+  get laufend() {
+    return this.#aktiv.size;
+  }
+  get reserviert() {
+    return this.#reserviert;
+  }
+
+  belege(reservierung: number): { vorgang: Lesevorgang; frei: () => void } | null {
+    const r = Math.max(0, Math.min(reservierung, this.o.maxBytes));
+    const now = this.o.uhr();
+    if (!this.#passt(r, 0, 0)) {
+      // Pick victims (slowest first) only if displacing them actually makes room; otherwise touch nobody.
+      const kandidaten = [...this.#aktiv]
+        .map(([v, res]) => ({ v, res, dauer: now - v.start }))
+        .filter((k) => k.dauer > 0 && k.dauer >= this.o.schonfristMs && (k.v.bytes * 1000) / k.dauer < this.o.verdraengenUnterBytesProS)
+        .sort((a, b) => a.v.bytes / a.dauer - b.v.bytes / b.dauer);
+      const opfer: Lesevorgang[] = [];
+      let slots = 0;
+      let bytes = 0;
+      for (const k of kandidaten) {
+        if (this.#passt(r, slots, bytes)) break;
+        opfer.push(k.v);
+        slots += 1;
+        bytes += k.res;
+      }
+      if (!this.#passt(r, slots, bytes)) return null;
+      for (const v of opfer) {
+        this.#entferne(v);
+        v.verdraengt = true;
+        v.abbrechen?.();
+      }
+    }
+    const vorgang: Lesevorgang = { start: now, bytes: 0, verdraengt: false };
+    this.#aktiv.set(vorgang, r);
+    this.#reserviert += r;
+    return { vorgang, frei: () => this.#entferne(vorgang) };
+  }
+
+  #passt(r: number, freieSlots: number, freieBytes: number): boolean {
+    return this.#aktiv.size - freieSlots < this.o.maxSlots && this.#reserviert - freieBytes + r <= this.o.maxBytes;
+  }
+
+  #entferne(v: Lesevorgang) {
+    const r = this.#aktiv.get(v);
+    if (r === undefined) return;
+    this.#aktiv.delete(v);
+    this.#reserviert -= r;
   }
 }
 
