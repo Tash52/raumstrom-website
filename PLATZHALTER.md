@@ -1,6 +1,6 @@
 # Offene Inhalte vor dem Launch
 
-Automatisch erzeugt mit `npm run platzhalter` am 2026-11-18. Nicht von Hand bearbeiten, sondern die genannte Datei ändern (am einfachsten per Keystatic: `npm run dev`, dann http://localhost:4321/keystatic) und den Befehl erneut ausführen.
+Automatisch erzeugt mit `npm run platzhalter` am 2026-11-19. Nicht von Hand bearbeiten, sondern die genannte Datei ändern (am einfachsten per Keystatic: `npm run dev`, dann http://localhost:4321/keystatic) und den Befehl erneut ausführen.
 
 `npm run check:launch` schlägt fehl, solange hier etwas offen ist.
 
@@ -89,7 +89,7 @@ Automatisch erzeugt mit `npm run platzhalter` am 2026-11-18. Nicht von Hand bear
 - [ ] Alternativtext zum Foto, sobald ein Foto vorliegt · `src/content/team/christian-maul.yaml:4`
 - [ ] Alternativtext zum Foto, sobald ein Foto vorliegt · `src/content/team/jernar-kassimov.yaml:4`
 
-## Texte (50)
+## Texte (51)
 
 - [ ] Einzugsgebiet vom Betreiber bestätigen lassen · `src/content/faq/einzugsgebiet.yaml:2`
 - [ ] Angebotsform und Preisbindung laut AGB, von legal-compliance zu bestätigen · `src/content/faq/komplett-angebot.yaml:2`
@@ -110,7 +110,8 @@ Automatisch erzeugt mit `npm run platzhalter` am 2026-11-18. Nicht von Hand bear
 - [ ] Konditionen und Empfehlungsregelung, falls gewünscht und rechtlich geprüft · `src/content/pages/partner.md:13`
 - [ ] Anforderungen und Ablauf der Partneraufnahme, vom Betreiber festzulegen · `src/content/pages/partner.md:21`
 - [ ] Hinweis ersetzen, sobald erste echte Referenzen mit Einverständnis vorliegen · `src/content/pages/referenzen.md:13`
-- [ ] Einzugsgebiet vom Betreiber bestätigen lassen · `src/content/pages/start.md:34`
+- [ ] Frist für die Angebotserstellung vom Betreiber bestätigen · `src/content/pages/start.md:33`
+- [ ] Einzugsgebiet vom Betreiber bestätigen lassen · `src/content/pages/start.md:42`
 - [ ] Gründungsjahr und Gründungsgeschichte vom Betreiber · `src/content/pages/ueber-uns.md:9`
 - [ ] Partnerbetriebe namentlich nennen, sofern gewünscht und abgestimmt · `src/content/pages/ueber-uns.md:17`
 - [ ] Qualifikationsnachweise der Gründer (Abschlüsse, Prüfscheine) mit genauer Bezeichnung, geprüft durch legal-compliance und Betreiber · `src/content/pages/ueber-uns.md:21`
