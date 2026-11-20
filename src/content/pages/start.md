@@ -24,6 +24,14 @@ abschnitte:
     label: So arbeiten wir
     titel: Ein Ansprechpartner, klare Zuständigkeiten
     text: Bei uns erhalten Sie einen festen Ansprechpartner für Ihre gesamte Renovierung. Demontage, Trockenbau und Bodenbeläge erbringen wir selbst. Elektroinstallation, Wallbox, Zählerschrank, Fliesen, Putz und Malerarbeiten führen unsere Meister-Partnerbetriebe aus. An jeder Leistung steht deshalb sichtbar, wer ausführt.
+  - id: ablauf
+    label: Ablauf
+    titel: So läuft's ab
+    text: |-
+      1. **Anfrage.** Sie schildern uns Ihr Vorhaben, gern mit Fotos oder einer Skizze aus dem Raumplaner.
+      2. **Besichtigung.** Wir sehen uns die Räume vor Ort an, nehmen Maß und klären gemeinsam, was zu tun ist.
+      3. **Angebot.** Sie erhalten ein Angebot, das Leistungen und Ausführende klar benennt. [[PLATZHALTER: Frist für die Angebotserstellung vom Betreiber bestätigen]]
+      4. **Umsetzung.** Wir planen, koordinieren und führen aus. Meisterpflichtige Gewerke übernehmen unsere festen Meister-Partnerbetriebe. Zum Schluss folgen Abnahme und Übergabe.
   - id: raumplaner-teaser
     label: Raumplaner
     titel: Ihren Raum vorab im 3D-Raumplaner skizzieren

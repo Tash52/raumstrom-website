@@ -5,6 +5,7 @@ import { Font, fontData } from 'astro:assets';
 import Footer from '../components/layout/Footer.astro';
 import Header from '../components/layout/Header.astro';
 import SkipLink from '../components/layout/SkipLink.astro';
+import Motion from '../components/sections/Motion.astro';
 import type { NavEintrag } from '../components/layout/navigation.ts';
 import '../styles/base.css';
 
@@ -48,6 +49,7 @@ if (preloads.some((u) => !u)) throw new Error('Font-Preload: Schriftdateien fehl
       <slot />
     </main>
     {!ohneKopfFuss && <Footer />}
+    <Motion />
   </body>
 </html>
 

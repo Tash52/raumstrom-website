@@ -1,0 +1,223 @@
+/*
+ * Global motion styles (motion-3d). Imported by components/sections/Motion.astro on every page.
+ * Every rule here only refines what is already complete without JS: lines are fully drawn, cards
+ * flat, buttons still. Classes are set by src/lib/motion/*.ts; values come in as custom properties.
+ */
+
+/* ---------- Page transitions: the cable runs across while the new page wipes in ---------- */
+.vt-leitung {
+  position: fixed;
+  inset-block: 0;
+  left: 0;
+  width: 3px;
+  opacity: 0;
+  pointer-events: none;
+  view-transition-name: vt-leitung;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-group(vt-leitung) {
+    animation: vt-leitung-fahrt 560ms cubic-bezier(0.77, 0, 0.175, 1) both;
+    background: #c5f01e;
+    box-shadow:
+      0 0 0 1px rgb(61 99 0 / 0.5),
+      0 0 22px 6px rgb(197 240 30 / 0.55);
+  }
+
+  ::view-transition-old(vt-leitung),
+  ::view-transition-new(vt-leitung) {
+    animation: none;
+    opacity: 0;
+  }
+
+  ::view-transition-old(root) {
+    animation: vt-alt 560ms cubic-bezier(0.77, 0, 0.175, 1) both;
+  }
+
+  ::view-transition-new(root) {
+    animation: vt-neu 560ms cubic-bezier(0.77, 0, 0.175, 1) both;
+  }
+}
+
+@keyframes vt-leitung-fahrt {
+  from {
+    transform: translateX(-4px);
+  }
+  to {
+    transform: translateX(100vw);
+  }
+}
+
+@keyframes vt-neu {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes vt-alt {
+  to {
+    opacity: 0.4;
+  }
+}
+
+/* ---------- Leitung: node of each section switches on when the line reaches it ---------- */
+.leitung-aktiv [data-leitung-knoten] {
+  transition:
+    background-color 200ms ease,
+    box-shadow 320ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.leitung-aktiv [data-leitung-knoten]:not(.ist-an) {
+  background: var(--surface);
+}
+
+.leitung-aktiv [data-leitung-knoten].ist-an {
+  box-shadow:
+    0 0 0 2px var(--surface),
+    0 0 0 3.5px var(--leitung),
+    0 0 16px 3px rgb(197 240 30 / 0.6);
+}
+
+.leitung-aktiv [data-leitung] {
+  will-change: transform;
+}
+
+/* ---------- Tilt cards with depth (desktop pointer only) ---------- */
+@media (hover: hover) and (pointer: fine) {
+  .karte-link[data-tilt] {
+    transform: perspective(56rem) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+    transform-style: preserve-3d;
+    transition: transform 520ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .karte-link[data-tilt].tilt-aktiv {
+    transition-duration: 140ms;
+  }
+
+  .karte-link[data-tilt] .karte-linie {
+    translate: 0 0 26px;
+  }
+
+  .karte-link[data-tilt] .karte-text,
+  .karte-link[data-tilt] .karte-fuss {
+    translate: 0 0 12px;
+  }
+
+  .karte-link[data-tilt] .karte-pfeil {
+    translate: 0 0 38px;
+  }
+
+  .karte-link[data-tilt]::before {
+    content: '';
+    position: absolute;
+    inset: calc(var(--space-3) * -1);
+    border-radius: var(--radius-s);
+    background: radial-gradient(circle at var(--glanz-x, 50%) var(--glanz-y, 50%), rgb(197 240 30 / 0.16), transparent 60%);
+    opacity: 0;
+    transition: opacity 240ms ease;
+    pointer-events: none;
+  }
+
+  .karte-link[data-tilt].tilt-aktiv::before {
+    opacity: 1;
+  }
+
+  /* ---------- Magnetic buttons ---------- */
+  html .btn[data-magnet] {
+    translate: var(--magnet-x, 0) var(--magnet-y, 0);
+    transition:
+      background-color var(--dur-base) var(--ease-out),
+      color var(--dur-base) var(--ease-out),
+      border-color var(--dur-base) var(--ease-out),
+      transform var(--dur-instant) var(--ease-out),
+      translate 280ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+}
+
+/* ---------- Cursor ring (follows the native cursor, which stays visible) ---------- */
+.cursor-ring {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 2147483000;
+  width: 2.25rem;
+  height: 2.25rem;
+  margin: -1.125rem 0 0 -1.125rem;
+  border: 1.5px solid #f4f1eb;
+  border-radius: 50%;
+  mix-blend-mode: difference;
+  pointer-events: none;
+  opacity: 0;
+  transition:
+    opacity 200ms ease,
+    scale 220ms cubic-bezier(0.23, 1, 0.32, 1),
+    border-width 220ms ease;
+}
+
+.cursor-ring.ist-sichtbar {
+  opacity: 0.85;
+}
+
+.cursor-ring.ist-ziel {
+  scale: 1.55;
+  border-width: 2px;
+}
+
+.cursor-ring.ist-text {
+  scale: 0.5;
+  opacity: 0.35;
+}
+
+.cursor-ring.ist-gedrueckt {
+  scale: 0.8;
+}
+
+@media (forced-colors: active) {
+  .cursor-ring {
+    display: none;
+  }
+}
+
+/* ---------- Pause button (shown by JS only while something loops) ---------- */
+.motion-pause {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 2.75rem;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-s);
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: var(--step--1);
+  letter-spacing: var(--tracking-mono);
+  cursor: pointer;
+}
+
+/* Hidden until a loop runs, but keeps its space so showing it never shifts the layout (CLS). */
+.motion-pause[hidden] {
+  visibility: hidden;
+}
+
+.motion-pause:hover {
+  border-color: var(--text);
+}
+
+.motion-pause-symbol {
+  display: inline-block;
+  width: 0.625rem;
+  height: 0.75rem;
+  border-inline: 3px solid currentColor;
+}
+
+.motion-pause[aria-pressed='true'] .motion-pause-symbol {
+  width: 0;
+  height: 0;
+  border-inline: 0;
+  border-block: 0.375rem solid transparent;
+  border-left: 0.625rem solid currentColor;
+}

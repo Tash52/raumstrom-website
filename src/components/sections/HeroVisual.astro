@@ -1,0 +1,163 @@
+---
+// 3D hero visual "Hinter der Wand" (motion-3d). Poster first: a rendered still of the 3D scene as
+// AVIF/WebP (LCP candidate, fixed aspect ratio, no layout shift). src/islands/hero/steuerung.ts lays the
+// WebGL canvas over it when the hero is visible, the device can do it and motion is allowed.
+// prefers-reduced-motion gets the fully opened wall as still image (<source media>), no JS needed.
+import { getImage } from 'astro:assets';
+import posterStart from '../../islands/hero/poster/hero-start.png';
+import posterKomplett from '../../islands/hero/poster/hero-komplett.png';
+import PauseKnopf from './PauseKnopf.astro';
+
+interface Props {
+  class?: string;
+}
+const { class: className } = Astro.props;
+
+const SIZES = '(min-width: 64em) 44vw, (min-width: 40em) 80vw, 100vw';
+const BREITEN = [480, 768, 1152];
+async function quellen(src: ImageMetadata) {
+  return Promise.all(
+    (['avif', 'webp'] as const).map(async (format) => {
+      const bild = await getImage({ src, format, widths: BREITEN, quality: format === 'avif' ? 60 : 78 });
+      return { type: `image/${format}`, srcset: bild.srcSet.attribute };
+    }),
+  );
+}
+const start = await quellen(posterStart);
+const komplett = await quellen(posterKomplett);
+const ersatz = await getImage({ src: posterStart, format: 'webp', width: 768 });
+const STUFEN = ['Farbe', 'Putz', 'Mauerwerk', 'Leitung', 'Dose'];
+---
+<figure class:list={['hero-visual', className]} data-hero data-hero-zustand="poster">
+  <div class="hero-buehne">
+    <picture class="hero-poster">
+      {komplett.map((q) => <source media="(prefers-reduced-motion: reduce)" type={q.type} srcset={q.srcset} sizes={SIZES} />)}
+      {start.map((q) => <source type={q.type} srcset={q.srcset} sizes={SIZES} />)}
+      <img
+        src={ersatz.src}
+        width={posterStart.width}
+        height={posterStart.height}
+        alt="Wand im Querschnitt: Farbe und Putz sind abgetragen, im geöffneten Mauerwerk verläuft eine leuchtende Leitung zur Steckdose."
+        fetchpriority="high"
+        loading="eager"
+        decoding="async"
+      />
+    </picture>
+    <div class="hero-canvas" data-hero-canvas aria-hidden="true"></div>
+  </div>
+  <figcaption class="hero-fuss">
+    <ol class="hero-stufen" aria-label="Schichten einer Wand, von außen nach innen">
+      {STUFEN.map((s, i) => (
+        <li class="hero-stufe" data-hero-stufe>
+          <span class="hero-stufe-nr" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+          {s}
+        </li>
+      ))}
+    </ol>
+    <PauseKnopf class="hero-pause" />
+  </figcaption>
+</figure>
+
+<style>
+  .hero-visual {
+    margin: 0;
+    display: grid;
+    gap: var(--space-4);
+    width: 100%;
+  }
+
+  .hero-buehne {
+    position: relative;
+    aspect-ratio: 4 / 3;
+  }
+
+  .hero-poster,
+  .hero-poster img {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .hero-poster img {
+    object-fit: contain;
+    transition: opacity 600ms cubic-bezier(0.23, 1, 0.32, 1) 150ms;
+  }
+
+  .hero-canvas {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 600ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .hero-canvas:empty {
+    display: none;
+  }
+
+  .hero-3d-an .hero-canvas {
+    opacity: 1;
+  }
+
+  .hero-3d-an .hero-poster img {
+    opacity: 0;
+  }
+
+  .hero-fuss {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3) var(--space-5);
+  }
+
+  .hero-stufen {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    letter-spacing: var(--tracking-mono);
+    color: var(--text-muted);
+  }
+
+  .hero-stufe {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.4em;
+    transition: color 240ms ease;
+  }
+
+  .hero-stufe-nr {
+    color: var(--text-muted);
+  }
+
+  .hero-stufe::before {
+    content: '';
+    align-self: center;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: var(--radius-punkt);
+    border: 1.5px solid currentColor;
+    transition:
+      background-color 240ms ease,
+      box-shadow 320ms ease;
+  }
+
+  /* With 3D running: finished layers in text colour, the current one switched on (Strom on Graphit). */
+  .hero-stufe:global(.ist-offen) {
+    color: var(--text);
+  }
+
+  .hero-stufe:global(.ist-aktiv) {
+    color: var(--accent-text);
+  }
+
+  .hero-stufe:global(.ist-aktiv)::before {
+    background: var(--accent-surface);
+    border-color: var(--accent-surface);
+    box-shadow: 0 0 10px 2px rgb(197 240 30 / 0.5);
+  }
+</style>
