@@ -21,7 +21,7 @@ import {
 } from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { FARBE, kabelMaterial } from '../hero/kabel-material.ts';
-import { Takt, daempfung, type SzenenSteuerung } from '../hero/takt.tsx';
+import { Takt, Vorwaermen, daempfung, type SzenenSteuerung } from '../hero/takt.tsx';
 
 /** Objects sit on a rail that moves in step with the horizontal text track. */
 const ABSTAND = 3.2;
@@ -259,7 +259,7 @@ function Schiene({ s }: { s: SzenenSteuerung }) {
 export function JourneySzene({ s, dpr }: { s: SzenenSteuerung; dpr: [number, number] }) {
   return (
     <Canvas
-      frameloop="demand"
+      frameloop="never" /* Vorwaermen switches to "demand" after shader warm-up */
       flat
       dpr={dpr}
       camera={{ position: [0, 0.35, 4.6], fov: 34, near: 0.1, far: 30 }}
@@ -273,6 +273,7 @@ export function JourneySzene({ s, dpr }: { s: SzenenSteuerung; dpr: [number, num
       <directionalLight position={[-3, 4, 5]} intensity={2.1} />
       <directionalLight position={[3, 1, -2]} intensity={0.6} />
       <Schiene s={s} />
+      <Vorwaermen />
     </Canvas>
   );
 }
