@@ -4,12 +4,14 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'no
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { freierPort } from '../freier-port.ts';
 
 const work = mkdtempSync(path.join(tmpdir(), 'prod-build-'));
 // Inside the project so the prerender step can resolve node_modules; .astro/ is gitignored.
 const out = path.resolve('.astro/prod-build-test');
 const envFile = path.join(work, '.env');
-const PORT = 4398;
+// Free port: parallel test runs (other worktrees) must not collide (QA finding B1).
+const PORT = freierPort();
 let server: ReturnType<typeof spawn> | undefined;
 
 beforeAll(async () => {
@@ -32,7 +34,7 @@ beforeAll(async () => {
   );
   // Only PATH and the overrides come from the environment; all secrets come from the .env file.
   server = spawn(process.execPath, ['server/server.mjs'], {
-    env: { PATH: process.env.PATH ?? '', RAUMSTROM_DIST: out, RAUMSTROM_ENV_FILE: envFile, PORT: String(PORT) },
+    env: { PATH: process.env.PATH ?? '', RAUMSTROM_DIST: out, RAUMSTROM_ENV_FILE: envFile, PORT: String(PORT), RAUMSTROM_LAUF_ID: 'lauf-a' },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   let log = '';
@@ -77,6 +79,11 @@ describe('Produktions-Build', () => {
   it('Server liest Secrets aus .env, Umgebung hat Vorrang (PORT)', async () => {
     const res = await fetch(`http://127.0.0.1:${PORT}/healthz`);
     expect(res.status).toBe(200);
+  });
+
+  it('/healthz bestätigt nur die eigene Lauf-ID (E2E-Isolation)', async () => {
+    expect((await fetch(`http://127.0.0.1:${PORT}/healthz?lauf=lauf-a`)).status).toBe(200);
+    expect((await fetch(`http://127.0.0.1:${PORT}/healthz?lauf=lauf-b`)).status).toBe(409);
   });
 
   it('/styleguide/ liefert 404, Startseite 200', async () => {

@@ -6,7 +6,7 @@ Cloud-Umgebung: Netz nur npm/PyPI/GitHub (lesen) plus 15 freigegebene Hosts (Pla
 ## Befehle
 - `npm ci` · `npm run dev` (http://localhost:4321, Keystatic unter `/keystatic`)
 - `npm run build:staging` (Platzhalter erlaubt, enthält `/styleguide/`; `npm run build` entfernt ihn) · `npm run build` (bricht ab, solange `check:launch` offen ist) · `npm start` (dist + Header; liest `.env` im Projektstamm, echte Umgebungsvariablen haben Vorrang, wie beim Launch-Check)
-- `npm test` (Vitest + Hook-Test) · `npm run test:e2e` (Playwright gegen `dist`, vorher `build:staging`; startet Mailpit per Docker aus `compose.test.yml`, STARTTLS mit Wegwerf-Zertifikat; `E2E_MAILPIT=extern` nutzt ein laufendes Mailpit auf 127.0.0.1:1025/8025, Postfach http://127.0.0.1:8025) · `npm run check` (Typen)
+- `npm test` (Vitest + Hook-Test) · `npm run test:e2e` (Playwright gegen `dist`, vorher `build:staging`; startet Mailpit per Docker aus `compose.test.yml`, STARTTLS mit Wegwerf-Zertifikat; `E2E_MAILPIT=extern` nutzt ein laufendes Mailpit auf 127.0.0.1:1025/8025, Postfach http://127.0.0.1:8025; je Lauf freier Port, eigene Lauf-ID und Kopie von `dist`, `E2E_PORT`/`E2E_DIST` überschreiben; während E2E- und Prüfläufen nicht im selben Checkout bauen) · `npm run check` (Typen)
 - `npm run check:launch` · `npm run platzhalter` (schreibt `PLATZHALTER.md`, nach Inhaltsänderungen ausführen, Test prüft Aktualität)
 - `npm run scan:wording` · `npm run licenses [-- --check]` · `npm run trend-schema [-- --check]` · `npm run audit`
 
@@ -50,6 +50,7 @@ Cloud-Umgebung: Netz nur npm/PyPI/GitHub (lesen) plus 15 freigegebene Hosts (Pla
 
 ## Konventionen
 - Keine CDN-/Fremd-Hosts, nirgends (Test: 0 Fremd-Requests). Draco-/Basis-/KTX2-Decoder, meshopt, pdf.js-Worker, Schriften (auch für drei `<Text font>`) und HDRs (`<Environment files="/hdr/…">` statt `preset`) liegen lokal unter `public/`.
+- CSS-Dateien ≤ 20 KB bettet der Build als `<style>` mit CSP-Hash ein (`inlineNurCss` in `astro.config.mjs`), Bilder/Schriften/Skripte nie.
 - CSP ohne `'unsafe-inline'`: keine `style`-Attribute, keine `on*`-Handler, kein Inline-`<script>` außer von Astro gebündelt; dynamische Werte über Klassen, CSS-Variablen per Stylesheet oder `element.style` aus gebündeltem JS.
 - Seitenübergänge: native View Transitions (`@view-transition { navigation: auto; }`), kein `<ClientRouter />`.
 - Astro 7: Rust-Compiler verlangt gültiges HTML; `compressHTML: 'jsx'` entfernt Leerraum zwischen Elementen, nötige Leerzeichen als `{" "}`.

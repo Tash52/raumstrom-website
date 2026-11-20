@@ -24,6 +24,8 @@ if (!parsed.ok) {
   process.exit(1);
 }
 const { HOST, PORT, TRUST_PROXY } = parsed.env;
+// Test-only run ID (E2E isolation); empty in production, then any ?lauf= value is answered with 409.
+const LAUF_ID = process.env.RAUMSTROM_LAUF_ID ?? '';
 
 if (!existsSync(path.join(CLIENT, 'index.html'))) {
   console.error(`Kein Build gefunden unter ${CLIENT}. Zuerst npm run build ausführen.`);
@@ -69,7 +71,12 @@ async function handle(req, res) {
   }
   const { pathname } = url;
 
-  if (pathname === '/healthz') return plain(res, 200, 'ok');
+  if (pathname === '/healthz') {
+    // E2E (B1): playwright.config.ts asks /healthz?lauf=<id>; a server of another run answers 409.
+    const lauf = url.searchParams.get('lauf');
+    if (lauf !== null && lauf !== LAUF_ID) return plain(res, 409, 'anderer Lauf');
+    return plain(res, 200, 'ok');
+  }
 
   // Keystatic never exists in production builds; answer before anything else.
   if (/^\/(api\/)?keystatic(\/|$)/.test(pathname)) return notFound(req, res);
