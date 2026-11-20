@@ -131,6 +131,16 @@ const FONTS = [
   },
 ];
 
+// Inlining (Vite assetsInlineLimit, also read by Astro for build.inlineStylesheets 'auto'):
+// - Images, fonts, scripts: never (no data: URIs, CSP img-src/font-src 'self'; scripts stay files).
+// - Component CSS up to CSS_INLINE_MAX bytes becomes a <style> in the page; Astro adds its
+//   SHA-256 hash to style-src (no 'unsafe-inline'). Saves the many small render-blocking
+//   requests (Phase-3 LCP finding, Lighthouse mobile median 2.25/2.11 s -> 1.95/1.95 s on
+//   /kontakt/ and /leistungen/wallbox/). Larger, shared CSS (BaseLayout, 25 KB) stays a cacheable file.
+const CSS_INLINE_MAX = 20 * 1024;
+/** @param {string} file @param {Buffer} content */
+const inlineNurCss = (file, content) => file.endsWith('.css') && content.length <= CSS_INLINE_MAX;
+
 export default defineConfig({
   site: SITE.site,
   output: 'static', // pages are prerendered; only src/pages/api/* sets `export const prerender = false`
@@ -169,7 +179,6 @@ export default defineConfig({
     },
   },
   vite: {
-    // Never inline assets as data: URIs (CSP allows only 'self').
-    build: { sourcemap: false, assetsInlineLimit: 0 },
+    build: { sourcemap: false, assetsInlineLimit: inlineNurCss },
   },
 });

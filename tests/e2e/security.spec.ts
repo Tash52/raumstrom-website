@@ -1,6 +1,8 @@
+import { createHash } from 'node:crypto';
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
+import { DIST } from './lauf.ts';
 
 const EXPECTED_HEADERS: Record<string, string | RegExp> = {
   'strict-transport-security': 'max-age=63072000; includeSubDomains',
@@ -54,6 +56,21 @@ test('CSP ist streng: Hashes statt unsafe-inline, keine fremden Hosts', async ({
   }
 });
 
+// Small component CSS is inlined as <style> (astro.config.mjs, inlineNurCss); each block must be
+// allowed by its SHA-256 hash in style-src, without 'unsafe-inline'.
+test('Inline-<style> sind per Hash in der Seiten-CSP erlaubt', async ({ request }) => {
+  for (const path of ['/', '/kontakt/', '/leistungen/wallbox/', '/impressum/', '/gibt-es-nicht/']) {
+    const res = await request.get(path);
+    const styleSrc = directives(res.headers()['content-security-policy'] ?? '').get('style-src') ?? [];
+    const html = await res.text();
+    const bloecke = [...html.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)].map((m) => m[1]!);
+    expect(bloecke.length, path).toBeGreaterThan(0);
+    for (const css of bloecke) {
+      expect(styleSrc, `${path}: ${css.slice(0, 60)}`).toContain(`'sha256-${createHash('sha256').update(css).digest('base64')}'`);
+    }
+  }
+});
+
 test('HTML enthält kein style-Attribut und kein Inline-Event-Handler', async ({ request }) => {
   const html = await (await request.get('/')).text();
   expect(html).not.toMatch(/\sstyle=/i);
@@ -78,9 +95,9 @@ test('Unbekannte Seiten und Pfad-Tricks liefern 404 mit Headern', async ({ reque
 });
 
 test('Produktions-Build enthält Keystatic nicht', () => {
-  const files = (readdirSync('dist', { recursive: true }) as string[]).filter((f) => /\.(m?js|html|json)$/.test(f));
+  const files = (readdirSync(DIST, { recursive: true }) as string[]).filter((f) => /\.(m?js|html|json)$/.test(f));
   expect(files.length).toBeGreaterThan(0);
-  const hits = files.filter((f) => /keystatic/i.test(f) || /@keystatic|\/keystatic\//.test(readFileSync(path.join('dist', f), 'utf8')));
+  const hits = files.filter((f) => /keystatic/i.test(f) || /@keystatic|\/keystatic\//.test(readFileSync(path.join(DIST, f), 'utf8')));
   expect(hits).toEqual([]);
 });
 

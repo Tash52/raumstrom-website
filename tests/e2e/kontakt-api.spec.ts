@@ -8,9 +8,10 @@ import AxeBuilder from '@axe-core/playwright';
 import { solveChallenge, type Challenge } from 'altcha-lib';
 import { deriveKey } from 'altcha-lib/algorithms/pbkdf2';
 import sharp from 'sharp';
+import { BASE_URL } from './lauf.ts';
 import { MAILPIT_API, TEST_EMPFAENGER } from './mailpit/umgebung.ts';
 
-const BASE = 'http://127.0.0.1:4399';
+const BASE = BASE_URL; // own port per run (tests/e2e/lauf.ts)
 const HEIC = readFileSync(new URL('../fixtures/backend-api/testbild.heic', import.meta.url));
 
 /** Browser-like headers of a same-origin fetch plus a unique client address. */
