@@ -110,6 +110,61 @@ test.describe('Motion und 3D', () => {
     expect(await b.cspImDokument()).toEqual([]);
   });
 
+  test('Software-Renderer (SwiftShader/llvmpipe): Standbild statt 3D', async ({ page }) => {
+    await page.addInitScript(() => {
+      Object.defineProperty(Navigator.prototype, 'hardwareConcurrency', { get: () => 8 });
+      const echt = WebGL2RenderingContext.prototype.getParameter;
+      WebGL2RenderingContext.prototype.getParameter = function (this: WebGL2RenderingContext, p: number) {
+        // UNMASKED_RENDERER_WEBGL (0x9246) and RENDERER report a CPU rasteriser, whatever the runner has
+        if (p === 0x9246 || p === this.RENDERER) return 'llvmpipe (LLVM 15.0.7, 256 bits)';
+        return echt.call(this, p);
+      } as typeof echt;
+    });
+    await page.goto('/');
+    await page.waitForLoadState('load');
+    await page.waitForTimeout(3500);
+    const hero = page.locator('[data-hero]');
+    await expect(hero).toHaveAttribute('data-hero-zustand', 'poster');
+    await expect(hero).toHaveAttribute('data-hero-grund', 'software-renderer');
+    await expect(page.locator('canvas')).toHaveCount(0);
+  });
+
+  test('Pause stoppt die Render-Schleife (keine Draw-Calls mehr), Fortsetzen startet sie wieder', async ({ page }) => {
+    test.slow();
+    await page.addInitScript(() => {
+      const w = window as unknown as { __draws: number };
+      w.__draws = 0;
+      const proto = WebGL2RenderingContext.prototype as unknown as Record<string, (...a: unknown[]) => unknown>;
+      for (const name of ['drawElements', 'drawArrays', 'drawElementsInstanced', 'drawArraysInstanced']) {
+        const echt = proto[name]!;
+        proto[name] = function (this: unknown, ...a: unknown[]) {
+          w.__draws++;
+          return echt.apply(this, a);
+        };
+      }
+    });
+    await page.goto('/?3d=erzwingen');
+    await expect.poll(() => heroZustand(page), { timeout: 30_000 }).toBe('3d');
+    const draws = () => page.evaluate(() => (window as unknown as { __draws: number }).__draws);
+    const pause = page.locator('[data-hero] [data-motion-pause]');
+    // Running: the cable pulse renders continuously
+    const a = await draws();
+    await page.waitForTimeout(1000);
+    expect(await draws()).toBeGreaterThan(a);
+    // Keyboard, not the mouse: pointer moves would (legitimately) render the parallax easing
+    await pause.focus();
+    await page.keyboard.press('Enter');
+    await expect(pause).toHaveAttribute('aria-pressed', 'true');
+    await page.waitForTimeout(1000); // last easing frames settle
+    const b = await draws();
+    await page.waitForTimeout(2000);
+    expect(await draws()).toBe(b);
+    await page.keyboard.press('Enter');
+    await expect(pause).toHaveAttribute('aria-pressed', 'false');
+    await page.waitForTimeout(1000);
+    expect(await draws()).toBeGreaterThan(b);
+  });
+
   test('Seiten ohne 3D laden keinen 3D-Chunk', async ({ page }) => {
     const js: number[] = [];
     page.on('response', async (r) => {

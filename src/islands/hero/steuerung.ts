@@ -1,8 +1,8 @@
 // Hero controller (small, in the page bundle). Decides poster vs. 3D, loads the 3D chunk only when the
-// hero is visible and the main thread is idle, maps scroll to the opening progress, and falls back
+// hero is visible and after the first interaction or 2 s after load (then in an idle period), maps scroll to the opening progress, and falls back
 // to the poster on reduced motion, missing WebGL, weak devices or a failed FPS check.
 // State for tests and debugging: [data-hero-zustand] = poster | laedt | 3d | poster-fertig | fallback.
-import { darf3D, feinerZeiger, aufReduceAenderung, merkeSchwach, testSchalter, wennRuhig, wennSichtbar } from '../../lib/motion/umgebung.ts';
+import { abgeben, darf3D, feinerZeiger, aufReduceAenderung, merkeSchwach, nachInteraktionOderSpaeter, testSchalter, wennSichtbar } from '../../lib/motion/umgebung.ts';
 import { aufPause, istPausiert, zeigePauseKnopf } from '../../lib/motion/pause.ts';
 import { P_START, aktiveStufe, fortschrittAusScroll } from './wand.ts';
 import type { SzenenSteuerung } from './takt.tsx';
@@ -35,6 +35,7 @@ export function initHero(): void {
   };
 
   let beenden: (() => void) | null = null;
+  let beendet = false;
   const weg: Array<() => void> = [];
   let letzteStufe = -1;
 
@@ -65,6 +66,8 @@ export function initHero(): void {
     setze('laedt');
     try {
       const { starteHero } = await import('./start.tsx');
+      await abgeben(); // chunk evaluation and scene setup in separate tasks
+      if (beendet) return setze('poster', 'reduzierte-bewegung');
       const klein = window.innerWidth < 640 || (navigator.hardwareConcurrency ?? 8) <= 4;
       s.bereit = () => {
         root.classList.add('hero-3d-an');
@@ -82,7 +85,12 @@ export function initHero(): void {
         merkeSchwach();
         abbauen('fallback', 'fps');
       };
-      beenden = starteHero(host, s, { leicht: klein && !s.poster, dpr: s.poster ? [2, 2] : klein ? [1, 1.5] : [1, 2] });
+      const ende = await starteHero(host, s, { leicht: klein && !s.poster, dpr: s.poster ? [2, 2] : klein ? [1, 1.5] : [1, 2] });
+      if (beendet) {
+        ende();
+        return setze('poster', 'reduzierte-bewegung');
+      }
+      beenden = ende;
     } catch {
       abbauen('fallback', 'ladefehler');
       return;
@@ -119,12 +127,15 @@ export function initHero(): void {
   };
 
   aufReduceAenderung((reduce) => {
-    if (reduce && beenden) abbauen('poster', 'reduzierte-bewegung');
+    if (!reduce) return;
+    beendet = true;
+    if (beenden) abbauen('poster', 'reduzierte-bewegung');
   });
 
   if (s.poster) {
     void starten();
     return;
   }
-  wennSichtbar(root, () => wennRuhig(() => void starten()), '0px');
+  // Poster is the LCP; the 3D start (chunk eval, scene, shaders) must not compete with load or TBT.
+  wennSichtbar(root, () => nachInteraktionOderSpaeter(() => void starten()), '0px');
 }

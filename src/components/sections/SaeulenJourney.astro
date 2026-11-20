@@ -300,13 +300,22 @@ const ALT = [
     max-height: 100%;
     overflow-y: auto; /* never cut content if a pillar gets a long list */
     padding-right: var(--space-6);
-    opacity: 0.3;
-    transition: opacity 360ms ease;
+    /* Dimmed tone for inactive panels: 66 % text over the surface keeps >= 4.5:1 (Kalk-tief 5.1:1,
+       Kalk 5.4:1, Graphit 7.5:1), unlike opacity, which axe measured at 1.5:1. */
+    --journey-gedimmt: color-mix(in srgb, var(--text) 66%, var(--surface));
   }
 
-  .journey:global(.journey-aktiv) .journey-panel:global(.ist-aktiv),
-  .journey:global(.journey-aktiv) .journey-panel:focus-within {
-    opacity: 1;
+  /* Inactive panels recede by colour, not opacity: tokens are swapped on the text block, so headings,
+     links, the step number and the Gewerke note (incl. its icon) all dim and stay readable. */
+  .journey:global(.journey-aktiv) .journey-panel:not(:global(.ist-aktiv)):not(:focus-within) .journey-panel-text {
+    --text: var(--journey-gedimmt);
+    --text-muted: var(--journey-gedimmt);
+    --accent-text: var(--journey-gedimmt);
+    color: var(--text);
+  }
+
+  .journey:global(.journey-aktiv) .journey-panel-text :is(p, h3, a, span, svg) {
+    transition: color 360ms ease;
   }
 
   .journey:global(.journey-aktiv) .journey-panel-bild {

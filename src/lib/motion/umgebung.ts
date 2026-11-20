@@ -21,25 +21,67 @@ export function aufReduceAenderung(fn: (reduce: boolean) => void): void {
   window.matchMedia(MQ_REDUCE).addEventListener('change', (e) => fn(e.matches));
 }
 
-const webglCache = new Map<boolean, boolean>();
 /**
- * WebGL 2 available? (three.js r163+ requires WebGL 2.) Creates and releases one throwaway context.
- * streng: also fail on a "major performance caveat" (software rendering), which counts as weak.
+ * Renderer strings of CPU rasterisers. Chrome's "major performance caveat" does not cover SwiftShader
+ * (headless Chrome, Lighthouse, VMs without GPU), Mesa llvmpipe/softpipe/lavapipe or Windows' Basic
+ * Render Driver, so they are recognised by name and treated like "no WebGL" (poster).
  */
-export function hatWebGL(streng = true): boolean {
+const SOFTWARE_RENDERER = /swiftshader|llvmpipe|softpipe|lavapipe|software|basic render driver|microsoft basic/i;
+
+export function istSoftwareRenderer(name: string | null | undefined): boolean {
+  return Boolean(name) && SOFTWARE_RENDERER.test(name!);
+}
+
+/**
+ * Renderer description of a context: the unmasked string via WEBGL_debug_renderer_info where the
+ * browser still offers it (Chrome, Safari), otherwise gl.RENDERER (Firefox reports a sanitised but
+ * still telling name there, e.g. "llvmpipe" or "SwiftShader"). Both are checked; empty if unknown.
+ */
+export function rendererName(gl: WebGLRenderingContext | WebGL2RenderingContext): string {
+  const teile: string[] = [];
+  try {
+    const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+    if (dbg) teile.push(String(gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) ?? ''));
+  } catch {
+    /* extension blocked (privacy settings): fall through */
+  }
+  try {
+    teile.push(String(gl.getParameter(gl.RENDERER) ?? ''));
+  } catch {
+    /* ignore */
+  }
+  return teile.filter(Boolean).join(' | ');
+}
+
+type WebGLBefund = { ok: boolean; software: boolean; renderer: string };
+const webglCache = new Map<boolean, WebGLBefund>();
+
+/**
+ * Probe WebGL 2 (three.js r163+ requires it) with one throwaway context, released right away.
+ * streng: also fail on a "major performance caveat"; software renderers are reported separately.
+ */
+export function pruefeWebGL(streng = true): WebGLBefund {
   const cached = webglCache.get(streng);
-  if (cached !== undefined) return cached;
-  let ok = false;
+  if (cached) return cached;
+  let befund: WebGLBefund = { ok: false, software: false, renderer: '' };
   try {
     const canvas = document.createElement('canvas');
     const gl = canvas.getContext('webgl2', { failIfMajorPerformanceCaveat: streng });
-    ok = Boolean(gl);
+    if (gl) {
+      const renderer = rendererName(gl);
+      befund = { ok: true, software: istSoftwareRenderer(renderer), renderer };
+    }
     gl?.getExtension('WEBGL_lose_context')?.loseContext();
   } catch {
-    ok = false;
+    /* no WebGL */
   }
-  webglCache.set(streng, ok);
-  return ok;
+  webglCache.set(streng, befund);
+  return befund;
+}
+
+/** WebGL 2 available (any renderer)? */
+export function hatWebGL(streng = true): boolean {
+  return pruefeWebGL(streng).ok;
 }
 
 /**
@@ -88,7 +130,9 @@ export function darf3D(): DreiDEntscheidung {
   if (erzwingen) return hatWebGL(false) ? { ok: true } : { ok: false, grund: 'kein-webgl' };
   const s = schwachesGeraet();
   if (s.schwach) return { ok: false, grund: `schwaches-geraet:${s.grund}` };
-  if (!hatWebGL()) return { ok: false, grund: 'kein-webgl' };
+  const gl = pruefeWebGL();
+  if (!gl.ok) return { ok: false, grund: 'kein-webgl' };
+  if (gl.software) return { ok: false, grund: 'software-renderer' };
   return { ok: true };
 }
 
@@ -100,6 +144,46 @@ export function wennRuhig(fn: () => void, timeout = 1500): void {
   };
   if (document.readyState === 'complete') go();
   else window.addEventListener('load', go, { once: true });
+}
+
+const INTERAKTION = ['pointerdown', 'keydown', 'wheel', 'touchstart', 'scroll'] as const;
+
+/**
+ * Deferred start for heavy work (3D): on the first user interaction or `verzoegerung` ms after load,
+ * whichever comes first, and then only in an idle period. The interaction itself is never delayed:
+ * the work is queued behind it, so it does not land in that interaction's INP.
+ */
+export function nachInteraktionOderSpaeter(fn: () => void, verzoegerung = 2000): () => void {
+  let fertig = false;
+  let timer = 0;
+  const los = () => {
+    if (fertig) return;
+    fertig = true;
+    aufraeumen();
+    wennRuhig(fn, 1000);
+  };
+  const aufraeumen = () => {
+    window.clearTimeout(timer);
+    for (const t of INTERAKTION) window.removeEventListener(t, los, true);
+    window.removeEventListener('load', nachLoad);
+  };
+  const nachLoad = () => {
+    timer = window.setTimeout(los, verzoegerung);
+  };
+  for (const t of INTERAKTION) window.addEventListener(t, los, { capture: true, passive: true, once: true });
+  if (document.readyState === 'complete') nachLoad();
+  else window.addEventListener('load', nachLoad, { once: true });
+  return () => {
+    fertig = true;
+    aufraeumen();
+  };
+}
+
+/** Give the main thread back between chunks of setup work (scheduler.yield where available). */
+export function abgeben(): Promise<void> {
+  const sch = (globalThis as { scheduler?: { yield?: () => Promise<void> } }).scheduler;
+  if (sch?.yield) return sch.yield();
+  return new Promise((r) => setTimeout(r, 0));
 }
 
 /** Resolve once the element is within `rootMargin` of the viewport (then stop observing). */

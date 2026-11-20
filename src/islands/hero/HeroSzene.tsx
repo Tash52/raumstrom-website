@@ -27,7 +27,8 @@ import {
 } from 'three';
 import { DOSE, KABEL_PUNKTE, WAND, heroZustand, mauerwerk, type HeroZustand } from './wand.ts';
 import { FARBE, kabelMaterial } from './kabel-material.ts';
-import { Takt, daempfung, type SzenenSteuerung } from './takt.tsx';
+import { Takt, Vorwaermen, daempfung, type SzenenSteuerung } from './takt.tsx';
+import { abgeben } from '../../lib/motion/umgebung.ts';
 
 const B = WAND.breite;
 const H = WAND.hoehe;
@@ -91,32 +92,52 @@ const ZIEL_PUTZ = 0.5;
 const ZIEL_FARBE = 0.95;
 const START_KANTE = -B / 2 - 0.35;
 
+export type HeroGeometrie = Awaited<ReturnType<typeof baueHeroGeometrie>>;
+
+/**
+ * Builds the procedural geometry before React mounts the scene, one piece per task (tubes and
+ * extrusions are the expensive ones), so the start never becomes one long main-thread task.
+ */
+export async function baueHeroGeometrie(leicht: boolean) {
+  const kurve = kabelKurve(-0.02);
+  const seg = leicht ? 120 : 220;
+  const rad = leicht ? 8 : 12;
+  const rund = leicht ? 20 : 32;
+  const steine = mauerwerk(leicht ? 'leicht' : 'voll');
+  await abgeben();
+  const putz = schichtGeometrie(PUTZ_D, 0.55, 1);
+  const farbe = schichtGeometrie(FARBE_D, 0.45, 2);
+  await abgeben();
+  const kern = new TubeGeometry(kurve, seg, 0.034, rad, false);
+  await abgeben();
+  const huelle = new TubeGeometry(kurve, seg, 0.1, rad, false);
+  await abgeben();
+  const geo = {
+    stein: new BoxGeometry(1, 1, 1),
+    putz,
+    farbe,
+    kern,
+    huelle,
+    dose: new CylinderGeometry(0.17, 0.17, 0.2, rund, 1, true),
+    doseBoden: new CylinderGeometry(0.17, 0.17, 0.01, rund),
+    platte: new BoxGeometry(0.42, 0.42, 0.03),
+    ring: new TorusGeometry(0.12, 0.012, 8, leicht ? 32 : 48),
+    punkt: new SphereGeometry(0.045, 16, 12),
+    glow: new SphereGeometry(0.16, 16, 12),
+  };
+  return { steine, geo };
+}
+
 type Anwenden = (z: HeroZustand, zeit: number) => void;
 
-function Wand({ api, leicht }: { api: { current: Anwenden }; leicht: boolean }) {
-  const steine = useMemo(() => mauerwerk(leicht ? 'leicht' : 'voll'), [leicht]);
+function Wand({ api, bau }: { api: { current: Anwenden }; bau: HeroGeometrie }) {
   const steinRef = useRef<InstancedMesh>(null);
   const putzRef = useRef<Mesh>(null);
   const farbeRef = useRef<Mesh>(null);
   const kabel = useRef<Group>(null);
   const doseRef = useRef<Group>(null);
 
-  const geo = useMemo(() => {
-    const kurve = kabelKurve(-0.02);
-    return {
-      stein: new BoxGeometry(1, 1, 1),
-      putz: schichtGeometrie(PUTZ_D, 0.55, 1),
-      farbe: schichtGeometrie(FARBE_D, 0.45, 2),
-      kern: new TubeGeometry(kurve, leicht ? 120 : 220, 0.034, leicht ? 8 : 12, false),
-      huelle: new TubeGeometry(kurve, leicht ? 120 : 220, 0.1, leicht ? 8 : 12, false),
-      dose: new CylinderGeometry(0.17, 0.17, 0.2, leicht ? 20 : 32, 1, true),
-      doseBoden: new CylinderGeometry(0.17, 0.17, 0.01, leicht ? 20 : 32),
-      platte: new BoxGeometry(0.42, 0.42, 0.03),
-      ring: new TorusGeometry(0.12, 0.012, 8, leicht ? 32 : 48),
-      punkt: new SphereGeometry(0.045, 16, 12),
-      glow: new SphereGeometry(0.16, 16, 12),
-    };
-  }, [leicht]);
+  const { steine, geo } = bau;
 
   const mat = useMemo(
     () => ({
@@ -233,7 +254,7 @@ function Wand({ api, leicht }: { api: { current: Anwenden }; leicht: boolean }) 
 const ANSICHT_BASIS = new Vector3(-1.75, 0.55, 6.5);
 const BLICK = new Vector3(0.1, -0.05, 0);
 
-function Regie({ s, startP, leicht }: { s: SzenenSteuerung; startP: number; leicht: boolean }) {
+function Regie({ s, startP, bau }: { s: SzenenSteuerung; startP: number; bau: HeroGeometrie }) {
   const camera = useThree((st) => st.camera) as PerspectiveCamera;
   const p = useRef(startP);
   const zeit = useRef(0);
@@ -255,15 +276,15 @@ function Regie({ s, startP, leicht }: { s: SzenenSteuerung; startP: number; leic
   return (
     <>
       <Takt s={s} schritt={schritt} />
-      <Wand api={anwenden} leicht={leicht} />
+      <Wand api={anwenden} bau={bau} />
     </>
   );
 }
 
-export function HeroSzene({ s, leicht, dpr }: { s: SzenenSteuerung; leicht: boolean; dpr: [number, number] }) {
+export function HeroSzene({ s, leicht, dpr, bau }: { s: SzenenSteuerung; leicht: boolean; dpr: [number, number]; bau: HeroGeometrie }) {
   return (
     <Canvas
-      frameloop="demand"
+      frameloop="never" /* Vorwaermen switches to "demand" after shader warm-up */
       flat
       dpr={dpr}
       camera={{ position: ANSICHT_BASIS.toArray(), fov: 34, near: 0.1, far: 40 }}
@@ -276,7 +297,8 @@ export function HeroSzene({ s, leicht, dpr }: { s: SzenenSteuerung; leicht: bool
       <hemisphereLight args={['#fbfaf7', '#232a31', 1.6]} />
       <directionalLight position={[-3, 4, 5]} intensity={2.2} />
       <directionalLight position={[4, -1, 3]} intensity={0.5} color={FARBE.strom} />
-      <Regie s={s} startP={s.ziel} leicht={leicht} />
+      <Regie s={s} startP={s.ziel} bau={bau} />
+      <Vorwaermen />
     </Canvas>
   );
 }

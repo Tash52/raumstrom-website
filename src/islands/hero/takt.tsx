@@ -1,9 +1,12 @@
-// Frame loop shared by hero and journey scenes. Canvas runs with frameloop="demand": a frame is only
-// rendered while something moves (pulse running, lerp not settled) and the scene is visible.
+// Frame loop shared by hero and journey scenes. Canvas starts with frameloop="never" (Vorwaermen
+// compiles shaders first), then runs "demand": a frame is only rendered while something moves
+// (pulse running, lerp not settled) and the scene is visible. Paused + settled = no frames at all.
 // Also runs the FPS check (lowers resolution once, then gives up so the controller shows the poster).
 import { useEffect, useMemo, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
+import type { Mesh, Object3D } from 'three';
 import { fpsWaechter, type FpsUrteil } from '../../lib/motion/fps.ts';
+import { abgeben } from '../../lib/motion/umgebung.ts';
 
 export interface SzenenSteuerung {
   /** Target progress (scroll); the scene eases towards it. */
@@ -53,6 +56,47 @@ export function Takt({ s, schritt }: { s: SzenenSteuerung; schritt: (dt: number)
     }
     if (frames.current < 3 || laufen || (weiter && s.sichtbar)) state.invalidate();
   });
+  return null;
+}
+
+/**
+ * Shader warm-up before the first frame. The Canvas starts with frameloop="never"; this compiles the
+ * programs mesh by mesh (compileAsync uses KHR_parallel_shader_compile where available) and yields
+ * to the main thread in between, so the start is several short tasks instead of one long first frame.
+ * Then it switches to "demand" and requests the first frame.
+ */
+export function Vorwaermen() {
+  const gl = useThree((st) => st.gl);
+  const scene = useThree((st) => st.scene);
+  const camera = useThree((st) => st.camera);
+  const setFrameloop = useThree((st) => st.setFrameloop);
+  const invalidate = useThree((st) => st.invalidate);
+
+  useEffect(() => {
+    let weg = false;
+    void (async () => {
+      const meshes: Object3D[] = [];
+      scene.traverse((o) => {
+        if ((o as Mesh).isMesh) meshes.push(o);
+      });
+      for (const m of meshes) {
+        await abgeben();
+        if (weg) return;
+        try {
+          await gl.compileAsync(m, camera, scene);
+        } catch {
+          /* compiled lazily on the first frame instead */
+        }
+      }
+      await abgeben();
+      if (weg) return;
+      setFrameloop('demand');
+      invalidate();
+    })();
+    return () => {
+      weg = true;
+    };
+  }, [gl, scene, camera, setFrameloop, invalidate]);
   return null;
 }
 

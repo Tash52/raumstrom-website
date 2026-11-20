@@ -2,7 +2,7 @@
 // (desktop, motion allowed). Without that: a plain grid of cards with poster images (static markup).
 // 3D rail of objects on top when darf3D() allows it; posters stay underneath as fallback.
 // State: [data-journey-zustand] = statisch | gepinnt | laedt | 3d | poster-fertig | fallback.
-import { darf3D, merkeSchwach, testSchalter, wennRuhig, wennSichtbar } from '../../lib/motion/umgebung.ts';
+import { abgeben, darf3D, merkeSchwach, testSchalter, wennRuhig, wennSichtbar } from '../../lib/motion/umgebung.ts';
 import { aufPause, istPausiert, zeigePauseKnopf } from '../../lib/motion/pause.ts';
 import type { SzenenSteuerung } from '../hero/takt.tsx';
 
@@ -106,6 +106,8 @@ export function initJourney({ gsap, ScrollTrigger }: Gsap): void {
             setze('laedt');
             try {
               const { starteJourney } = await import('./start.tsx');
+              await abgeben(); // chunk evaluation and scene setup in separate tasks
+              if (!root.classList.contains('journey-aktiv')) return;
               s.bereit = () => {
                 root.classList.add('journey-3d-an');
                 setze('3d');
