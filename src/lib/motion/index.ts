@@ -3,6 +3,8 @@
 // something scroll-linked actually needs it: the journey at once (it pins), section cables and the
 // process cable only once one of them comes within half a viewport of the screen. Form pages (/kontakt/…) never load GSAP
 // for the cables: their lines keep the static drawing, the form's LCP is not delayed (Phase 4).
+// Tool pages (/raumplaner/, /planer/…) never load GSAP at all: the planner owns the main thread there
+// (Befund B3, Phase 4).
 // The 3D chunks load only from the hero/journey controllers.
 import { initPauseKnoepfe } from './pause.ts';
 import { aufReduceAenderung, feinerZeiger, reduzierteBewegung } from './umgebung.ts';
@@ -18,6 +20,8 @@ initHero();
 
 /** Pages with a form: cable animation is decoration there and must not compete with the form. */
 const FORMULAR_SEITE = /^\/kontakt(\/|$)/;
+/** Tool pages: no scroll motion at all (neither cables nor process lists), lines stay static. */
+const WERKZEUG_SEITE = /^\/(raumplaner|planer)(\/|$)/;
 
 let ohneScroll: (() => void) | null = null;
 let ohneZeiger: (() => void) | null = null;
@@ -27,6 +31,7 @@ let journeyGestartet = false;
 
 /** Elements whose visibility starts the scroll motion (sections of the cables, process lists). */
 function scrollZiele(doc: Document, pfad: string): Element[] {
+  if (WERKZEUG_SEITE.test(pfad)) return [];
   const ziele: Element[] = [...doc.querySelectorAll('[data-prozess]')];
   if (!FORMULAR_SEITE.test(pfad)) {
     for (const linie of doc.querySelectorAll('[data-leitung]')) ziele.push(linie.closest('section') ?? linie.parentElement ?? linie);

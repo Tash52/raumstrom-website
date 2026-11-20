@@ -42,3 +42,8 @@ Einordnung:
 - backend-api: Altcha-Widget (89 KB roh) erst bei Fokus oder Sichtbarkeit des Formulars laden.
 - Startseite LCP knapp über 2,0 s: GSAP wird dort für die Journey gebraucht. Es ließe sich auch dort per Observer an `[data-journey]` binden (erst laden, wenn die Journey in die Nähe kommt). Das ändert das Pin-Verhalten beim Direktsprung per Anker und ist hier bewusst nicht umgesetzt (eigener Auftrag, falls gewünscht).
 - Springt man per Anker oder Tastatur (`Ende`) direkt hinter alle Linien, lädt GSAP erst, wenn man wieder durch eine Section scrollt. Bis dahin bleiben die Linien statisch voll gezeichnet, was dem korrekten Endzustand entspricht.
+
+## Nachtrag: Befund B3 (GSAP auf /raumplaner/)
+- `src/lib/motion/index.ts`: neue Ausnahme `WERKZEUG_SEITE` (`/raumplaner/`, `/planer/…`). Dort liefert `scrollZiele` keine Ziele, weder Leitungen noch Prozesslisten; GSAP (`scroll.*.js`, 41,6 KB) wird nie geladen, die Linien bleiben statisch gezeichnet. Keine Seitenänderung nötig.
+- Beleg: neuer E2E-Test „Raumplaner: kein GSAP …“ in `tests/e2e/motion-3d.spec.ts` (Desktop und Mobil grün): 0 Requests auf `scroll.*.js` nach Scrollen bis zum Seitenende, keine `leitung-aktiv`; Gegenprobe Startseite lädt GSAP genau einmal (unverändert).
+- `npm test` (402), `npm run check`, `npm run build:staging`, motion-3d-E2E (28 grün, 2 projektbedingt übersprungen, `E2E_MAILPIT=extern` mit Stub auf 8025) grün.

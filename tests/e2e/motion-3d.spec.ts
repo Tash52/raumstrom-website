@@ -246,6 +246,25 @@ test.describe('Motion und 3D', () => {
     expect(await linie.evaluate((el) => getComputedStyle(el).transform)).toBe('none');
   });
 
+  test('Raumplaner: kein GSAP, auch nach Scrollen bis zum Seitenende (B3, Phase 4)', async ({ page }) => {
+    const gsap: string[] = [];
+    page.on('request', (r) => {
+      if (/\/_astro\/scroll\.[^/]+\.js/.test(r.url())) gsap.push(r.url());
+    });
+    await page.goto('/raumplaner/');
+    await page.waitForLoadState('load');
+    expect(await page.locator('[data-leitung]').count()).toBeGreaterThan(0);
+    await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
+    await page.mouse.wheel(0, 2000);
+    await page.waitForTimeout(800);
+    expect(gsap).toEqual([]);
+    await expect(page.locator('html')).not.toHaveClass(/leitung-aktiv/);
+    // Gegenprobe: die Startseite (Journey) lädt GSAP weiterhin
+    await page.goto('/');
+    await page.waitForLoadState('load');
+    await expect.poll(() => gsap.length, { timeout: 10_000 }).toBe(1);
+  });
+
   test('Leitung lädt GSAP erst in Sichtweite und zeichnet sich bis zum Seitenende', async ({ page }) => {
     let gsap = 0;
     page.on('request', (r) => {
