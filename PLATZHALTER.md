@@ -1,6 +1,6 @@
 # Offene Inhalte vor dem Launch
 
-Automatisch erzeugt mit `npm run platzhalter` am 2026-11-19. Nicht von Hand bearbeiten, sondern die genannte Datei ändern (am einfachsten per Keystatic: `npm run dev`, dann http://localhost:4321/keystatic) und den Befehl erneut ausführen.
+Automatisch erzeugt mit `npm run platzhalter` am 2026-11-20. Nicht von Hand bearbeiten, sondern die genannte Datei ändern (am einfachsten per Keystatic: `npm run dev`, dann http://localhost:4321/keystatic) und den Befehl erneut ausführen.
 
 `npm run check:launch` schlägt fehl, solange hier etwas offen ist.
 
