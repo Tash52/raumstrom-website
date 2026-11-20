@@ -1,7 +1,10 @@
 # Schriften (lokal, OFL-1.1)
 
 Kein Font-CDN. Eingebunden über die Astro-Fonts-API (`fonts` in `astro.config.mjs`, `fontProviders.local()`),
-`font-display: swap`, Preload: Archivo (Latin) und IBM Plex Mono Regular (Latin).
+`font-display: swap` mit Astros Fallback-Metriken (Arial bzw. Courier New mit `size-adjust`/`ascent-override`, daher kein CLS).
+Preload nur Archivo (Latin), die Schrift des LCP-Texts. Plex Mono wird nicht vorgeladen (Phase 4, LCP `/kontakt/`):
+Der Plex-Pi-Bereich lässt U+2010 aus (sonst lädt `hyphens: auto` die Pi-Datei; Blink trennt dann mit U+002D, Glyphe
+in Plex identisch), und der Footer (`content-visibility: auto`) fordert Plex erst an, wenn er in die Nähe des Viewports kommt.
 Lizenztexte liegen neben den Dateien und werden zusätzlich unter `/fonts/*-OFL.txt` ausgeliefert (`public/fonts/`).
 
 | Datei | Quelle | Bearbeitung |

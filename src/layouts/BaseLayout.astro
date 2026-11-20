@@ -22,10 +22,11 @@ interface Props {
 const { title, description, noindex = false, ohneKopfFuss = false, navigation, anfrage } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 
-// Preload exactly two files: Archivo Latin (variable, all headings and text) and Plex Mono Regular Latin.
+// Preload exactly one file: Archivo Latin (variable font, every heading and body text, so also the
+// LCP text). Plex Mono is never above the fold on its own and is not preloaded (Phase-4 LCP).
 // fontData lists files in the order of the variants in astro.config.mjs (first = Latin).
-const preloads = [fontData['--font-archivo']?.[0], fontData['--font-plex-mono']?.[0]].map((f) => f?.src[0]?.url);
-if (preloads.some((u) => !u)) throw new Error('Font-Preload: Schriftdateien fehlen (fonts in astro.config.mjs prüfen)');
+const preload = fontData['--font-archivo']?.[0]?.src[0]?.url;
+if (!preload) throw new Error('Font-Preload: Schriftdatei fehlt (fonts in astro.config.mjs prüfen)');
 ---
 <!doctype html>
 <html lang="de">
@@ -38,7 +39,7 @@ if (preloads.some((u) => !u)) throw new Error('Font-Preload: Schriftdateien fehl
     {noindex && <meta name="robots" content="noindex" />}
     <meta name="theme-color" content="#F4F1EB" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    {preloads.map((url) => <link rel="preload" href={url} as="font" type="font/woff2" crossorigin />)}
+    <link rel="preload" href={preload} as="font" type="font/woff2" crossorigin />
     <Font cssVariable="--font-archivo" />
     <Font cssVariable="--font-plex-mono" />
   </head>
