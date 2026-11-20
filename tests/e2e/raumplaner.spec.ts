@@ -99,12 +99,15 @@ test.describe('Raumplaner', () => {
     await b.pruefen();
   });
 
-  test('Tastatur: Rechteck zeichnen, Raum wird erkannt, Länge numerisch, Rückgängig', async ({ page, baseURL }) => {
+  test('Tastatur: Rechteck zeichnen, Raum wird erkannt, Länge numerisch, Rückgängig', async ({ page, baseURL, isMobile }) => {
     const b = await beobachten(page, baseURL!);
     await oeffnen(page);
     await page.click('[data-planer-leer]');
     await tourSchliessen(page);
     const editor = page.locator('[data-planer-editor]');
+    await expect(editor, 'Fokus nach „Verstanden" auf dem Editor (QA B2)').toBeFocused();
+    // heading order h1 -> h2 -> h3 (a11y B1)
+    await expect(page.locator('.planer > h2')).toHaveText('Grundriss bearbeiten');
     await editor.focus();
     await page.keyboard.press('w');
     await page.keyboard.press('Enter'); // start point at the cursor
@@ -124,6 +127,11 @@ test.describe('Raumplaner', () => {
 
     // select a wall from the list and set its length numerically
     await page.locator('.planer-wandliste summary').click();
+    // tap targets: >= 24 px, 44 px on touch (a11y B2)
+    const mindest = isMobile ? 44 : 24;
+    for (const ziel of [page.locator('.planer-wandliste summary'), page.locator('.planer-wandliste button').first()]) {
+      expect((await ziel.boundingBox())!.height).toBeGreaterThanOrEqual(mindest);
+    }
     await page.locator('.planer-wandliste button').first().click();
     await expect(page.locator('[data-planer-auswahl="wand"]')).toBeVisible();
     await expect(page.locator('#planer-wandlaenge')).toHaveValue('400');
@@ -141,6 +149,37 @@ test.describe('Raumplaner', () => {
     await expect(page.locator('[data-planer-auswahl="oeffnung"]')).toBeVisible();
     await expect(editor.locator('g.oeffnung.tuer')).toHaveCount(1);
     await b.pruefen();
+  });
+
+  test('Tastatur: Maus über dem Editor verliert den Tastatur-Zeiger nicht (Seite scrollt, Maus verlässt den Editor)', async ({ page }) => {
+    // Regression (Phase 4, QA B1): the page scrolled under a resting mouse; the editor got pointerleave
+    // between an arrow key and Enter, the keyboard cursor was cleared and the wall went the wrong way.
+    await oeffnen(page);
+    await page.click('[data-planer-leer]');
+    await tourSchliessen(page);
+    const editor = page.locator('[data-planer-editor]');
+    const box = (await editor.boundingBox())!;
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2); // mouse rests over the editor
+    await editor.focus();
+    await page.keyboard.press('w');
+    await page.keyboard.press('Enter');
+    await page.keyboard.type('400');
+    await page.keyboard.press('Enter');
+    for (const [pfeil, laenge] of [['ArrowDown', '300'], ['ArrowLeft', '400'], ['ArrowUp', '300']] as const) {
+      await page.keyboard.press(pfeil);
+      // what Chrome sends when content slides away under a resting mouse: a move without travel and a
+      // boundary event (React derives onPointerLeave from pointerout with an outside relatedTarget)
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+      await editor.evaluate((el) => {
+        const raus = document.querySelector('.planer-leiste');
+        el.querySelector('svg')!.dispatchEvent(new PointerEvent('pointerout', { bubbles: true, pointerType: 'mouse', relatedTarget: raus }));
+      });
+      await page.keyboard.type(laenge);
+      await page.keyboard.press('Enter');
+    }
+    await page.keyboard.press('Escape');
+    await expect(editor.locator('line.wand')).toHaveCount(4);
+    await expect(page.locator('[data-planer-raeume] h3')).toHaveText('Räume (1)');
   });
 
   test('Maus/Touch: Wand per Tippen bzw. Klicken, Fenster auf die Wand setzen', async ({ page, baseURL, isMobile }) => {

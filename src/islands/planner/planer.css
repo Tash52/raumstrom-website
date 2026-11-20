@@ -94,8 +94,12 @@
   color: var(--button-text);
   box-shadow: inset 0 -3px 0 var(--accent-surface);
 }
+/* tap targets >= 24 px (WCAG 2.5.8), 44 px on touch (a11y Phase 4 B2) */
 .planer-link {
-  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.5rem;
+  padding: 0.125rem 0;
   border: 0;
   background: none;
   color: var(--accent-text);
@@ -375,7 +379,38 @@
   letter-spacing: 0.04em;
 }
 .planer-gruppe summary {
+  display: flex;
+  align-items: center;
+  min-height: 1.5rem;
   cursor: pointer;
+}
+.planer-gruppe summary::before {
+  content: '';
+  flex: none;
+  width: 0;
+  height: 0;
+  margin-right: var(--space-2);
+  border-block: 0.3em solid transparent;
+  border-left: 0.45em solid currentColor;
+  transition: rotate var(--dur-fast) var(--ease-out);
+}
+details.planer-gruppe[open] > summary::before {
+  rotate: 90deg;
+}
+.planer-gruppe summary::-webkit-details-marker {
+  display: none;
+}
+@media (pointer: coarse) {
+  .planer-link,
+  .planer-gruppe summary {
+    min-height: 2.75rem;
+  }
+  .planer-link {
+    width: 100%;
+  }
+  .planer-wandliste ul {
+    gap: 0;
+  }
 }
 .planer-wandliste ul {
   display: grid;
@@ -447,6 +482,8 @@
   fill: rgb(61 99 0 / 0.05);
 }
 .planer-svg .raum.ist-ausgewaehlt {
+  /* fill is 1.1:1 on the plan; the room state is carried by the side panel (Raum fieldset, list
+     entry with graphite border and Strom bar); an outline would lie under the walls (axis polygon) */
   fill: rgb(197 240 30 / 0.32);
 }
 .planer-svg .wand {
@@ -483,6 +520,11 @@
 .planer-svg .mass {
   fill: var(--text-muted);
   font-family: var(--font-mono);
+  /* halo keeps 6.7:1 over grid lines and an uploaded floor plan */
+  paint-order: stroke;
+  stroke: var(--color-kalk-hell);
+  stroke-width: 3px;
+  vector-effect: non-scaling-stroke;
 }
 .planer-svg .mass-aktiv {
   fill: var(--color-kabelgruen);
@@ -515,7 +557,9 @@
 }
 .planer-svg .knoten.ist-ausgewaehlt {
   fill: var(--accent-surface);
-  stroke-width: 2px;
+  /* Strom fill is 1.3:1 on the plan; the Kabelgrün ring carries the state (6.7:1) */
+  stroke: var(--color-kabelgruen);
+  stroke-width: 3px;
 }
 .planer-svg .wand-vorschau-koerper {
   stroke: rgb(21 25 30 / 0.35);

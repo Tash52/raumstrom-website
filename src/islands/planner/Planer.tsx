@@ -213,6 +213,7 @@ export function Planer({ webgl, leicht }: { webgl: boolean; leicht: boolean }) {
         <Startbildschirm />
       ) : (
         <>
+          <h2 className="visually-hidden">Grundriss bearbeiten</h2>
           <div className="planer-leiste">
             <div className="planer-schritte" role="group" aria-label="Ansicht wählen">
               <button type="button" className="planer-tab" onClick={neu}>
@@ -264,7 +265,15 @@ export function Planer({ webgl, leicht }: { webgl: boolean; leicht: boolean }) {
                 </p>
               )}
               <Meldung />
-              {tour === 'offen' && <Kurzanleitung onSchliessen={() => setTour('zu')} />}
+              {tour === 'offen' && (
+                <Kurzanleitung
+                  onSchliessen={() => {
+                    // keep keyboard users in place: focus moves to the drawing area, not to <body>
+                    document.querySelector<HTMLElement>('[data-planer-editor], .planer-3d')?.focus({ preventScroll: true });
+                    setTour('zu');
+                  }}
+                />
+              )}
             </div>
             <Seitenleiste />
           </div>

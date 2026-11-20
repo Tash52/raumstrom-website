@@ -38,6 +38,16 @@ describe('Projektmodell', () => {
     expect(parseProjekt({ ...p, waende: [{ ...p.waende[0]!, dicke: 5 }, ...p.waende.slice(1)] }).ok).toBe(false);
     expect(parseProjekt({ ...p, name: 'x'.repeat(200) }).ok).toBe(false);
   });
+
+  it('lehnt nicht endliche Zahlen ab (zod 4: z.number() ohne .finite())', () => {
+    const p = ladeVorlage('1-zimmer')!;
+    const k0 = p.knoten[0]!;
+    for (const x of [Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY]) {
+      expect(parseProjekt({ ...p, knoten: [{ ...k0, x }, ...p.knoten.slice(1)] }).ok).toBe(false);
+      expect(parseProjekt({ ...p, waende: [{ ...p.waende[0]!, dicke: x }, ...p.waende.slice(1)] }).ok).toBe(false);
+      expect(parseProjekt({ ...p, raeume: p.raeume.map((r) => ({ ...r, flaeche: x })) }).ok).toBe(false);
+    }
+  });
 });
 
 describe('Vorlagen', () => {

@@ -17,8 +17,8 @@ export const WANDDICKE = { aussen: 0.3, innen: 0.115 } as const;
 export const WANDDICKEN = [0.1, 0.115, 0.175, 0.24, 0.3, 0.365] as const;
 
 const id = z.string().regex(/^[a-z]+[0-9]+$/, 'ID-Format: Buchstaben + Zahl, z. B. w12');
-const meter = (min: number, max: number) => z.number().finite().min(min).max(max);
-const koordinate = z.number().finite().min(-10_000).max(10_000);
+const meter = (min: number, max: number) => z.number().min(min).max(max);
+const koordinate = z.number().min(-10_000).max(10_000);
 const punkt = z.object({ x: koordinate, y: koordinate });
 
 export const knotenSchema = z.object({ id, x: koordinate, y: koordinate });
@@ -55,7 +55,7 @@ export const raumSchema = z.object({
   /** Room height in metres, null = project standard height. */
   hoehe: meter(1.8, 6).nullable(),
   /** Derived: clear floor area in m² (centre-line polygon minus half the wall thickness). Recomputed on load. */
-  flaeche: z.number().finite().min(0),
+  flaeche: z.number().min(0),
 });
 
 export const grundrissSchema = z.object({
@@ -64,7 +64,7 @@ export const grundrissSchema = z.object({
   breitePx: z.number().int().min(1).max(20_000),
   hoehePx: z.number().int().min(1).max(20_000),
   /** Scale in metres per image pixel. */
-  meterProPixel: z.number().finite().positive().max(10),
+  meterProPixel: z.number().positive().max(10),
   /** World position (metres) of the image's top-left corner. */
   ursprung: punkt,
   deckkraft: z.number().min(0).max(1),
