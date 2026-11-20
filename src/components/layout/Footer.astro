@@ -127,11 +127,28 @@ const jahr = new Date().getFullYear();
     hyphens: manual;
   }
 
+  /*
+   * Phase-4 LCP: the footer holds the only Plex Mono text on most pages (column titles, copyright).
+   * content-visibility: auto skips its layout until it nears the viewport, so the two Plex files are
+   * no longer fetched before the LCP. contain-intrinsic-size reserves the height (auto = last real
+   * size); the switch happens below the fold, so no visible shift. Paint containment clips at the
+   * padding box: the extra inline padding (offset by a negative margin) keeps link focus rings
+   * (2px outline + 3px offset + 6px glow) visible; the top rule is a background so it keeps the
+   * container width.
+   */
+  .fuss-raster,
+  .fuss-unten {
+    content-visibility: auto;
+  }
+
   .fuss-raster {
+    --fokus-raum: var(--space-3);
     display: grid;
     gap: var(--space-6);
-    padding-block: var(--space-7);
-    border-top: 1px solid var(--line);
+    margin-inline: calc(-1 * var(--fokus-raum));
+    padding: var(--space-7) var(--fokus-raum);
+    background: linear-gradient(var(--line), var(--line)) var(--fokus-raum) 0 / calc(100% - 2 * var(--fokus-raum)) 1px no-repeat;
+    contain-intrinsic-size: auto 45rem;
   }
 
   .fuss-marke :global(.fuss-logo) {
@@ -181,11 +198,13 @@ const jahr = new Date().getFullYear();
     gap: var(--space-3);
     padding-top: var(--space-5);
     border-top: 1px solid var(--line);
+    contain-intrinsic-size: auto 2.75rem;
   }
 
   @media (min-width: 48em) {
     .fuss-raster {
       grid-template-columns: repeat(2, minmax(0, 1fr));
+      contain-intrinsic-size: auto 41rem;
     }
   }
 
@@ -193,6 +212,14 @@ const jahr = new Date().getFullYear();
     .fuss-raster {
       grid-template-columns: 1.4fr repeat(4, minmax(0, 1fr));
       column-gap: var(--space-7);
+      contain-intrinsic-size: auto 25rem;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .fuss-raster {
+      background: none;
+      border-top: 1px solid CanvasText;
     }
   }
 </style>

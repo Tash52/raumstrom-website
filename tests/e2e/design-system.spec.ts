@@ -25,8 +25,19 @@ for (const pfad of SEITEN) {
     await page.evaluate(() => document.fonts.ready);
     expect(fontRequests.length).toBeGreaterThan(0);
     for (const u of fontRequests) expect(new URL(u).pathname).toMatch(/^\/_astro\/fonts\/[\w-]+\.woff2$/);
-    // exactly two preloads (Archivo Latin, Plex Mono Regular Latin)
-    expect(await page.locator('link[rel="preload"][as="font"]').count()).toBe(2);
+    // exactly one preload: Archivo Latin, the font of the LCP text (Phase-4 LCP, Plex Mono not preloaded)
+    const preloads = page.locator('link[rel="preload"][as="font"]');
+    expect(await preloads.count()).toBe(1);
+    // first Archivo face with a file = Latin variant
+    const archivo = await page.evaluate(() =>
+      [...document.styleSheets]
+        .flatMap((s) => [...s.cssRules])
+        .filter((r): r is CSSFontFaceRule => r instanceof CSSFontFaceRule)
+        .map((r) => r.style)
+        .find((st) => st.getPropertyValue('font-family').includes('Archivo') && st.getPropertyValue('src').includes('/_astro/fonts/'))
+        ?.getPropertyValue('src'),
+    );
+    expect(archivo).toContain(new URL((await preloads.first().getAttribute('href'))!, page.url()).pathname);
     expect(await page.evaluate(() => document.fonts.check('700 1rem Archivo'))).toBe(true);
     const familie = await page.evaluate(() => getComputedStyle(document.body).fontFamily);
     expect(familie).toMatch(/^Archivo/);
