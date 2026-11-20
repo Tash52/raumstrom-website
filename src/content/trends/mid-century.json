@@ -1,0 +1,56 @@
+{
+  "name": "Mid-Century",
+  "beschreibung": "Retro-Stil der Mitte des 20. Jahrhunderts: Nussholz, gedämpfte Farbakzente, geschwungene Formen.",
+  "gueltig_ab": "2026-11-01",
+  "saison": "2026/27",
+  "trend_quelle_notiz": "Interne Redaktionsnotiz (Stand 2026-11-20): Eigene Einschätzung aus allgemein bekannten Einrichtungs- und Materialtrends 2026/27 (Fachpresse, Herstellerkataloge, Messeberichte); keine Quelle direkt übernommen, Farben frei benannt. Vor Veröffentlichung redaktionell prüfen.",
+  "aktiv": true,
+  "wandfarben": [
+    {
+      "name": "Senfgelb gedämpft",
+      "hex": "#C9A24A"
+    },
+    {
+      "name": "Petrolgrün",
+      "hex": "#2F5D5E"
+    },
+    {
+      "name": "Cremeweiß",
+      "hex": "#F1EBDD"
+    }
+  ],
+  "putz_tapete": {
+    "art": "tapete",
+    "beschreibung": "Mustertapete mit grafischem Retro-Muster als Akzentwand"
+  },
+  "boden": {
+    "material": "parkett",
+    "farbton": {
+      "name": "Nussbaum mittel",
+      "hex": "#7A5A3E"
+    },
+    "verlegemuster": "Chevron"
+  },
+  "fliesen": {
+    "format": "Hexagon",
+    "farbe": {
+      "name": "Salbei matt",
+      "hex": "#9BA791"
+    },
+    "verlegemuster": "Diagonal",
+    "fuge": "#D5D0C2"
+  },
+  "deckenlicht": {
+    "art": "Pendelleuchte im Kugelstil und Wandleuchten",
+    "farbtemperatur_k": 2700
+  },
+  "elektro_vorschlag": {
+    "paket": "Komfort",
+    "punkte": [
+      "Steckdosen mit USB-C am Sofa und Bett",
+      "Dimmer im Wohnbereich",
+      "Wandleuchten-Anschlüsse neben dem Sofa",
+      "LAN-Dose Cat.7 im Arbeitsbereich"
+    ]
+  }
+}

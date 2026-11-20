@@ -1,0 +1,57 @@
+{
+  "name": "Hotelbad",
+  "beschreibung": "Wellnessgefühl im Bad: großformatige helle Fliesen, warmes Licht und klare Linien.",
+  "gueltig_ab": "2026-11-01",
+  "saison": "2026/27",
+  "trend_quelle_notiz": "Interne Redaktionsnotiz (Stand 2026-11-20): Eigene Einschätzung aus allgemein bekannten Einrichtungs- und Materialtrends 2026/27 (Fachpresse, Herstellerkataloge, Messeberichte); keine Quelle direkt übernommen, Farben frei benannt. Vor Veröffentlichung redaktionell prüfen.",
+  "aktiv": true,
+  "wandfarben": [
+    {
+      "name": "Perlweiß",
+      "hex": "#F2F0EB"
+    },
+    {
+      "name": "Steinbeige",
+      "hex": "#D6CDBE"
+    },
+    {
+      "name": "Schiefergrau",
+      "hex": "#6E7378"
+    }
+  ],
+  "putz_tapete": {
+    "art": "putz",
+    "beschreibung": "Mikrozement fugenlos in hellem Sandton"
+  },
+  "boden": {
+    "material": "fliese",
+    "farbton": {
+      "name": "Steingrau warm",
+      "hex": "#B8B0A3"
+    },
+    "verlegemuster": "Halbverband"
+  },
+  "fliesen": {
+    "format": "120×120",
+    "farbe": {
+      "name": "Marmoroptik Weißgrau",
+      "hex": "#E6E3DD"
+    },
+    "verlegemuster": "Kreuzfuge",
+    "fuge": "#D9D5CD"
+  },
+  "deckenlicht": {
+    "art": "Einbauspots mit Spiegel- und Nischenbeleuchtung",
+    "farbtemperatur_k": 2700
+  },
+  "elektro_vorschlag": {
+    "paket": "Komfort Plus",
+    "punkte": [
+      "Dimmbare Einbauspots im Bad",
+      "LED-Streifen in der Nische",
+      "Raumthermostat für Fußbodenheizung",
+      "Steckdose am Waschtisch mit USB-C",
+      "Einbaulautsprecher im Bad"
+    ]
+  }
+}

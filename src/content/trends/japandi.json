@@ -1,0 +1,56 @@
+{
+  "name": "Japandi",
+  "beschreibung": "Ruhige Verbindung aus japanischer Schlichtheit und nordischer Wärme: gedeckte Erdtöne, helle Hölzer, viel Ruhe im Raum.",
+  "gueltig_ab": "2026-11-01",
+  "saison": "2026/27",
+  "trend_quelle_notiz": "Interne Redaktionsnotiz (Stand 2026-11-20): Eigene Einschätzung aus allgemein bekannten Einrichtungs- und Materialtrends 2026/27 (Fachpresse, Herstellerkataloge, Messeberichte); keine Quelle direkt übernommen, Farben frei benannt. Vor Veröffentlichung redaktionell prüfen.",
+  "aktiv": true,
+  "wandfarben": [
+    {
+      "name": "Haferweiß",
+      "hex": "#EDE7DC"
+    },
+    {
+      "name": "Sandstein",
+      "hex": "#CDBFAA"
+    },
+    {
+      "name": "Moosschatten",
+      "hex": "#8A8F78"
+    }
+  ],
+  "putz_tapete": {
+    "art": "putz",
+    "beschreibung": "Kalkputz in matter, leicht wolkiger Oberfläche, hell und warm"
+  },
+  "boden": {
+    "material": "parkett",
+    "farbton": {
+      "name": "Eiche hell",
+      "hex": "#C9AE86"
+    },
+    "verlegemuster": "Landhausdiele"
+  },
+  "fliesen": {
+    "format": "Zellige-Optik",
+    "farbe": {
+      "name": "Steingrau warm",
+      "hex": "#B9B2A5"
+    },
+    "verlegemuster": "Halbverband",
+    "fuge": "#D8D2C6"
+  },
+  "deckenlicht": {
+    "art": "Indirekte Lichtvoute plus Einbauspots",
+    "farbtemperatur_k": 2700
+  },
+  "elektro_vorschlag": {
+    "paket": "Komfort",
+    "punkte": [
+      "Dimmbare Einbauspots im Wohnbereich",
+      "Steckdosen mit USB-C am Bett",
+      "Wechselschalter an jedem Raumeingang",
+      "LAN-Dose Cat.7 im Arbeitsbereich"
+    ]
+  }
+}

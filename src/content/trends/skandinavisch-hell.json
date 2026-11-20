@@ -1,0 +1,56 @@
+{
+  "name": "Skandinavisch hell",
+  "beschreibung": "Viel Weiß, helles Holz und freundliche Pastelle: lichtdurchflutet, klar und alltagstauglich.",
+  "gueltig_ab": "2026-11-01",
+  "saison": "2026/27",
+  "trend_quelle_notiz": "Interne Redaktionsnotiz (Stand 2026-11-20): Eigene Einschätzung aus allgemein bekannten Einrichtungs- und Materialtrends 2026/27 (Fachpresse, Herstellerkataloge, Messeberichte); keine Quelle direkt übernommen, Farben frei benannt. Vor Veröffentlichung redaktionell prüfen.",
+  "aktiv": true,
+  "wandfarben": [
+    {
+      "name": "Schneeweiß",
+      "hex": "#F7F6F2"
+    },
+    {
+      "name": "Nebelgrau",
+      "hex": "#DADDDD"
+    },
+    {
+      "name": "Wasserblau hell",
+      "hex": "#B8CAD2"
+    }
+  ],
+  "putz_tapete": {
+    "art": "tapete",
+    "beschreibung": "Raufaser fein, weiß überstrichen"
+  },
+  "boden": {
+    "material": "laminat",
+    "farbton": {
+      "name": "Birke hell",
+      "hex": "#DCC8A6"
+    },
+    "verlegemuster": "Landhausdiele"
+  },
+  "fliesen": {
+    "format": "7,5×15 Metro",
+    "farbe": {
+      "name": "Weiß glänzend",
+      "hex": "#F1F1EE"
+    },
+    "verlegemuster": "Halbverband",
+    "fuge": "#CFCFCB"
+  },
+  "deckenlicht": {
+    "art": "Deckenauslass mit Pendelleuchte und Einbauspots",
+    "farbtemperatur_k": 3000
+  },
+  "elektro_vorschlag": {
+    "paket": "Basis",
+    "punkte": [
+      "Steckdosen 2-fach an Arbeitsplatten und Betten",
+      "Wechselschalter in Fluren",
+      "Rauchwarnmelder in Schlaf- und Flurbereichen",
+      "Einbauspots im Bad"
+    ]
+  }
+}

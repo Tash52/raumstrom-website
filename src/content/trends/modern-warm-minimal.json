@@ -1,0 +1,57 @@
+{
+  "name": "Modern Warm Minimal",
+  "beschreibung": "Reduzierte Formen, warme Neutraltöne und weiche Übergänge: wohnlich, aber aufgeräumt.",
+  "gueltig_ab": "2026-11-01",
+  "saison": "2026/27",
+  "trend_quelle_notiz": "Interne Redaktionsnotiz (Stand 2026-11-20): Eigene Einschätzung aus allgemein bekannten Einrichtungs- und Materialtrends 2026/27 (Fachpresse, Herstellerkataloge, Messeberichte); keine Quelle direkt übernommen, Farben frei benannt. Vor Veröffentlichung redaktionell prüfen.",
+  "aktiv": true,
+  "wandfarben": [
+    {
+      "name": "Cremeweiß",
+      "hex": "#F3EEE6"
+    },
+    {
+      "name": "Lehmbeige",
+      "hex": "#D9C7B0"
+    },
+    {
+      "name": "Terrakotta gedämpft",
+      "hex": "#B9775A"
+    }
+  ],
+  "putz_tapete": {
+    "art": "farbe",
+    "beschreibung": "Wandfarbe in samtmatter Optik, warm getönt"
+  },
+  "boden": {
+    "material": "vinyl",
+    "farbton": {
+      "name": "Eiche gekalkt",
+      "hex": "#D2BFA3"
+    },
+    "verlegemuster": "Landhausdiele"
+  },
+  "fliesen": {
+    "format": "60×120",
+    "farbe": {
+      "name": "Beige-Greige",
+      "hex": "#CFC4B4"
+    },
+    "verlegemuster": "Drittelverband",
+    "fuge": "#C2B7A6"
+  },
+  "deckenlicht": {
+    "art": "Flächenbündige Einbauspots mit Wandfluter",
+    "farbtemperatur_k": 2700
+  },
+  "elektro_vorschlag": {
+    "paket": "Komfort Plus",
+    "punkte": [
+      "Dimmbare Einbauspots mit Lichtszenen",
+      "Steckdosen mit USB-C an Bett und Sofa",
+      "LAN-Dose Cat.7 in jedem Raum",
+      "Dimmer im Wohnbereich",
+      "Wallbox-Vorbereitung in der Unterverteilung"
+    ]
+  }
+}

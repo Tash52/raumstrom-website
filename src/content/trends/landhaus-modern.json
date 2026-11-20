@@ -1,0 +1,56 @@
+{
+  "name": "Landhaus modern",
+  "beschreibung": "Gemütlicher Landhauscharakter, neu interpretiert: warme Töne, natürliche Hölzer, klare Linien.",
+  "gueltig_ab": "2026-11-01",
+  "saison": "2026/27",
+  "trend_quelle_notiz": "Interne Redaktionsnotiz (Stand 2026-11-20): Eigene Einschätzung aus allgemein bekannten Einrichtungs- und Materialtrends 2026/27 (Fachpresse, Herstellerkataloge, Messeberichte); keine Quelle direkt übernommen, Farben frei benannt. Vor Veröffentlichung redaktionell prüfen.",
+  "aktiv": true,
+  "wandfarben": [
+    {
+      "name": "Salbeigrün hell",
+      "hex": "#B7BFA6"
+    },
+    {
+      "name": "Leinen",
+      "hex": "#E4DBC9"
+    },
+    {
+      "name": "Taubenblau",
+      "hex": "#8FA0A8"
+    }
+  ],
+  "putz_tapete": {
+    "art": "putz",
+    "beschreibung": "Kalkputz mit feiner, handwerklicher Struktur"
+  },
+  "boden": {
+    "material": "parkett",
+    "farbton": {
+      "name": "Eiche geölt",
+      "hex": "#B58F62"
+    },
+    "verlegemuster": "Landhausdiele"
+  },
+  "fliesen": {
+    "format": "7,5×15 Metro",
+    "farbe": {
+      "name": "Cremeweiß glänzend",
+      "hex": "#EFE9DA"
+    },
+    "verlegemuster": "Halbverband",
+    "fuge": "#C9C0AE"
+  },
+  "deckenlicht": {
+    "art": "Pendelleuchten und Wandleuchten, warmes Licht",
+    "farbtemperatur_k": 2700
+  },
+  "elektro_vorschlag": {
+    "paket": "Komfort",
+    "punkte": [
+      "Steckdosen mit USB-C in Küche und am Bett",
+      "Dimmer im Wohn- und Essbereich",
+      "Außensteckdose IP44 an Terrasse oder Eingang",
+      "Rauchwarnmelder in allen Wohn- und Schlafräumen"
+    ]
+  }
+}

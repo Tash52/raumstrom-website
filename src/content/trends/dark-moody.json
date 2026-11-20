@@ -1,0 +1,61 @@
+{
+  "name": "Dark & Moody",
+  "beschreibung": "Tiefe, dunkle Farbräume mit warmem Licht: dramatisch, geborgen, mit matten Oberflächen.",
+  "gueltig_ab": "2026-11-01",
+  "saison": "2026/27",
+  "trend_quelle_notiz": "Interne Redaktionsnotiz (Stand 2026-11-20): Eigene Einschätzung aus allgemein bekannten Einrichtungs- und Materialtrends 2026/27 (Fachpresse, Herstellerkataloge, Messeberichte); keine Quelle direkt übernommen, Farben frei benannt. Vor Veröffentlichung redaktionell prüfen.",
+  "aktiv": true,
+  "wandfarben": [
+    {
+      "name": "Tiefes Tannengrün",
+      "hex": "#23362F"
+    },
+    {
+      "name": "Nachtblau gedeckt",
+      "hex": "#1F2A38"
+    },
+    {
+      "name": "Kohle",
+      "hex": "#2B2B2D"
+    },
+    {
+      "name": "Messingbeige",
+      "hex": "#B79A6B"
+    }
+  ],
+  "putz_tapete": {
+    "art": "farbe",
+    "beschreibung": "Wandfarbe in tiefmatter Optik, durchgefärbt"
+  },
+  "boden": {
+    "material": "parkett",
+    "farbton": {
+      "name": "Räuchereiche dunkel",
+      "hex": "#4A3A2E"
+    },
+    "verlegemuster": "Fischgrät"
+  },
+  "fliesen": {
+    "format": "60×120",
+    "farbe": {
+      "name": "Anthrazit matt",
+      "hex": "#3A3C3F"
+    },
+    "verlegemuster": "Drittelverband",
+    "fuge": "#2A2B2D"
+  },
+  "deckenlicht": {
+    "art": "Indirekte Lichtvoute plus dimmbare Einbauspots",
+    "farbtemperatur_k": 2400
+  },
+  "elektro_vorschlag": {
+    "paket": "Smart",
+    "punkte": [
+      "Dimmbare Einbauspots mit Lichtszenen",
+      "LED-Streifen in der Lichtvoute",
+      "Smart-Schalter für Stimmungslicht",
+      "Steckdosen mit USB-C am Bett",
+      "Einbaulautsprecher im Wohnbereich"
+    ]
+  }
+}
