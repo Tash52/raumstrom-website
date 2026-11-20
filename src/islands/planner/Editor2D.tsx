@@ -75,7 +75,6 @@ export function Editor2D() {
   const auswahl = usePlaner((s) => s.auswahl);
   const winkelFang = usePlaner((s) => s.winkelFang);
   const rasterFang = usePlaner((s) => s.rasterFang);
-  const wandArt = usePlaner((s) => s.wandArt);
   const wandDicke = usePlaner((s) => s.wandDicke);
   const hintergrund = usePlaner((s) => s.hintergrund);
   const hintergrundSichtbar = usePlaner((s) => s.hintergrundSichtbar);
@@ -88,9 +87,30 @@ export function Editor2D() {
   const [ansicht, setAnsicht] = useState<Ansicht>({ tx: 40, ty: 40, zoom: 60 });
   const ansichtRef = useRef(ansicht);
   ansichtRef.current = ansicht;
-  const [zeiger, setZeiger] = useState<Punkt | null>(null); // raw world position (pointer or keyboard)
-  const [start, setStart] = useState<Punkt | null>(null); // start of the wall being drawn
-  const [eingabe, setEingabe] = useState(''); // typed length
+  // Drawing state lives in refs (read by event handlers, always current even if several keys arrive
+  // before React re-renders) and is mirrored into state for rendering.
+  const [zeiger, setZeigerState] = useState<Punkt | null>(null); // raw world position (pointer or keyboard)
+  const [start, setStartState] = useState<Punkt | null>(null); // start of the wall being drawn
+  const [eingabe, setEingabeState] = useState(''); // typed length
+  const zeigerRef = useRef<Punkt | null>(null);
+  const startRef = useRef<Punkt | null>(null);
+  const eingabeRef = useRef('');
+  const setZeiger = useCallback((p: Punkt | null) => {
+    zeigerRef.current = p;
+    setZeigerState(p);
+  }, []);
+  const setStart = useCallback((p: Punkt | null) => {
+    startRef.current = p;
+    setStartState(p);
+  }, []);
+  const setEingabe = useCallback((t: string) => {
+    eingabeRef.current = t;
+    setEingabeState(t);
+  }, []);
+  // Keyboard owns the cursor until the mouse really travels: a resting mouse gets boundary events and
+  // moves without travel when the page scrolls under it (Phase 4, QA B1); those must not clear it.
+  const tastaturZeiger = useRef(false);
+  const letzteMaus = useRef<{ x: number; y: number } | null>(null);
   const zeigerMap = useRef(new Map<number, Punkt>());
   const geste = useRef<Geste | null>(null);
   const leertaste = useRef(false);
@@ -146,7 +166,7 @@ export function Editor2D() {
   useEffect(() => {
     setStart(null);
     setEingabe('');
-  }, [werkzeug]);
+  }, [werkzeug, setStart, setEingabe]);
 
   // ---------- canvas: grid and floor plan ----------
   useEffect(() => {
@@ -233,6 +253,7 @@ export function Editor2D() {
   const setzeWandPunkt = useCallback(
     (ziel: FangErgebnis) => {
       const st = s();
+      const start = startRef.current;
       if (!start) {
         setStart(ziel.punkt);
         st.melde(`Startpunkt gesetzt. Nächsten Punkt wählen oder Länge eingeben.`);
@@ -249,14 +270,14 @@ export function Editor2D() {
         st.melde(`Wand ${formatLaenge(l)} gesetzt. Linienzug beendet${n ? `, ${n} ${n === 1 ? 'Raum' : 'Räume'} erkannt` : ''}.`);
       } else setStart(ziel.punkt);
     },
-    [start, s],
+    [s, setStart, setEingabe],
   );
 
   const beendeKette = useCallback(() => {
-    if (start) s().melde('Linienzug beendet.');
+    if (startRef.current) s().melde('Linienzug beendet.');
     setStart(null);
     setEingabe('');
-  }, [start, s]);
+  }, [s, setStart, setEingabe]);
 
   const trefferBei = useCallback(
     (w: Punkt): { art: 'knoten' | 'oeffnung' | 'wand' | 'raum'; id: string } | null => {
@@ -287,7 +308,7 @@ export function Editor2D() {
       const st = s();
       switch (st.werkzeug) {
         case 'wand':
-          setzeWandPunkt(fang(w, start));
+          setzeWandPunkt(fang(w, startRef.current));
           break;
         case 'tuer':
         case 'fenster': {
@@ -314,7 +335,7 @@ export function Editor2D() {
         }
       }
     },
-    [s, fang, start, setzeWandPunkt, trefferBei],
+    [s, fang, setzeWandPunkt, trefferBei],
   );
 
   const loescheAuswahl = useCallback(() => {
@@ -367,6 +388,8 @@ export function Editor2D() {
     zeigerMap.current.set(e.pointerId, sp);
     const v = ansichtRef.current;
     const w = zuWelt(v, sp);
+    tastaturZeiger.current = false;
+    if (e.pointerType === 'mouse') letzteMaus.current = { x: e.clientX, y: e.clientY };
     setZeiger(w);
 
     if (zeigerMap.current.size === 2) {
@@ -419,6 +442,13 @@ export function Editor2D() {
       return;
     }
     const w = zuWelt(v, sp);
+    if (e.pointerType === 'mouse' && !g) {
+      // ignore moves without travel (content scrolled under a resting mouse)
+      const m = letzteMaus.current;
+      if (m && Math.abs(m.x - e.clientX) < 1 && Math.abs(m.y - e.clientY) < 1) return;
+      letzteMaus.current = { x: e.clientX, y: e.clientY };
+      tastaturZeiger.current = false;
+    }
     if (e.pointerType !== 'touch' || g) setZeiger(w);
     if (!g || g.id !== e.pointerId) return;
     if (g.art === 'pan') {
@@ -485,6 +515,9 @@ export function Editor2D() {
   const onKeyDown = (e: ReactKeyboardEvent<HTMLDivElement>) => {
     const st = s();
     const v = ansichtRef.current;
+    const zeiger = zeigerRef.current;
+    const start = startRef.current;
+    const eingabe = eingabeRef.current;
     const mitte = zuWelt(v, { x: groesse.b / 2, y: groesse.h / 2 });
     const aktuell = zeiger ?? (start ? start : mitte);
     const schritt = e.shiftKey ? TASTEN_SCHRITT.gross : e.altKey ? TASTEN_SCHRITT.fein : TASTEN_SCHRITT.normal;
@@ -525,6 +558,7 @@ export function Editor2D() {
       }
       // move the drawing cursor; with a start point the cursor jumps along snapped directions
       const neu = { x: f3(aktuell.x + d.x * schritt), y: f3(aktuell.y + d.y * schritt) };
+      tastaturZeiger.current = true;
       setZeiger(neu);
       const sp = zuSchirm(v, neu);
       if (sp.x < 20 || sp.y < 20 || sp.x > groesse.b - 20 || sp.y > groesse.h - 20) {
@@ -535,12 +569,12 @@ export function Editor2D() {
 
     if (st.werkzeug === 'wand' && start && /^[0-9.,]$/.test(e.key)) {
       e.preventDefault();
-      setEingabe((x) => (x + e.key).slice(0, 8));
+      setEingabe((eingabe + e.key).slice(0, 8));
       return;
     }
     if (e.key === 'Backspace' && eingabe) {
       e.preventDefault();
-      setEingabe((x) => x.slice(0, -1));
+      setEingabe(eingabe.slice(0, -1));
       return;
     }
 
@@ -555,10 +589,14 @@ export function Editor2D() {
         const richtung = zeiger && abstand(zeiger, start) > 1e-6 ? zeiger : plus(start, { x: 1, y: 0 });
         const ende = punktMitLaenge(start, richtung, l, st.winkelFang);
         setzeWandPunkt({ punkt: ende, art: 'winkel' });
+        tastaturZeiger.current = true;
         setZeiger(ende);
         return;
       }
       tippe(aktuell);
+      // keyboard cursor continues from the (snapped) point just set, so a typed length starts there
+      tastaturZeiger.current = true;
+      setZeiger(st.werkzeug === 'wand' && startRef.current ? startRef.current : aktuell);
       return;
     }
     if (e.key === 'Escape') {
@@ -608,7 +646,7 @@ export function Editor2D() {
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
       onPointerLeave={(e) => {
-        if (e.pointerType === 'mouse' && !geste.current) setZeiger(null);
+        if (e.pointerType === 'mouse' && !geste.current && !tastaturZeiger.current) setZeiger(null);
       }}
       onDoubleClick={() => werkzeug === 'wand' && beendeKette()}
       onContextMenu={(e) => e.preventDefault()}

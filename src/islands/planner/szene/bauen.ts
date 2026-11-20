@@ -3,7 +3,8 @@
 // Every mesh carries userData { art, id } so planner-design (Phase 5) can assign materials per wall/floor.
 // Plan (x, y) maps to three.js (x, 0, y); height is +y.
 import * as THREE from 'three';
-import { Brush, Evaluator, SUBTRACTION } from 'three-bvh-csg';
+import { Brush, Evaluator, HalfEdgeMap, SUBTRACTION } from 'three-bvh-csg';
+import { MeshBVH } from 'three-mesh-bvh';
 import { type Projekt, bodenFlaechen, wandKoerper } from '../../../lib/geometry/index.ts';
 
 export type TeilArt = 'wand' | 'boden' | 'fenster' | 'tuer';
@@ -29,6 +30,38 @@ const FARBE = {
   grund: 0xe8e3d8,
 };
 
+type CsgGeometrie = THREE.BufferGeometry & { boundsTree?: MeshBVH; halfEdges?: HalfEdgeMap; groupIndices?: Uint16Array };
+
+/**
+ * Brush whose acceleration data uses the current three-mesh-bvh option `targetLeafSize`.
+ * three-bvh-csg 0.0.18 (latest) still passes the deprecated `maxLeafSize`, and three-mesh-bvh 0.9.18
+ * warns once per brush (32 warnings per 3D build, QA Phase 4 B4). Same data as Brush.prepareGeometry
+ * (BVH with leaf size 3, indirect; half edges; group indices), without SharedArrayBuffer conversion,
+ * which only matters for worker use (and needs cross-origin isolation in browsers).
+ * Remove once three-bvh-csg passes targetLeafSize itself.
+ */
+export class CsgKoerper extends Brush {
+  #stand: { geometrie: string; index: unknown; pos: unknown; version: string } | null = null;
+
+  override prepareGeometry(): void {
+    const geometry = this.geometry as CsgGeometrie;
+    const index = geometry.index;
+    const pos = geometry.getAttribute('position') as THREE.BufferAttribute;
+    const version = `${index ? `${index.count}_${index.version}` : '-'}_${pos.count}_${pos.version}`;
+    const alt = this.#stand;
+    if (alt && alt.geometrie === geometry.uuid && alt.index === index && alt.pos === pos && alt.version === version) return;
+    this.#stand = { geometrie: geometry.uuid, index, pos, version };
+    geometry.boundsTree = new MeshBVH(geometry, { targetLeafSize: 3, indirect: true });
+    geometry.halfEdges ??= new HalfEdgeMap();
+    geometry.halfEdges.updateFrom(geometry);
+    const dreiecke = (index ? index.count : pos.count) / 3;
+    if (!geometry.groupIndices || geometry.groupIndices.length !== dreiecke) geometry.groupIndices = new Uint16Array(dreiecke);
+    geometry.groups.forEach(({ start, count }, i) => {
+      for (let t = start / 3; t < (start + count) / 3; t++) geometry.groupIndices![t] = i;
+    });
+  }
+}
+
 export function baueSzene(p: Projekt): Szene {
   const gruppe = new THREE.Group();
   gruppe.name = 'raumplaner-modell';
@@ -50,7 +83,7 @@ export function baueSzene(p: Projekt): Szene {
     let geo: THREE.BufferGeometry = box;
     if (k.oeffnungen.length) {
       box.deleteAttribute('uv');
-      let ergebnis = new Brush(box);
+      let ergebnis: Brush = new CsgKoerper(box);
       ergebnis.updateMatrixWorld();
       for (const o of k.oeffnungen) {
         // keep cut faces off the wall's own faces (coplanar faces are fragile in CSG)
@@ -59,11 +92,11 @@ export function baueSzene(p: Projekt): Szene {
         if (oben - unten < 0.05) continue;
         const loch = new THREE.BoxGeometry(o.breite, oben - unten, k.dicke + 0.2);
         loch.deleteAttribute('uv');
-        const b = new Brush(loch);
+        const b = new CsgKoerper(loch);
         b.position.set(o.von + o.breite / 2, (unten + oben) / 2, 0);
         b.updateMatrixWorld();
         const vorher = ergebnis;
-        ergebnis = evaluator.evaluate(vorher, b, SUBTRACTION);
+        ergebnis = evaluator.evaluate(vorher, b, SUBTRACTION, new CsgKoerper());
         if (vorher.geometry !== box) vorher.geometry.dispose();
         loch.dispose();
       }
