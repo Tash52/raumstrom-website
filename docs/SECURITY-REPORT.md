@@ -291,3 +291,179 @@ Pflege: `security-auditor`. Jede Prüfphase als eigener Abschnitt. Befunde mit S
 - **backend-api:** N-1 (Budget erst vor `sende` verbrauchen), N-2 (`ANNAHME` nach dem Lesen freigeben, Byte-Budget bzw. Mindestrate), M-2-Rest (`await terminate`, Slot bis nach sharp), N-3.
 - **architect (Phase 6):** Container-Speicher und Allokator (M-2), Port nicht öffentlich bei `TRUST_PROXY=true` (M-1), optional I-6.
 - Nach den Fixes prüft der security-auditor N-1, N-2 und M-2 mit den obigen Reproduktionen erneut.
+
+### Phase 2 – zweite Nachprüfung
+
+- **Stand:** `main` @ `1910ac8` (Fixes aus `docs/agent-reports/2-backend-api-fixes.md`, Nachtrag). `npm run build:staging` frisch (124 vorkomprimierte Dateien). Nach einem Container-Neustart wurden die Server neu gestartet. Der Build ist unverändert, der Arbeitsbaum sauber.
+- **Umgebung wie in der ersten Nachprüfung:** A `:18480` mit `TRUST_PROXY=false`, B `:18481` mit `TRUST_PROXY=true`, Test-Secrets, SMTP auf einem geschlossenen Port. **502 heißt also „alle Prüfungen bestanden, nur der Versand scheitert".** Kein Docker und kein Mailpit. Für jede Messung wurde B neu gestartet. Gemessen wurde VmHWM/VmRSS aus `/proc/<pid>/status` und `/healthz` alle 50 ms. Die HEIC-Dateien sind dieselben wie in der ersten Nachprüfung (`rausch-24mp` 0,7 MB).
+
+#### Gesamturteil
+
+**Bestanden mit Restpunkten.** N-1, N-2 (beide Original-Reproduktionen), N-3 und I-7 sind behoben (belegt). Bei H-1 und M-1 gibt es keine Regression. Der M-2-Rest ist für reine HEIC-Last behoben: Die Spitze liegt bei 459–550 MB. Es ist kein Medium-Befund mehr offen. Neu sind zwei Low-Befunde (N-4, N-5) und ein Info-Befund (N-6). Keiner davon blockiert Phase 3. N-5 macht `MALLOC_ARENA_MAX=2` in Phase 6 zur Pflicht.
+
+| ID | Status | Kurz |
+|---|---|---|
+| N-1 | **behoben** (belegt) | 12 × 5 Nicht-Bilder mit gelöstem ALTCHA → 36 × 422, 24 × 429 (Foto-Sperre); danach legitime Anfrage 502 nach 20 ms bzw. mit 12-MP-JPEG 502 nach 1,5 s |
+| N-2 | **behoben** (belegt) | Repro 1 und 2 → legitime Anfrage 502 statt 503 |
+| M-2-Rest | **behoben für HEIC** (belegt), Rest siehe N-5 | Spitze 459–550 MB |
+| N-3 | **behoben** (belegt) | Log enthält nur `kontakt: foto abgelehnt defekt` |
+| I-7 | **behoben** (belegt) | `HEAD` 200 bzw. 429 mit `Retry-After`, ohne Body; `PUT`/`DELETE` → 405 `Allow: GET, HEAD` |
+| H-1, M-1 | **keine Regression** (belegt) | Werte wie in der ersten Nachprüfung |
+| N-4 | **neu · Low · belegt** | Schnelle Leser (≥ 256 KB/s) füllen das Byte-Budget und sperren Foto-Uploads 55 s je Runde |
+| N-5 | **neu · Low · belegt** | Gemischte Last HEIC + 40-MP-JPEG/PNG: 687–738 MB; mit `MALLOC_ARENA_MAX=2` 550–563 MB |
+| N-6 | neu · Info · belegt | Kleiner Pool: 32 Adressen × 2 sperren Textanfragen rund 5 s je Runde |
+
+#### N-1 · behoben (belegt, Server B)
+
+- Original-Reproduktion: 12 Adressen (`192.0.2.120–131`) × 5 Anfragen mit gültigem CSRF, gelöstem ALTCHA und dem „Foto" `kein bild` als `image/jpeg`.
+  - Ergebnis: **36 × 422, 24 × 429** (ab der 4. Anfrage je Adresse `rate-limit fotos`, `src/lib/security/kontakt-ablauf.ts:184-188`).
+  - Danach erhält ein anderer Client ohne Foto **502 nach 20 ms**, mit einem 12-MP-JPEG **502 nach 1,5 s**. Vorher waren es 429 mit `Retry-After: 3321`.
+  - Eine neue Adresse mit Nicht-Bild erhält weiter 422, die Sperre trifft also nur den eigenen Client.
+- Im Code (`kontakt-ablauf.ts:175` nur `stand()`, gezählt erst bei `:223` nach dem `VERSAND`-Slot) gibt es kein Race: `pruefe()` vor `sende` ist die harte Grenze.
+- **Restrisiko (akzeptiert, wie im Fix-Bericht):** 60 gültige Textanfragen je Stunde erschöpfen das Budget weiterhin. Dabei gehen 60 Mails beim Betreiber ein, die Sperre ist also sichtbar. Empfehlung für Phase 6: Die Logzeile `WARNUNG globales limit erreicht` per Alarm melden.
+
+#### N-2 · behoben (belegt, Server B)
+
+- **Repro 1** (4 Adressen × 2 Verbindungen à 20 KB/s, `Content-Length: 20000000`):
+  - Eine legitime Anfrage ohne Foto erhält **502 nach 33 ms**, mit 12-MP-Foto **502 nach 1,4 s**.
+  - Die langsamen Verbindungen erhalten **408 nach 5,2 s** (`src/lib/security/body.ts:21-25`).
+- **Repro 2** (8 Anfragen von 4 Adressen mit je 5 × HEIC 24 MP, Rauschen 0,7 MB):
+  - Eine Anfrage ohne Foto 1 s später erhält **502 nach 16 ms**.
+  - Die Last-Anfragen erhalten 6 × 502 (23,7–54,2 s) und 2 × 503 nach 30,2 s (`PARALLEL`-Wartezeit).
+- **Chunked ohne `Content-Length`** (8 × 20 KB/s): Die legitime Anfrage erhält 502 nach 24 ms, die Angreifer 408 nach 5,0 s.
+- **Slowloris wie H-1** (1 B/2 s, 2 × 2): Die gültige Anfrage erhält 502 nach 36 ms, die Angreifer 408 nach 5,1 s.
+- **Beobachtung (bekannt, architect):** Der Socket schließt nach einem frühen 408 erst nach 11–13 s, bei 55-s-Abbruch nach 61 s. Das Body-Budget ist bis dahin schon frei (`kontakt-ablauf.ts:123`). Es bleibt nur ein Socket offen, keine Sperre.
+
+#### N-4 · Low · Byte-Budget mit schnellen Lesern blockierbar, nur Foto-Uploads (belegt)
+
+- **Ort:** `src/lib/security/api.ts:484` (`ANNAHME`: 16 Slots, `8 × MAX_BODY`, Verdrängung nur unter 256 KB/s) und `src/lib/security/body.ts:28-31` (Frist höchstens 55 s).
+- **Reproduktion (Server B):** 8 Adressen × 1 Verbindung mit je 300 KB/s und `Content-Length` = 22 MB (`MAX_BODY`). Nach 7 s kommt eine legitime Anfrage mit 12-MP-Foto:
+  - Sie erhält **503 nach 23 ms** (`Retry-After: 60`, Log `ausgelastet annahme`).
+  - Eine Anfrage ohne Foto erhält weiter 502, denn sie läuft über den kleinen Pool.
+  - Die Angreifer erhalten erst nach **55,1 s** 408. Sie sind nicht verdrängbar, weil sie schneller als 256 KB/s senden. Fertig werden können sie trotzdem nicht: 22 MB bei 300 KB/s dauern 75 s, die Frist beträgt aber 55 s.
+- **Aufwand und Wirkung:**
+  - Etwa 2,4 MB/s (rund 20 Mbit/s) Upload und 4–8 Adressen sperren Foto-Uploads für 55 s je Runde.
+  - Bei 5 Versuchen je Adresse und 15 min braucht eine Dauersperre etwa 26 Adressen.
+  - Textanfragen bleiben möglich, die Kontaktaufnahme ist also nie ganz blockiert. CVSS etwa 3.7 (AV:N/AC:H/PR:N/UI:N/A:L).
+- **Fix-Vorschlag (backend-api, optional):**
+  1. In `Annahme.belege` zusätzlich Leser als verdrängbar werten, die ihre Frist rechnerisch nicht schaffen: Restbytes / aktuelle Rate > Restfrist. Solche Leser enden ohnehin mit 408. Eine Sperre kostet dann mindestens 22 MB / 50 s ≈ 450 KB/s je Verbindung, und die Bodys werden fertig und danach sofort abgewiesen (403 CSRF).
+  2. Die Reservierung je Client auf 1 × `MAX_BODY` begrenzen.
+  - **Nachtest:** die obige Reproduktion → die legitime Anfrage mit Foto erhält 502.
+
+#### M-2-Rest · behoben für HEIC (belegt)
+
+| Szenario (Server B frisch, Basis 73–85 MB) | Ergebnis | Dauer | `/healthz` max | VmHWM | RSS danach |
+|---|---|---|---|---|---|
+| 1 × 5 × `rausch-24mp` (0,7 MB) | 502 | 9,4 s | 23 ms | **459 MB** (vorher 689) | 250 MB |
+| 4 × 5 × `rausch-24mp` | 4 × 502 | 37,3 s | 26 ms | **550 MB** (vorher 770) | 316 MB |
+| 8 × 5 × `flach-25mp` | 8 × 502 | 29,5 s | 47 ms | **525 MB** (vorher 828) | 281 MB |
+| 1 × 5 × 10-Bit-RGB 24 MP | 502 | 4,0 s | 22 ms | 522 MB | 245 MB |
+| 1 × 5 × 10-Bit-RGBA 16 MP | 502 | 4,2 s | 24 ms | 471 MB | 214 MB |
+| 1 × 5 × 10-Bit-RGBA 24 MP | 422 „zu hohe Auflösung" (Alpha-Limit `heic.ts:23`) | 0,2 s | 24 ms | 122 MB | – |
+| 1 × 1 × 30 Top-Level-Bilder à 24 MP | 502 (nur das erste Bild wird dekodiert) | 0,9 s | 17 ms | 349 MB | 138 MB |
+| 2 × 5 × PNG 40 MP / 3 × 5 × PNG 40 MP | 502 | 3,2 / 4,9 s | 35 ms | 331 / 336 MB | – |
+| 2 × 2 × JPEG 40 MP (9 MB) / 3 × 2 | 502 | 5,5 / 8,1 s | 65–83 ms | 457 / 527–557 MB | = HWM |
+
+- Das Ziel **< 600 MB ist für alle HEIC-Szenarien erreicht**. Die Werte decken sich mit dem Fix-Bericht (± 25 MB).
+- Der Event-Loop bleibt frei (≤ 83 ms).
+- **Stabilität:** 4 Durchläufe von 3 × 2 × JPEG 40 MP hintereinander auf demselben Server ergaben 527 → 573 → 572 → 572 MB. Der Wert erreicht ein Plateau, es gibt kein Leck.
+
+#### N-5 · Low · Gemischte Bildlast über 600 MB ohne Allokator-Einstellung (belegt)
+
+- **Reproduktion:** gleichzeitig 2 × 5 × HEIC `rausch-24mp`, 2 × 2 × JPEG 40 MP und 2 × 5 × PNG 40 MP (6 Anfragen, je 2 je Adresse).
+  - Ergebnis: 6 × 502 in 27 s, `/healthz` ≤ 104 ms.
+  - **VmHWM 719, 687, 738, 720 MB** (4 Läufe), RSS danach 535–571 MB.
+- **Mit `MALLOC_ARENA_MAX=2`:**
+  - Dasselbe Szenario ergibt **550 und 563 MB** (RSS danach 325–362 MB).
+  - 3 × 2 × JPEG 40 MP ergibt 394 statt 557 MB.
+- **Ursachen:**
+  - **Vermutung:** glibc-Arenen von libvips und die WASM-Heaps der Worker fragmentieren sich gegenseitig. Dazu kommen die Rohbodys (bis 3 × 18 MB, zusätzlich die FormData-Kopien), die während der seriellen Bildarbeit im Speicher bleiben.
+  - **Belegt:** `BILD_SLOT` serialisiert alles (`src/lib/uploads/bild.ts:18`). Die Spitze steigt also nicht mit der Zahl der Anfragen, sondern mit dem Allokator-Verschnitt.
+- **Fix:** **architect (Phase 6, jetzt Pflicht, nicht optional):**
+  - `MALLOC_ARENA_MAX=2` im Container bzw. im Startskript setzen.
+  - Container-Limit ≥ 1 GB und Neustart-Richtlinie vorsehen.
+  - **Nachtest:** das obige Mischszenario im Container → < 600 MB.
+  - Optional (backend-api): `MAX_PIXEL` für JPEG/PNG von 40 auf 25 MP senken. Ein 40-MP-Puffer belegt etwa 120 MB. Das kostet aber 48/50-MP-Handyfotos, die heute schon über 40 MP liegen und abgewiesen werden. Deshalb nur, wenn Phase 6 das Ziel nicht erreicht.
+
+#### N-6 · Info · Kleiner Annahme-Pool (belegt)
+
+- 32 Adressen × 2 Verbindungen mit `Content-Length` 256 KB und 1 B/s belegen alle 64 Plätze von `ANNAHME_KLEIN` (`api.ts:483`). Eine legitime Textanfrage erhält **503 nach 7 ms**. Alle 64 Angreifer erhalten 408 nach 5,1 s.
+- Eine Dauersperre bräuchte rund 64 × 900 s / (5 × 5 s) ≈ 2300 IPv4-Adressen bzw. rund 575 IPv6-/48. Das ist kein praktikabler Angriff. Ich dokumentiere es nur als Grenze.
+
+#### N-3 und I-7 · behoben (belegt)
+
+- **N-3:**
+  - `abgeschnitten.heic` (3 Bilder) und `kaputt.heic` (1 bzw. 2 Bilder) ergeben jeweils 422 „konnte nicht gelesen werden".
+  - Das Server-Log enthält ausschließlich `[api] kontakt: foto abgelehnt defekt`, keine libheif-Zeilen und keine Fehlerobjekte (`src/lib/uploads/heic.ts:43-44`, `:137-141`).
+- **I-7:**
+  - `HEAD /api/altcha` und `HEAD /api/csrf` ergeben 200 mit `content-type: application/json`, `cache-control: no-store`, `nosniff` und ohne Body.
+  - Nach erschöpftem Limit (Server A) liefert `HEAD /api/csrf` **429 mit `Retry-After: 596`**. HEAD zählt nicht mit (`kopfAntwort`, `src/lib/security/api.ts:521`).
+  - `PUT /api/altcha` und `DELETE /api/csrf` ergeben 405 mit `Allow: GET, HEAD`.
+
+#### Regressionen H-1 / M-1 (belegt, keine)
+
+- **H-1 (B):**
+  - 70 × `POST` ohne Token von einer Adresse → 5 × 403, 65 × 429. Danach erhält ein anderer Client mit gültiger Anfrage 502.
+  - Slowloris 1 B/2 s (2 × 2) → die gleichzeitige gültige Anfrage erhält 502 nach 36 ms.
+- **M-1 (A, `TRUST_PROXY=false`):**
+  - XFF wechselnd mit Produktions-Host → 5 × 403, 3 × 429.
+  - XFF, `x-raumstrom-client-ip`, `Forwarded`, `X-Real-IP` und XFF-Kette jeweils wechselnd → 8 × 429.
+  - `/api/altcha` und `/api/csrf` 40 × mit wechselnden Headern → 30 × 200, 10 × 429.
+- **M-1 (B, `TRUST_PROXY=true`):** Erster XFF wechselnd, `client-ip` wechselnd, zwei XFF-Header oder ungültiger letzter Eintrag → jeweils 5 × 403, 3 × 429.
+- Die Server-Logs von A und B enthalten **0** Zeilen mit `error`/Stack.
+
+#### Bewertung: Mindestrate 64 KB/s nach 5 s (Usability vs. Schutz)
+
+- **Was gilt (Code):**
+  - Die mittlere Rate muss nach 5 s mindestens 64 KB/s (0,5 Mbit/s) betragen (`body.ts:21-25`).
+  - Die Frist ist min(55 s, 5 s + Länge / 64 KB/s) (`body.ts:28-31`).
+  - Dazu kommen `requestTimeout` 60 s (`server/server.mjs:111`) und `AbortSignal.timeout(60_000)` im Formular (`src/components/forms/kontakt-formular.ts:178`).
+  - Unter Volllast des großen Pools werden Uploads unter 256 KB/s (2 Mbit/s) verdrängt.
+- **Belegt (Rechnung aus dem Code):** Die harte Grenze für Fotos ist **nicht die Mindestrate, sondern die 55-s-Frist**.
+  - Bis etwa 3,2 MB Body genügen 64 KB/s.
+  - Darüber braucht ein Upload Länge / 55 s:
+    - 5 MB → 0,75 Mbit/s,
+    - 10 MB → 1,5 Mbit/s,
+    - 20 MB (Formular-Maximum) → **3 Mbit/s** dauerhaft.
+  - Die 64-KB/s-Schwelle allein trifft nur Verbindungen unter 0,5 Mbit/s, also 2G/EDGE oder extreme Funklöcher.
+  - Textanfragen sind nie betroffen: Sie sind klein, haben einen eigenen Pool und sind in unter 1 s übertragen.
+- **Einschätzung (Vermutung, Erfahrungswerte, nicht gemessen):**
+  - Typische Uploads: iPhone-HEIC 24 MP ist 1,5–3 MB groß, ein Handy-JPEG 3–6 MB. 3–5 Fotos ergeben also 8–20 MB.
+  - Mobiler Upload: LTE/5G im Median meist ≥ 5 Mbit/s, in Gebäuden, im ländlichen Netz oder in Kellern (Baustellenfotos!) aber oft 0,5–2 Mbit/s.
+  - Damit scheitert ein **relevanter Teil der Mehrfoto-Uploads auf schwachen Verbindungen an der 55-s-Grenze**, nicht an 64 KB/s.
+  - Die Fehlermeldung (`kontakt-ablauf.ts:59`, „weniger oder kleinere Fotos") führt zum richtigen Ausweg, kostet aber einen ALTCHA-Durchlauf und einen der 5 Versuche je 15 min.
+- **Schutzwirkung:**
+  - Die 64 KB/s begrenzen Slowloris auf 5 s je Slot (N-2, N-6).
+  - Eine Senkung auf 32 KB/s würde den Schutz nur leicht schwächen: Die Haltezeit im großen Pool ist ohnehin durch die Verdrängung begrenzt.
+  - Eine längere Frist verlängert dagegen N-4 proportional.
+- **Empfehlung:**
+  1. **64 KB/s / 5 s beibehalten.** Das ist sicherheitlich sinnvoll und trifft praktisch nur Verbindungen, die ohnehin nicht nutzbar sind.
+  2. **Clientseitig verkleinern (größter Hebel, page-builder/backend-api):**
+     - JPEG/PNG/WebP vor dem Senden per Canvas auf höchstens 2560 px Kante als JPEG etwa 0,85 umrechnen. Der Server rechnet ohnehin auf 2560 px herunter (`src/lib/uploads/bild.ts:15`), es geht also keine Information verloren.
+     - 5 Fotos werden dann zu rund 3–5 MB. Damit genügen etwa 0,6 Mbit/s.
+     - HEIC dekodiert nur Safari im Canvas, in anderen Browsern wird es unverändert gesendet (Vermutung, vor Umsetzung prüfen).
+     - Das ist ohne Abstriche bei der Sicherheit möglich, weil der Server weiter neu kodiert.
+  3. **Fortschritt anzeigen** (XHR `upload.onprogress`) und bei absehbarer Überschreitung früh mit dem Hinweis „weniger Fotos" abbrechen, statt nach 55 s mit 408.
+  4. **Nur falls 2. nicht umgesetzt wird:** Frist für Bodys mit `Content-Length` auf etwa 120 s anheben, gleichzeitig `requestTimeout` und den Client-Timeout anpassen. Das nur **zusammen mit** dem N-4-Fix 1 (fristlose Leser verdrängbar), sonst verdoppelt sich die N-4-Sperrdauer.
+  5. **Info, Usability:**
+     - Nach 3 abgewiesenen Fotos in einer Stunde (z. B. 48-MP-„HEIF Max" 3 × versucht) erhält derselbe Nutzer 429 mit dem Text „mehrere Anfragen" (`kontakt-ablauf.ts:184-188`). Ein eigener Text („Fotos konnten mehrfach nicht verarbeitet werden, bitte ohne Fotos senden …") wäre klarer.
+     - Unter HEIC-Volllast dauerten legitime Foto-Anfragen bis 54 s (Repro 2), knapp unter dem 60-s-Client-Timeout.
+
+#### Nicht geprüft / Grenzen
+
+- Kein erfolgreicher Versand, weil Mailpit und Docker fehlen. Mail-Inhalt, Anhänge, L-4 dynamisch und E2E fehlen weiterhin (CI oder Docker).
+- Kein IPv6-Socket-Test. Das /48-Limit (`schluessel.ts:598`) ist nur per Code und Unit-Test geprüft.
+- Kein Produktions-Build und kein Container: Die Messungen zu N-5 mit `MALLOC_ARENA_MAX` liefen am Host-Prozess.
+- Mobile Bandbreiten sind Erfahrungswerte, keine Messung.
+
+#### Rückgabe
+
+- **architect (Phase 6):**
+  - `MALLOC_ARENA_MAX=2` als Pflicht (N-5), Container-Limit ≥ 1 GB, Mischszenario im Container nachmessen.
+  - Socket nach frühem 408 schneller schließen.
+  - Port nicht öffentlich bei `TRUST_PROXY=true`.
+  - Alarm auf `WARNUNG globales limit erreicht`.
+- **backend-api (optional, Low):**
+  - N-4: fristlose Leser verdrängbar machen, Reservierung je Client begrenzen.
+  - Eigener Text für die Foto-Sperre.
+- **page-builder/backend-api (Usability):** clientseitige Verkleinerung und Upload-Fortschritt (Empfehlung 2 und 3).
