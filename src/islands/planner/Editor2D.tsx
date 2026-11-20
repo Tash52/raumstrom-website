@@ -9,6 +9,7 @@ import {
   TOLERANZ,
   abstand,
   beschriftungsPunkt,
+  einruecken,
   entferneOeffnung,
   entferneWand,
   fangePunkt,
@@ -26,6 +27,7 @@ import {
   platziereOeffnung,
   plus,
   mal,
+  nettoPolygon,
   punktImPolygon,
   punktMitLaenge,
   raumPolygon,
@@ -679,6 +681,15 @@ export function Editor2D() {
               strokeWidth={k.dicke}
             />
           ))}
+          {/* selected room: Kabelgrün outline just inside the inner wall faces (6.7:1 on the plan, WCAG 1.4.11) */}
+          {auswahl?.art === 'raum' &&
+            (() => {
+              const r = projekt.raeume.find((x) => x.id === auswahl.id);
+              if (!r) return null;
+              const innen = nettoPolygon(projekt, r.knoten, km);
+              const rand = einruecken(innen, innen.map(() => px(2.5)));
+              return <polygon className="raum-auswahl" points={rand.map((q) => `${q.x},${q.y}`).join(' ')} data-planer-raum-auswahl={r.id} />;
+            })()}
           {/* openings */}
           {projekt.oeffnungen.map((o) => {
             const lage = oeffnungsLage(projekt, o, km);
@@ -738,7 +749,7 @@ export function Editor2D() {
           {projekt.raeume.map((r) => {
             const lp = beschriftungsPunkt(raumPolygon(projekt, r.knoten, km));
             return (
-              <g key={r.id} className="raum-text">
+              <g key={r.id} className={`raum-text${ausgewaehlt('raum', r.id) ? ' ist-ausgewaehlt' : ''}`}>
                 <text x={lp.x} y={lp.y - px(7)} fontSize={px(13)} textAnchor="middle" className="raum-name">
                   {r.name}
                 </text>

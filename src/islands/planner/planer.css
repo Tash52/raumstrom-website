@@ -350,6 +350,10 @@
   flex-direction: column;
   min-width: 0;
 }
+.planer-flaeche {
+  position: relative;
+  min-width: 0;
+}
 .planer-seite {
   display: grid;
   align-content: start;
@@ -482,9 +486,17 @@ details.planer-gruppe[open] > summary::before {
   fill: rgb(61 99 0 / 0.05);
 }
 .planer-svg .raum.ist-ausgewaehlt {
-  /* fill is 1.1:1 on the plan; the room state is carried by the side panel (Raum fieldset, list
-     entry with graphite border and Strom bar); an outline would lie under the walls (axis polygon) */
+  /* the fill alone is 1.1:1; the state is carried by .raum-auswahl and the label (both Kabelgrün) */
   fill: rgb(197 240 30 / 0.32);
+}
+.planer-svg .raum-auswahl {
+  /* outline just inside the inner wall faces: Kabelgrün 6.7:1 on Kalk-hell, 6.1:1 on the selected fill */
+  fill: none;
+  stroke: var(--color-kabelgruen);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
 }
 .planer-svg .wand {
   stroke: var(--color-graphit);
@@ -548,6 +560,10 @@ details.planer-gruppe[open] > summary::before {
   stroke: rgb(251 250 247 / 0.85);
   stroke-width: 3px;
   vector-effect: non-scaling-stroke;
+}
+.planer-svg .raum-text.ist-ausgewaehlt .raum-name {
+  fill: var(--color-kabelgruen);
+  font-weight: 750;
 }
 .planer-svg .knoten {
   fill: var(--color-kalk-hell);
@@ -811,6 +827,15 @@ details.planer-gruppe[open] > summary::before {
     top: var(--space-2);
     bottom: auto;
     max-width: calc(100% - 2 * var(--space-3));
+  }
+  /* QA Phase 4 H1: as an overlay the guide covered the zoom buttons and the status message at 390 px;
+     in flow above the drawing area it covers nothing */
+  .planer-tour {
+    position: static;
+    order: -1;
+    max-width: none;
+    margin: var(--space-2);
+    padding: var(--space-3);
   }
 }
 @media (prefers-reduced-motion: reduce) {

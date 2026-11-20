@@ -38,7 +38,7 @@ export function platziereOeffnung(
   if (l < m.breite + 2 * OEFFNUNG_RAND) return { ok: false, fehler: 'Die Wand ist für diese Öffnung zu kurz.' };
   const mitte = einpassen(l, m.breite, treffer.t * l);
   if (!frei(p, treffer.wand.id, mitte, m.breite)) return { ok: false, fehler: 'An dieser Stelle ist bereits eine Öffnung.' };
-  const o: Oeffnung = { id: neueId('o', p.oeffnungen), wandId: treffer.wand.id, art, abstand: mitte, ...m, anschlag: 'links', aufschlag: 'links' };
+  const o: Oeffnung = { id: neueId('o', p.oeffnungen), wandId: treffer.wand.id, art, abstand: mitte, ...m, anschlag: 'links', aufschlag: 'links', gestaltung: null };
   return { ok: true, projekt: { ...p, oeffnungen: [...p.oeffnungen, o] }, id: o.id };
 }
 

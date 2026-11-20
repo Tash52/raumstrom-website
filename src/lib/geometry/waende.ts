@@ -1,8 +1,8 @@
 // Wall graph operations (pure). Walls are edges between nodes; every operation returns a new project.
 // Junctions are explicit: a wall that ends on another wall splits it (T-junction), crossing walls
 // are split at the crossing. That keeps the graph planar, which room detection (raeume.ts) relies on.
-import { type Knoten, type Oeffnung, type Projekt, type Wand, type WandArt, knotenMap, neueId } from './projekt.ts';
-import { type Punkt, abstand, kreuz, minus, normiert, plus, mal, projiziere, rundePunkt, schnittStrecken, skalar } from './vektor.ts';
+import { type Knoten, type Oeffnung, type Projekt, type Seite, type Wand, type WandArt, knotenMap, neueId } from './projekt.ts';
+import { type Punkt, abstand, kreuz, minus, normale, normiert, plus, mal, projiziere, rundePunkt, schnittStrecken, skalar } from './vektor.ts';
 
 /** Two points closer than this are the same node (metres). */
 export const TOLERANZ = 0.005;
@@ -29,6 +29,26 @@ export const wandLaenge = (p: Projekt, w: Wand, km = knotenMap(p)): number => {
 };
 
 export const findeWand = (p: Projekt, id: string): Wand | undefined => p.waende.find((w) => w.id === id);
+
+/** Unit normal pointing to the given side of the wall (`links` = normale(bis - von), see seiteSchema). */
+export function seitenNormale(a: Punkt, b: Punkt, seite: Seite): Punkt {
+  return mal(normale(normiert(minus(b, a))), seite === 'links' ? 1 : -1);
+}
+
+/**
+ * Point on the wall surface of one side, `abstand` metres from `von` along the wall (clamped to the wall),
+ * plus the outward normal of that surface (pointing into the room on that side).
+ */
+export function wandFlaechenPunkt(p: Projekt, w: Wand, seite: Seite, abstandVonA: number, km = knotenMap(p)): { punkt: Punkt; normale: Punkt; abstand: number } {
+  const { a, b } = endpunkte(p, w, km);
+  const l = abstand(a, b);
+  const t = Math.min(Math.max(abstandVonA, 0), l);
+  const n = seitenNormale(a, b, seite);
+  const mitte = plus(a, mal(normiert(minus(b, a)), t));
+  return { punkt: plus(mitte, mal(n, w.dicke / 2)), normale: n, abstand: t };
+}
+
+const gegenseite = (s: Seite): Seite => (s === 'links' ? 'rechts' : 'links');
 
 export function waendeAnKnoten(p: Projekt, knotenId: string): Wand[] {
   return p.waende.filter((w) => w.von === knotenId || w.bis === knotenId);
@@ -93,8 +113,13 @@ export function teileWand(p: Projekt, wandId: string, pt: Punkt, tol = TOLERANZ)
   const oeffnungen = p.oeffnungen.map((o) =>
     o.wandId !== w.id || o.abstand <= l1 ? o : { ...o, wandId: w2.id, abstand: Number((o.abstand - l1).toFixed(4)) },
   );
+  // electrical points follow like openings; wall-side designs apply to both halves (same direction)
+  const elektro = p.elektro.map((e) =>
+    e.wandId !== w.id || e.abstand <= l1 ? e : { ...e, wandId: w2.id, abstand: Number((e.abstand - l1).toFixed(4)) },
+  );
+  const wandSeiten = p.wandSeiten.flatMap((s) => (s.wandId === w.id ? [s, { ...s, wandId: w2.id }] : [s]));
   const waende = p.waende.flatMap((x) => (x.id === w.id ? [w1, w2] : [x]));
-  return { projekt: oeffnungenEinpassen({ ...p, knoten: [...p.knoten, k], waende, oeffnungen }), knotenId: kId };
+  return { projekt: oeffnungenEinpassen({ ...p, knoten: [...p.knoten, k], waende, oeffnungen, elektro, wandSeiten }), knotenId: kId };
 }
 
 /** Node for a point: existing node, split of a wall the point lies on, or a new free node. */
@@ -205,20 +230,40 @@ export function verschmelzeKollineare(p: Projekt, knotenId: string): Projekt {
   // new wall x -> y keeps w1's id; positions of openings measured from x
   const neu: Wand = { ...w1, von: x.id, bis: y.id };
   const lGesamt = abstand(x, y);
-  const oeffnungen = p.oeffnungen.map((o) => {
-    if (o.wandId !== w1.id && o.wandId !== w2.id) return o;
-    const w = o.wandId === w1.id ? w1 : w2;
-    // absolute centre point of the opening along its old wall
+  const rNeu = normiert(minus(y, x));
+  /** Position along the merged wall and whether the old wall ran against the new direction. */
+  const umrechnen = (w: Wand, abst: number) => {
+    // absolute point along the old wall
     const { a, b } = endpunkte(p, w, km);
-    const mitte = plus(a, mal(normiert(minus(b, a)), o.abstand));
-    const abst = projiziere(mitte, x, y).t * lGesamt;
-    return { ...o, wandId: neu.id, abstand: Number(abst.toFixed(4)) };
+    const r = normiert(minus(b, a));
+    const pt = plus(a, mal(r, abst));
+    return { abstand: Number((projiziere(pt, x, y).t * lGesamt).toFixed(4)), gedreht: skalar(r, rNeu) < 0 };
+  };
+  const alteWand = (id: string) => (id === w1.id ? w1 : id === w2.id ? w2 : null);
+  const oeffnungen = p.oeffnungen.map((o) => {
+    const w = alteWand(o.wandId);
+    if (!w) return o;
+    // hinge and swing sides are informative and kept as they are (as in Phase 4)
+    return { ...o, wandId: neu.id, abstand: umrechnen(w, o.abstand).abstand };
   });
+  const elektro = p.elektro.map((e) => {
+    const w = e.wandId ? alteWand(e.wandId) : null;
+    if (!w || !e.seite) return e;
+    const u = umrechnen(w, e.abstand);
+    return { ...e, wandId: neu.id, abstand: u.abstand, seite: u.gedreht ? gegenseite(e.seite) : e.seite };
+  });
+  // wall-side designs: w1's entries win over w2's for the same (new) side
+  const seitenNeu = new Map<Seite, (typeof p.wandSeiten)[number]>();
+  for (const w of [w2, w1]) {
+    const gedreht = umrechnen(w, 0).gedreht;
+    for (const s of p.wandSeiten) if (s.wandId === w.id) seitenNeu.set(gedreht ? gegenseite(s.seite) : s.seite, { ...s, wandId: neu.id, seite: gedreht ? gegenseite(s.seite) : s.seite });
+  }
+  const wandSeiten = [...p.wandSeiten.filter((s) => s.wandId !== w1.id && s.wandId !== w2.id), ...seitenNeu.values()];
   const waende = p.waende.filter((w) => w.id !== w2.id).map((w) => (w.id === w1.id ? neu : w));
-  return { ...p, waende, oeffnungen, knoten: p.knoten.filter((n) => n.id !== knotenId) };
+  return { ...p, waende, oeffnungen, elektro, wandSeiten, knoten: p.knoten.filter((n) => n.id !== knotenId) };
 }
 
-/** Delete a wall with its openings; clean up loose nodes and merge collinear rests. */
+/** Delete a wall with its openings, wall-mounted electrical points and wall-side designs; clean up loose nodes and merge collinear rests. */
 export function entferneWand(p: Projekt, wandId: string): Projekt {
   const w = findeWand(p, wandId);
   if (!w) return p;
@@ -226,6 +271,8 @@ export function entferneWand(p: Projekt, wandId: string): Projekt {
     ...p,
     waende: p.waende.filter((x) => x.id !== wandId),
     oeffnungen: p.oeffnungen.filter((o) => o.wandId !== wandId),
+    elektro: p.elektro.filter((e) => e.wandId !== wandId),
+    wandSeiten: p.wandSeiten.filter((s) => s.wandId !== wandId),
   };
   q = entferneLoseKnoten(q);
   for (const k of [w.von, w.bis]) if (q.knoten.some((n) => n.id === k)) q = verschmelzeKollineare(q, k);
@@ -261,6 +308,8 @@ export function verbindeKnoten(p: Projekt, quelle: string, ziel: string): Projek
     knoten: p.knoten.filter((k) => k.id !== quelle),
     waende: gesehen,
     oeffnungen: p.oeffnungen.filter((o) => !entfernt.has(o.wandId)),
+    elektro: p.elektro.filter((e) => e.wandId === null || !entfernt.has(e.wandId)),
+    wandSeiten: p.wandSeiten.filter((s) => !entfernt.has(s.wandId)),
   };
   return oeffnungenEinpassen(entferneLoseKnoten(q));
 }
@@ -286,5 +335,8 @@ export function skaliereProjekt(p: Projekt, faktor: number, um: Punkt = { x: 0, 
     return { ...k, x: n.x, y: n.y };
   });
   const oeffnungen = p.oeffnungen.map((o) => ({ ...o, abstand: Number((o.abstand * faktor).toFixed(4)) }));
-  return oeffnungenEinpassen({ ...p, knoten, oeffnungen });
+  const skaliere = <T extends Punkt>(o: T): T => ({ ...o, ...rundePunkt(plus(um, mal(minus(o, um), faktor))) });
+  const elektro = p.elektro.map((e) => skaliere({ ...e, abstand: Number((e.abstand * faktor).toFixed(4)) }));
+  const einrichtung = p.einrichtung.map(skaliere);
+  return oeffnungenEinpassen({ ...p, knoten, oeffnungen, elektro, einrichtung });
 }

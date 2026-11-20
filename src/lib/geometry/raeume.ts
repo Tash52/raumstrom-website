@@ -1,9 +1,10 @@
 // Room detection (pure): closed rooms are the bounded faces of the planar wall graph.
 // Dangling walls are ignored. Detected rooms keep id, name and height of matching earlier rooms,
 // so renaming survives editing.
-import { type Projekt, type Raum, type Wand, knotenMap, neueId } from './projekt.ts';
+import { type Elektro, type Projekt, type Raum, type Seite, type Wand, knotenMap, leereRaumGestaltung, neueId } from './projekt.ts';
 import { beschriftungsPunkt, einruecken, flaeche, punktImPolygon, vorzeichenFlaeche } from './polygon.ts';
-import type { Punkt } from './vektor.ts';
+import { type Punkt, rundePunkt } from './vektor.ts';
+import { wandFlaechenPunkt } from './waende.ts';
 
 /** Faces smaller than this (m², centre line) are not rooms (e.g. a wall drawn twice slightly offset). */
 export const MIN_RAUMFLAECHE = 0.3;
@@ -166,9 +167,101 @@ export function mitRaeumen(p: Projekt, vorher: Projekt = p): Projekt {
     }
     const name = nameVorschlag(fl, vergeben);
     vergeben.add(name);
-    raeume.push({ id: neueId('r', [...p.raeume, ...raeume]), name, knoten: z.f, hoehe: null, flaeche: fl });
+    raeume.push({
+      id: neueId('r', [...p.raeume, ...raeume]),
+      name,
+      knoten: z.f,
+      hoehe: null,
+      flaeche: fl,
+      gestaltung: leereRaumGestaltung(),
+      stilpaket: null,
+    });
   }
-  return { ...p, raeume };
+  return bereinigeAusstattung({ ...p, raeume });
+}
+
+/**
+ * Room on one side of a wall (rooms are positively oriented, so a room lies `links` of an edge it
+ * traverses von->bis and `rechts` of an edge it traverses bis->von). null = no room (outside, open plan).
+ */
+export function raumAnWandseite(p: Projekt, wandId: string, seite: Seite): Raum | null {
+  const w = p.waende.find((x) => x.id === wandId);
+  if (!w) return null;
+  const [von, bis] = seite === 'links' ? [w.von, w.bis] : [w.bis, w.von];
+  for (const r of p.raeume) {
+    const n = r.knoten.length;
+    for (let i = 0; i < n; i++) if (r.knoten[i] === von && r.knoten[(i + 1) % n] === bis) return r;
+  }
+  return null;
+}
+
+/** Rooms on both sides of a wall. */
+export const raeumeAnWand = (p: Projekt, wandId: string): Record<Seite, Raum | null> => ({
+  links: raumAnWandseite(p, wandId, 'links'),
+  rechts: raumAnWandseite(p, wandId, 'rechts'),
+});
+
+const gleicheZahl = (a: number, b: number) => Math.abs(a - b) < 1e-9;
+
+/**
+ * Keep the furnishing consistent with the geometry (called by mitRaeumen, i.e. after every edit):
+ * - wall sides and wall-mounted electrical points on missing walls are removed, duplicates dropped;
+ * - wall points: `abstand` clamped to the wall, `x`/`y` = point on the wall surface, `raumId` = room on that side;
+ * - ceiling/floor points and furniture: `raumId` = room containing the position (null outside).
+ * Returns `p` itself when nothing changed.
+ */
+export function bereinigeAusstattung(p: Projekt): Projekt {
+  if (!p.elektro.length && !p.einrichtung.length && !p.wandSeiten.length) return p;
+  const km = knotenMap(p);
+  const waende = new Map(p.waende.map((w) => [w.id, w]));
+  const suche = raumSucher(p);
+  const raumIdBei = (x: number, y: number) => suche({ x, y })?.id ?? null;
+
+  const gesehen = new Set<string>();
+  const wandSeiten = p.wandSeiten.filter((s) => {
+    const key = `${s.wandId}:${s.seite}`;
+    if (!waende.has(s.wandId) || gesehen.has(key)) return false;
+    gesehen.add(key);
+    return true;
+  });
+
+  let elektroGeaendert = false;
+  const elektro = p.elektro.flatMap((e) => {
+    let neu: Elektro;
+    if (e.ort === 'wand') {
+      const w = e.wandId ? waende.get(e.wandId) : undefined;
+      if (!w || !e.seite) {
+        elektroGeaendert = true;
+        return [];
+      }
+      const f = wandFlaechenPunkt(p, w, e.seite, e.abstand, km);
+      const pt = rundePunkt(f.punkt, 0.0001);
+      neu = { ...e, abstand: Number(f.abstand.toFixed(4)), x: pt.x, y: pt.y, raumId: raumAnWandseite(p, w.id, e.seite)?.id ?? null };
+    } else {
+      neu = { ...e, wandId: null, seite: null, abstand: 0, raumId: raumIdBei(e.x, e.y) };
+    }
+    const gleich =
+      neu.raumId === e.raumId && neu.wandId === e.wandId && neu.seite === e.seite && gleicheZahl(neu.abstand, e.abstand) && gleicheZahl(neu.x, e.x) && gleicheZahl(neu.y, e.y);
+    if (gleich) return [e];
+    elektroGeaendert = true;
+    return [neu];
+  });
+
+  let moebelGeaendert = false;
+  const einrichtung = p.einrichtung.map((m) => {
+    const raumId = raumIdBei(m.x, m.y);
+    if (raumId === m.raumId) return m;
+    moebelGeaendert = true;
+    return { ...m, raumId };
+  });
+
+  if (wandSeiten.length === p.wandSeiten.length && !elektroGeaendert && !moebelGeaendert) return p;
+  return {
+    ...p,
+    wandSeiten: wandSeiten.length === p.wandSeiten.length ? p.wandSeiten : wandSeiten,
+    elektro: elektroGeaendert ? elektro : p.elektro,
+    einrichtung: moebelGeaendert ? einrichtung : p.einrichtung,
+  };
 }
 
 export const raumHoehe = (p: Projekt, r: Raum): number => r.hoehe ?? p.standardHoehe;
@@ -185,8 +278,12 @@ export function wandHoehe(p: Projekt, w: Wand): number {
   return h || p.standardHoehe;
 }
 
-/** Room containing a point (centre-line polygon). */
-export function raumBei(p: Projekt, pt: Punkt): Raum | undefined {
+/** Lookup "room containing a point" with the polygons prepared once (smallest room wins). */
+export function raumSucher(p: Projekt): (pt: Punkt) => Raum | undefined {
   const km = knotenMap(p);
-  return [...p.raeume].sort((a, b) => a.flaeche - b.flaeche).find((r) => punktImPolygon(pt, raumPolygon(p, r.knoten, km)));
+  const liste = [...p.raeume].sort((a, b) => a.flaeche - b.flaeche).map((r) => ({ r, poly: raumPolygon(p, r.knoten, km) }));
+  return (pt) => liste.find((x) => punktImPolygon(pt, x.poly))?.r;
 }
+
+/** Room containing a point (centre-line polygon). */
+export const raumBei = (p: Projekt, pt: Punkt): Raum | undefined => raumSucher(p)(pt);
