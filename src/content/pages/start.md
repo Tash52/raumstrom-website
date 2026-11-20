@@ -28,14 +28,14 @@ abschnitte:
     label: Ablauf
     titel: So läuft's ab
     text: |-
-      1. **Anfrage.** Sie schildern uns Ihr Vorhaben, gern mit Fotos oder einer Skizze aus dem Raumplaner.
+      1. **Anfrage.** Sie schildern uns Ihr Vorhaben, gern mit Fotos oder Ihrem Grundriss über das Kontaktformular.
       2. **Besichtigung.** Wir sehen uns die Räume vor Ort an, nehmen Maß und klären gemeinsam, was zu tun ist.
       3. **Angebot.** Sie erhalten ein Angebot, das Leistungen und Ausführende klar benennt. [[PLATZHALTER: Frist für die Angebotserstellung vom Betreiber bestätigen]]
       4. **Umsetzung.** Wir planen, koordinieren und führen aus. Meisterpflichtige Gewerke übernehmen unsere festen Meister-Partnerbetriebe. Zum Schluss folgen Abnahme und Übergabe.
   - id: raumplaner-teaser
     label: Raumplaner
-    titel: Ihren Raum vorab im 3D-Raumplaner skizzieren
-    text: Zeichnen Sie Ihren Raum, setzen Sie Steckdosen, Schalter und Lichtpunkte und senden Sie uns die Skizze mit Ihrer Anfrage. Das ersetzt keine Aufmaß-Besichtigung, erleichtert aber das erste Gespräch.
+    titel: Ihren Grundriss vorab im 3D-Raumplaner zeichnen
+    text: Laden Sie Ihren Grundriss hoch, zeichnen Sie Wände, Türen und Fenster nach und sehen Sie Ihre Räume in 3D. Das ersetzt keine Aufmaß-Besichtigung, hilft aber bei der Vorbereitung.
   - id: region
     label: Einzugsgebiet
     titel: Schweinfurt und Umland

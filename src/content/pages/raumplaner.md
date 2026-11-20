@@ -1,17 +1,17 @@
 ---
 titel: 3D-Raumplaner
-meta_title: "3D-Raumplaner: Raum skizzieren und anfragen"
-meta_description: Skizzieren Sie Ihren Raum in 3D, setzen Sie Steckdosen und Lichtpunkte und senden Sie die Skizze mit Ihrer Anfrage an RAUMSTROM.
+meta_title: "3D-Raumplaner: Grundriss zeichnen und in 3D ansehen"
+meta_description: Laden Sie Ihren Grundriss hoch, zeichnen Sie Wände, Türen und Fenster und sehen Sie Ihre Räume in 3D. Direkt im Browser, ohne Installation.
 abschnitte:
   - id: einleitung
     label: Einleitung
-    titel: Raum skizzieren, Elektrik mitdenken
-    text: Mit dem Raumplaner zeichnen Sie Ihren Raum direkt im Browser, platzieren Steckdosen, Schalter und Lichtpunkte und sehen das Ergebnis in 3D. Die Skizze senden Sie mit Ihrer Anfrage an uns. Sie dient als Orientierung für das erste Gespräch und ersetzt weder Aufmaß noch Angebot.
+    titel: Grundriss hochladen, Räume zeichnen, in 3D ansehen
+    text: Mit dem Raumplaner laden Sie einen Grundriss als Bild, PDF oder HEIC-Foto hoch, legen den Maßstab fest und zeichnen die Wände nach. Der Planer erkennt die Räume, Sie ergänzen Türen und Fenster und sehen das Ergebnis in 3D. Vorlagen erleichtern den Einstieg. Das Absenden der Skizze und die Planung von Steckdosen, Schaltern und Lichtpunkten sind in diesem Planer nicht enthalten. Schicken Sie uns Ihren Grundriss bitte über das [Kontaktformular](/kontakt/). Die Ansicht dient als Orientierung und ersetzt weder Aufmaß noch Angebot.
   - id: hinweis
     label: Hinweis
     titel: Was der Planer nicht ist
-    text: Der Raumplaner ist ein Gestaltungs- und Kommunikationswerkzeug. Er ist keine Elektroplanung. Die Ausführungsplanung erfolgt nach Besichtigung vor Ort. Hinweise zum Umgang mit Ihren Daten finden Sie in der Datenschutzerklärung.
+    text: Der Raumplaner ist ein Gestaltungs- und Kommunikationswerkzeug. Er ist keine Elektroplanung und ersetzt kein Aufmaß. Die Ausführungsplanung erfolgt nach Besichtigung vor Ort. Hinweise zum Umgang mit Ihren Daten finden Sie in der Datenschutzerklärung.
 entwurf: false
 ---
 
-Planen Sie Ihren Raum vorab und gehen Sie vorbereitet ins Gespräch.
+Zeichnen Sie Ihren Grundriss vorab und sehen Sie Ihre Räume in 3D.
