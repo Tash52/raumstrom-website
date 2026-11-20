@@ -9,3 +9,4 @@ export * from './oeffnungen.ts';
 export * from './extrusion.ts';
 export * from './kalibrierung.ts';
 export * from './vorlagen.ts';
+export * from './ausstattung.ts';

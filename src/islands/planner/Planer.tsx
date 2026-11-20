@@ -258,13 +258,17 @@ export function Planer({ webgl, leicht }: { webgl: boolean; leicht: boolean }) {
           </div>
           <div className="planer-arbeit">
             <div className="planer-buehne">
-              {ansicht === '2d' ? <Editor2D /> : <Bereich3D webgl={webgl} leicht={leicht} />}
+              {/* drawing area and status message share one box, so on small screens the guide (in flow above it)
+                  never covers the zoom buttons or the message */}
+              <div className="planer-flaeche">
+                {ansicht === '2d' ? <Editor2D /> : <Bereich3D webgl={webgl} leicht={leicht} />}
+                <Meldung />
+              </div>
               {ansicht === '2d' && (
                 <p className="planer-hilfe" id="planer-editor-hilfe">
                   {HILFE[werkzeug]} Tastatur: Pfeiltasten bewegen den Zeiger (Umschalt 1 m, Alt 1 cm), Eingabetaste setzt, Entf löscht, Strg+Z macht rückgängig, + und − zoomen.
                 </p>
               )}
-              <Meldung />
               {tour === 'offen' && (
                 <Kurzanleitung
                   onSchliessen={() => {
