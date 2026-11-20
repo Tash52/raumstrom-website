@@ -1,38 +1,44 @@
 ---
-// Raumplaner entry page (phase 2c: introduction only). The planner itself follows in phase 4-6.
+// Raumplaner (Phase 4, planner-geometry): upload, scale, wall editor, rooms, doors/windows, 3D view.
+// The planner chunk is imported only by the script of this page. CSP extras only here:
+// 'wasm-unsafe-eval' (HEIC decoder, pdf.js image decoders) and blob: workers (HEIC decoder worker).
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import Button from '../../components/base/Button.astro';
-import Icon from '../../components/base/Icon.astro';
 import Abschnitte from '../../components/sections/Abschnitte.astro';
 import Entwurfsbanner from '../../components/sections/Entwurfsbanner.astro';
 import Seitenkopf from '../../components/sections/Seitenkopf.astro';
 import { getSeite } from '../../components/sections/seiten.ts';
+import '../../islands/planner/planer.css';
+
+// insertScriptResource replaces Astro's default source list, so 'self' is added again explicitly.
+Astro.csp?.insertScriptResource("'self'");
+Astro.csp?.insertScriptResource("'wasm-unsafe-eval'");
+Astro.csp?.insertDirective("worker-src 'self' blob:");
 
 const seite = await getSeite('raumplaner');
 ---
 <BaseLayout title={seite.data.meta_title} description={seite.data.meta_description}>
   <Entwurfsbanner entwurf={seite.data.entwurf} />
-  <Seitenkopf titel={seite.data.titel} lead={seite.body?.trim()} pfad={[{ text: seite.data.titel }]}>
-    <p class="folgt" data-planer-folgt>
-      <Icon name="clock" size="s" />
-      <span>Der Raumplaner folgt in Kürze. Bis dahin können Sie uns Ihr Vorhaben direkt schildern.</span>
-    </p>
-    <div class="cluster">
-      <Button href="/kontakt/" icon="arrow-right">Anfrage stellen</Button>
+  <Seitenkopf titel={seite.data.titel} lead={seite.body?.trim()} pfad={[{ text: seite.data.titel }]} />
+  <section class="planer-bereich" aria-label="Raumplaner">
+    <div class="planer-container">
+      <div class="planer-host" data-planer-host data-planer-zustand="laedt">
+        <div class="planer-laden" data-planer-laden hidden>
+          <p data-planer-laden-text>Raumplaner wird geladen …</p>
+          <progress max="100" value="5" aria-label="Ladefortschritt Raumplaner"></progress>
+        </div>
+      </div>
+      <noscript>
+        <div class="planer-noscript">
+          <p><strong>Der Raumplaner benötigt JavaScript.</strong> Bitte aktivieren Sie JavaScript in Ihrem Browser, um Ihren Grundriss zu zeichnen.</p>
+          <p>Sie können uns Ihr Vorhaben auch direkt schildern: <a href="/kontakt/">zum Kontaktformular</a>.</p>
+        </div>
+      </noscript>
     </div>
-  </Seitenkopf>
+  </section>
   <Abschnitte seite={seite} />
 </BaseLayout>
 
-<style>
-  .folgt {
-    display: flex;
-    gap: var(--space-2);
-    align-items: flex-start;
-    max-width: 40rem;
-    padding: var(--space-4);
-    border-left: 0.375rem solid var(--leitung);
-    background: var(--surface-2);
-    font-weight: var(--weight-ui);
-  }
-</style>
+<script>
+  import { ladePlaner } from '../../islands/planner/laden.ts';
+  void ladePlaner();
+</script>

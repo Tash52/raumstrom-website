@@ -1,0 +1,776 @@
+/* Raumplaner (planner-geometry). Loaded only by /raumplaner/. Tokens from src/styles/tokens.css. */
+
+.planer-bereich {
+  padding-block: 0 var(--space-8);
+}
+.planer-container {
+  width: min(100% - 2 * var(--gutter), 96rem);
+  margin-inline: auto;
+}
+.planer-host {
+  min-height: 34rem;
+  border: var(--border) solid var(--line-strong);
+  background: var(--surface-field);
+  border-radius: var(--radius-s);
+}
+.planer-laden,
+.planer-noscript {
+  display: grid;
+  place-content: center;
+  gap: var(--space-3);
+  min-height: 34rem;
+  padding: var(--space-6);
+  text-align: center;
+}
+.planer-laden[hidden] {
+  display: none;
+}
+.planer-laden progress {
+  width: min(20rem, 70vw);
+  accent-color: var(--color-kabelgruen);
+}
+.planer-noscript {
+  border: var(--border) solid var(--line-strong);
+  background: var(--surface-2);
+}
+
+.planer {
+  display: flex;
+  flex-direction: column;
+  min-height: 34rem;
+  font-size: var(--step--1);
+}
+
+/* ---------- buttons and fields ---------- */
+.planer-knopf,
+.planer-tab,
+.planer-werkzeug {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 2.75rem;
+  padding: var(--space-2) var(--space-3);
+  border: var(--border) solid var(--line-strong);
+  border-radius: var(--radius-s);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-weight: var(--weight-ui);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out), transform var(--dur-instant) var(--ease-out);
+}
+.planer-knopf:hover,
+.planer-tab:hover,
+.planer-werkzeug:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+.planer-knopf:active,
+.planer-tab:active,
+.planer-werkzeug:active:not(:disabled) {
+  transform: scale(calc(1 - 0.03 * var(--motion)));
+}
+.planer-knopf-primaer {
+  border-color: var(--button-bg);
+  background: var(--button-bg);
+  color: var(--button-text);
+}
+.planer-knopf-primaer:hover {
+  background: var(--color-graphit-2);
+}
+.planer-knopf-gefahr {
+  color: var(--error);
+  border-color: currentColor;
+}
+.planer-knopf:disabled,
+.planer-werkzeug:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.planer-tab[aria-pressed='true'],
+.planer-werkzeug[aria-pressed='true'] {
+  border-color: var(--button-bg);
+  background: var(--button-bg);
+  color: var(--button-text);
+  box-shadow: inset 0 -3px 0 var(--accent-surface);
+}
+.planer-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent-text);
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+  text-align: start;
+}
+.planer :is(button, input, select, a, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 5px var(--focus-glow);
+}
+.planer-symbol {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.planer-feld {
+  display: grid;
+  gap: var(--space-1);
+}
+.planer-feld label {
+  font-weight: var(--weight-ui);
+}
+.planer-feld :is(input:not([type='range']), select) {
+  min-height: 2.75rem;
+  width: 100%;
+  padding: var(--space-2);
+  border: var(--border) solid var(--line-strong);
+  border-radius: var(--radius-s);
+  background: var(--surface-field);
+  color: var(--text);
+  font: inherit;
+}
+.planer-feld input[type='range'] {
+  width: 100%;
+  accent-color: var(--color-kabelgruen);
+}
+.planer-einheit {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.planer-einheit input {
+  font-family: var(--font-mono);
+}
+.planer-schalter {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 2.25rem;
+  cursor: pointer;
+}
+.planer-schalter input {
+  width: 1.15rem;
+  height: 1.15rem;
+  accent-color: var(--color-kabelgruen);
+}
+.planer-zeile {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--space-3);
+}
+.planer-knopfreihe {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.planer-klein {
+  color: var(--text-muted);
+  font-size: var(--step--1);
+}
+.planer-zahl {
+  font-family: var(--font-mono);
+  letter-spacing: var(--tracking-mono);
+  white-space: nowrap;
+}
+.planer-fehler {
+  padding: var(--space-3);
+  border-left: 4px solid var(--error);
+  background: var(--surface);
+  color: var(--error);
+  font-weight: var(--weight-ui);
+}
+.planer-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.planer-spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid var(--line-strong);
+  border-top-color: var(--color-kabelgruen);
+  border-radius: 50%;
+  animation: planer-drehen 0.8s linear infinite;
+}
+@keyframes planer-drehen {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------- start ---------- */
+.planer-start {
+  padding: clamp(var(--space-4), 3vw, var(--space-7));
+}
+.planer-start-titel {
+  margin-bottom: var(--space-5);
+  font-size: var(--step-2);
+}
+.planer-start-raster {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
+  align-items: start;
+}
+.planer-karte {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  border: var(--border) solid var(--line);
+  border-radius: var(--radius-s);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+}
+.planer-karte h3 {
+  font-size: var(--step-1);
+}
+.planer-karte-upload {
+  grid-row: span 2;
+}
+.planer-ablage {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-3);
+  padding: var(--space-6) var(--space-4);
+  border: 2px dashed var(--line-strong);
+  border-radius: var(--radius-s);
+  background: var(--surface-field);
+  text-align: center;
+  transition: background-color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
+}
+.planer-ablage.ist-aktiv {
+  border-color: var(--color-kabelgruen);
+  background: rgb(197 240 30 / 0.18);
+}
+.planer-ablage label:focus-within {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 6px var(--focus-glow);
+}
+.pdf-auswahl {
+  display: grid;
+  gap: var(--space-3);
+}
+.pdf-vorschau {
+  max-height: 22rem;
+  overflow: auto;
+  border: var(--border) solid var(--line);
+  background: #fff;
+}
+.pdf-vorschau-bild {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.planer-vorlagen {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-3);
+  padding: 0;
+  list-style: none;
+}
+.planer-vorlage {
+  display: grid;
+  gap: var(--space-1);
+  width: 100%;
+  height: 100%;
+  padding: var(--space-3);
+  border: var(--border) solid var(--line-strong);
+  border-radius: var(--radius-s);
+  background: var(--surface-field);
+  color: var(--text);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
+}
+.planer-vorlage:hover {
+  border-color: var(--button-bg);
+  box-shadow: var(--shadow-1);
+}
+.planer-vorlage-titel {
+  font-weight: var(--weight-strong);
+}
+.vorlage-bild {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  margin-bottom: var(--space-1);
+}
+.vorlage-raum {
+  fill: rgb(61 99 0 / 0.07);
+}
+.vorlage-wand {
+  stroke: var(--text);
+}
+
+/* ---------- editor layout ---------- */
+.planer-leiste {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: var(--border) solid var(--line-strong);
+  background: var(--surface);
+}
+.planer-schritte,
+.planer-werkzeuge,
+.planer-verlauf {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+.planer-werkzeug span {
+  white-space: nowrap;
+}
+.planer-arbeit {
+  background: var(--surface);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 20rem;
+  flex: 1;
+  min-height: 0;
+}
+.planer-buehne {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.planer-seite {
+  display: grid;
+  align-content: start;
+  gap: var(--space-3);
+  max-height: min(78vh, 52rem);
+  overflow: auto;
+  padding: var(--space-3);
+  border-left: var(--border) solid var(--line-strong);
+  background: var(--surface);
+}
+.planer-gruppe {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+  margin: 0;
+  padding: var(--space-3);
+  border: var(--border) solid var(--line);
+  border-radius: var(--radius-s);
+}
+.planer-gruppe legend,
+.planer-gruppe-titel,
+.planer-gruppe summary {
+  padding-inline: var(--space-1);
+  font-size: var(--step--1);
+  font-weight: var(--weight-strong);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.planer-gruppe summary {
+  cursor: pointer;
+}
+.planer-wandliste ul {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  padding: 0;
+  list-style: none;
+}
+.planer-raumliste {
+  display: grid;
+  gap: var(--space-1);
+  padding: 0;
+  list-style: none;
+}
+.planer-raum-knopf {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: 2.5rem;
+  padding: var(--space-2);
+  border: var(--border) solid transparent;
+  border-radius: var(--radius-s);
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+.planer-raum-knopf.ist-ausgewaehlt {
+  border-color: var(--button-bg);
+  box-shadow: inset 4px 0 0 var(--accent-surface);
+}
+.planer-summe {
+  display: flex;
+  justify-content: space-between;
+  padding-top: var(--space-2);
+  border-top: var(--border) solid var(--line);
+  font-weight: var(--weight-strong);
+}
+
+/* ---------- 2D canvas ---------- */
+.planer-editor {
+  position: relative;
+  height: min(78vh, 52rem);
+  min-height: 24rem;
+  overflow: hidden;
+  background: var(--color-kalk-hell);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: crosshair;
+}
+.planer-editor.werkzeug-auswahl {
+  cursor: default;
+}
+.planer-editor:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: -3px;
+}
+.planer-leinwand,
+.planer-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.planer-svg .raum {
+  fill: rgb(61 99 0 / 0.05);
+}
+.planer-svg .raum.ist-ausgewaehlt {
+  fill: rgb(197 240 30 / 0.32);
+}
+.planer-svg .wand {
+  stroke: var(--color-graphit);
+  stroke-linecap: butt;
+}
+.planer-svg .wand.ist-ausgewaehlt {
+  stroke: var(--color-kabelgruen);
+}
+.planer-svg .oeffnung-luecke {
+  stroke: var(--color-kalk-hell);
+}
+.planer-svg .fenster-glas,
+.planer-svg .fenster-rahmen,
+.planer-svg .tuer-bogen {
+  fill: none;
+  stroke: var(--color-graphit);
+  stroke-width: 1.25px;
+  vector-effect: non-scaling-stroke;
+}
+.planer-svg .fenster-rahmen {
+  stroke-width: 0.75px;
+}
+.planer-svg .oeffnung.ist-ausgewaehlt :is(.fenster-glas, .fenster-rahmen, .tuer-bogen) {
+  stroke: var(--color-kabelgruen);
+  stroke-width: 3px;
+}
+.planer-svg .oeffnung.ist-ausgewaehlt .oeffnung-luecke {
+  stroke: rgb(197 240 30 / 0.55);
+}
+.planer-svg .oeffnung-vorschau {
+  stroke: rgb(197 240 30 / 0.85);
+}
+.planer-svg .mass {
+  fill: var(--text-muted);
+  font-family: var(--font-mono);
+}
+.planer-svg .mass-aktiv {
+  fill: var(--color-kabelgruen);
+  font-weight: 600;
+  paint-order: stroke;
+  stroke: var(--color-kalk-hell);
+  stroke-width: 4px;
+  vector-effect: non-scaling-stroke;
+}
+.planer-svg .raum-name {
+  fill: var(--text);
+  font-family: var(--font-sans);
+  font-weight: 650;
+}
+.planer-svg .raum-flaeche {
+  fill: var(--text-muted);
+  font-family: var(--font-mono);
+}
+.planer-svg .raum-text text {
+  paint-order: stroke;
+  stroke: rgb(251 250 247 / 0.85);
+  stroke-width: 3px;
+  vector-effect: non-scaling-stroke;
+}
+.planer-svg .knoten {
+  fill: var(--color-kalk-hell);
+  stroke: var(--color-graphit);
+  stroke-width: 1.25px;
+  vector-effect: non-scaling-stroke;
+}
+.planer-svg .knoten.ist-ausgewaehlt {
+  fill: var(--accent-surface);
+  stroke-width: 2px;
+}
+.planer-svg .wand-vorschau-koerper {
+  stroke: rgb(21 25 30 / 0.35);
+}
+.planer-svg .wand-vorschau-achse,
+.planer-svg .kalibrier-vorschau {
+  stroke: var(--color-kabelgruen);
+  stroke-width: 1.5px;
+  stroke-dasharray: 6 4;
+  vector-effect: non-scaling-stroke;
+}
+.planer-svg .start-punkt {
+  fill: var(--accent-surface);
+  stroke: var(--color-graphit);
+  stroke-width: 1.5px;
+  vector-effect: non-scaling-stroke;
+}
+.planer-svg .fang :is(line, circle, rect) {
+  fill: none;
+  stroke: var(--color-kabelgruen);
+  stroke-width: 1.5px;
+  vector-effect: non-scaling-stroke;
+}
+.planer-svg .fang-knoten circle,
+.planer-svg .fang-wand rect {
+  fill: rgb(197 240 30 / 0.45);
+  stroke-width: 2px;
+}
+.planer-svg .kalibrierung > line {
+  stroke: var(--color-kabelgruen);
+  stroke-width: 3px;
+  vector-effect: non-scaling-stroke;
+}
+.planer-svg .kalibrierung > circle {
+  fill: var(--accent-surface);
+  stroke: var(--color-graphit);
+  stroke-width: 1.5px;
+  vector-effect: non-scaling-stroke;
+}
+
+.planer-eingabe {
+  position: absolute;
+  top: var(--space-3);
+  left: 50%;
+  translate: -50% 0;
+  max-width: calc(100% - 2 * var(--space-3));
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-s);
+  background: rgb(21 25 30 / 0.88);
+  color: var(--color-kalk);
+  font-family: var(--font-mono);
+  pointer-events: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.planer-zoom {
+  position: absolute;
+  right: var(--space-3);
+  bottom: var(--space-3);
+  display: grid;
+  gap: var(--space-1);
+}
+.planer-icon-knopf {
+  width: 2.75rem;
+  height: 2.75rem;
+  border: var(--border) solid var(--line-strong);
+  border-radius: var(--radius-s);
+  background: rgb(244 241 235 / 0.92);
+  color: var(--text);
+  font: inherit;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.planer-icon-knopf:hover {
+  background: var(--surface-2);
+}
+.planer-hilfe {
+  padding: var(--space-2) var(--space-3);
+  border-top: var(--border) solid var(--line);
+  background: var(--surface);
+  color: var(--text-muted);
+}
+.planer-meldung {
+  position: absolute;
+  left: var(--space-3);
+  bottom: calc(var(--space-3) + 3.5rem);
+  max-width: min(32rem, calc(100% - 5rem));
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-s);
+  background: var(--color-graphit);
+  color: var(--color-kalk);
+  box-shadow: var(--shadow-2);
+  opacity: 0;
+  translate: 0 calc(0.5rem * var(--motion));
+  transition: opacity var(--dur-base) var(--ease-out), translate var(--dur-base) var(--ease-out);
+  pointer-events: none;
+}
+.planer-meldung.ist-sichtbar {
+  opacity: 1;
+  translate: 0 0;
+}
+.planer-meldung.ist-fehler {
+  background: var(--color-fehler);
+}
+.planer-tour {
+  position: absolute;
+  top: var(--space-4);
+  left: var(--space-4);
+  z-index: 2;
+  display: grid;
+  gap: var(--space-3);
+  max-width: min(26rem, calc(100% - 2 * var(--space-4)));
+  padding: var(--space-4);
+  border: var(--border) solid var(--line-strong);
+  border-radius: var(--radius-s);
+  background: rgb(251 250 247 / 0.97);
+  box-shadow: var(--shadow-2);
+}
+.planer-tour h3 {
+  font-size: var(--step-1);
+}
+.planer-tour ol {
+  display: grid;
+  gap: var(--space-2);
+  padding-left: 1.25rem;
+}
+.planer-tour button {
+  justify-self: start;
+}
+
+/* ---------- 3D ---------- */
+.planer-3d {
+  position: relative;
+  height: min(78vh, 52rem);
+  min-height: 24rem;
+  background: var(--color-kalk);
+  touch-action: none;
+}
+.planer-3d:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: -3px;
+}
+.planer-3d canvas {
+  display: block;
+}
+.planer-3d-laden {
+  position: absolute;
+  inset: 0;
+  justify-content: center;
+}
+.planer-3d-knoepfe {
+  position: absolute;
+  right: var(--space-3);
+  bottom: var(--space-3);
+  left: var(--space-3);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-1);
+  pointer-events: none;
+}
+.planer-3d-knoepfe .planer-knopf {
+  min-height: 2.5rem;
+  background: rgb(244 241 235 / 0.92);
+  pointer-events: auto;
+}
+.planer-ohne-3d {
+  display: grid;
+  align-content: center;
+  gap: var(--space-3);
+  min-height: 24rem;
+  padding: var(--space-6);
+  background: var(--surface-2);
+}
+.planer-ohne-3d h3 {
+  font-size: var(--step-1);
+}
+
+.planer-hinweis {
+  padding: var(--space-2) var(--space-3);
+  border-top: var(--border) solid var(--line-strong);
+  background: var(--surface-2);
+  font-weight: var(--weight-ui);
+}
+
+/* ---------- small screens ---------- */
+@media (max-width: 60rem) {
+  .planer-arbeit {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .planer-seite {
+    max-height: none;
+    border-left: 0;
+    border-top: var(--border) solid var(--line-strong);
+  }
+  .planer-editor,
+  .planer-3d {
+    height: 66vh;
+    min-height: 20rem;
+  }
+}
+@media (max-width: 40rem) {
+  .planer-container {
+    width: 100%;
+  }
+  .planer-host {
+    border-inline: 0;
+    border-radius: 0;
+  }
+  .planer-werkzeug span,
+  .planer-verlauf span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .planer-werkzeug {
+    min-width: 2.75rem;
+    padding-inline: var(--space-2);
+  }
+  .planer-leiste {
+    gap: var(--space-2);
+  }
+  .planer-vorlagen {
+    grid-template-columns: 1fr;
+  }
+  .planer-3d {
+    height: auto;
+    min-height: 0;
+  }
+  .planer-3d canvas,
+  .planer-3d > div:first-child {
+    height: 58vh !important;
+  }
+  .planer-3d-knoepfe {
+    position: static;
+    padding: var(--space-2);
+  }
+  .planer-3d-knoepfe .planer-knopf {
+    flex: 1 1 30%;
+    min-height: 2.75rem;
+    padding-inline: var(--space-2);
+  }
+  .planer-meldung {
+    top: var(--space-2);
+    bottom: auto;
+    max-width: calc(100% - 2 * var(--space-3));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .planer-spinner {
+    animation-duration: 2.4s;
+  }
+}

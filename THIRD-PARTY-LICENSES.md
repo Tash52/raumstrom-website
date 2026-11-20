@@ -20,7 +20,7 @@ Projektregel: nur MIT, Apache-2.0, BSD, ISC (und gleich oder freizügigere Lizen
 
 LGPL-Bibliotheken werden unverändert und als austauschbare Einheit genutzt (dynamisch gelinkt bzw. eigener Chunk). MPL-2.0-Werkzeuge werden unverändert genutzt und nicht ausgeliefert.
 
-## Laufzeit- und Build-Abhängigkeiten (323)
+## Laufzeit- und Build-Abhängigkeiten (339)
 
 Plattform-spezifische optionale Pakete (z. B. `@img/sharp-*`, `lightningcss-*`) werden nur für das jeweilige Betriebssystem installiert.
 
@@ -104,6 +104,18 @@ Plattform-spezifische optionale Pakete (z. B. `@img/sharp-*`, `lightningcss-*`) 
 | @img/sharp-win32-ia32 | 0.35.5 | Apache-2.0 AND LGPL-3.0-or-later ⚑ |
 | @img/sharp-win32-x64 | 0.35.5 | Apache-2.0 AND LGPL-3.0-or-later ⚑ |
 | @jridgewell/sourcemap-codec | 1.6.0 | MIT |
+| @napi-rs/canvas | 1.1.1 | MIT |
+| @napi-rs/canvas-android-arm64 | 1.1.1 | MIT |
+| @napi-rs/canvas-darwin-arm64 | 1.1.1 | MIT |
+| @napi-rs/canvas-darwin-x64 | 1.1.1 | MIT |
+| @napi-rs/canvas-linux-arm-gnueabihf | 1.1.1 | MIT |
+| @napi-rs/canvas-linux-arm64-gnu | 1.1.1 | MIT |
+| @napi-rs/canvas-linux-arm64-musl | 1.1.1 | MIT |
+| @napi-rs/canvas-linux-riscv64-gnu | 1.1.1 | MIT |
+| @napi-rs/canvas-linux-x64-gnu | 1.1.1 | MIT |
+| @napi-rs/canvas-linux-x64-musl | 1.1.1 | MIT |
+| @napi-rs/canvas-win32-arm64-msvc | 1.1.1 | MIT |
+| @napi-rs/canvas-win32-x64-msvc | 1.1.1 | MIT |
 | @napi-rs/wasm-runtime | 1.2.6 | MIT |
 | @napi-rs/wasm-runtime | 1.2.7 | MIT |
 | @oslojs/encoding | 1.1.0 | MIT |
@@ -217,6 +229,7 @@ Plattform-spezifische optionale Pakete (z. B. `@img/sharp-*`, `lightningcss-*`) 
 | hash-wasm | 4.13.0 | MIT |
 | hast-util-to-html | 9.0.6 | MIT |
 | hast-util-whitespace | 3.0.0 | MIT |
+| heic-to | 1.6.7 | LGPL-3.0 ⚑ |
 | html-escaper | 3.0.3 | MIT |
 | html-void-elements | 3.0.0 | MIT |
 | http-cache-semantics | 4.3.0 | BSD-2-Clause |
@@ -275,6 +288,7 @@ Plattform-spezifische optionale Pakete (z. B. `@img/sharp-*`, `lightningcss-*`) 
 | p-limit | 7.3.3 | MIT |
 | p-queue | 10.0.0 | MIT |
 | package-manager-detector | 1.9.0 | MIT |
+| pdfjs-dist | 6.5.438 | Apache-2.0 |
 | piccolore | 0.1.3 | ISC |
 | picocolors | 1.1.1 | ISC |
 | picomatch | 2.3.2 | MIT |
@@ -315,6 +329,8 @@ Plattform-spezifische optionale Pakete (z. B. `@img/sharp-*`, `lightningcss-*`) 
 | suspend-react | 0.1.3 | MIT |
 | svgo | 4.1.0 | MIT |
 | three | 0.187.0 | MIT |
+| three-bvh-csg | 0.0.18 | MIT |
+| three-mesh-bvh | 0.9.18 | MIT |
 | tiny-inflate | 1.0.3 | MIT |
 | tinyclip | 1.0.3 | MIT |
 | tinyexec | 1.3.1 | MIT |
