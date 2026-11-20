@@ -7,6 +7,9 @@
 // only its placement (`grundriss`) is stored.
 import { z } from 'zod';
 
+// No JIT: zod would probe `Function('')` otherwise, which the strict CSP (no 'unsafe-eval') reports as a violation.
+z.config({ jitless: true });
+
 export const PROJEKT_VERSION = 1 as const;
 export const STANDARD_HOEHE = 2.5;
 export const WANDDICKE = { aussen: 0.3, innen: 0.115 } as const;
