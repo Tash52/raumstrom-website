@@ -15,6 +15,15 @@ export { gsap, ScrollTrigger };
 const KOPF = 'top 82%';
 const aufraeumen: Array<() => void> = [];
 
+/**
+ * Switch `ist-an` on once the scroll position passes `start` and keep it on down to the page end.
+ * (toggleClass with end 'max' switched it off again at the very bottom, where progress is exactly 1.)
+ */
+function einschalten(el: HTMLElement, start: string) {
+  const stellen = (self: ScrollTrigger) => el.classList.toggle('ist-an', self.progress > 0);
+  ScrollTrigger.create({ trigger: el, start, end: 'max', onToggle: stellen, onRefresh: stellen });
+}
+
 function leitungen(ctx: gsap.Context) {
   ctx.add(() => {
     for (const linie of document.querySelectorAll<HTMLElement>('[data-leitung]')) {
@@ -26,7 +35,7 @@ function leitungen(ctx: gsap.Context) {
         .fromTo(linie, { opacity: 0 }, { opacity: 1, ease: 'none', duration: 0.02 }, 0);
       const knoten = section.querySelector<HTMLElement>('[data-leitung-knoten]');
       if (knoten) {
-        ScrollTrigger.create({ trigger: knoten, start: KOPF, end: 'max', toggleClass: { targets: knoten, className: 'ist-an' } });
+        einschalten(knoten, KOPF);
       }
     }
   });
@@ -61,7 +70,7 @@ function prozesse(ctx: gsap.Context) {
         },
       );
       for (const s of schritte) {
-        ScrollTrigger.create({ trigger: s, start: 'top 70%', end: 'max', toggleClass: { targets: s, className: 'ist-an' } });
+        einschalten(s, 'top 70%');
       }
     }
   });
@@ -80,6 +89,7 @@ export function initScroll(): () => void {
     aufraeumen.splice(0).forEach((f) => f());
     document.documentElement.classList.remove('leitung-aktiv');
     for (const p of document.querySelectorAll('[data-prozess]')) p.classList.remove('prozess-aktiv');
+    for (const el of document.querySelectorAll('[data-leitung-knoten], [data-prozess-schritt]')) el.classList.remove('ist-an');
     for (const s of document.querySelectorAll<HTMLElement>('[data-prozess-strom]')) s.style.removeProperty('height');
   };
 }

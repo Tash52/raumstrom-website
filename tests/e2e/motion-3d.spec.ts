@@ -231,9 +231,49 @@ test.describe('Motion und 3D', () => {
     await expect(j.locator('.journey-panel-bild img').first()).toBeVisible();
   });
 
+  test('Formularseite: kein GSAP, Leitungen bleiben statisch gezeichnet (LCP, Phase 4)', async ({ page }) => {
+    const gsap: string[] = [];
+    page.on('request', (r) => {
+      if (/\/_astro\/scroll\.[^/]+\.js/.test(r.url())) gsap.push(r.url());
+    });
+    await page.goto('/kontakt/');
+    await page.waitForLoadState('load');
+    await page.mouse.wheel(0, 4000);
+    await page.waitForTimeout(800);
+    expect(gsap).toEqual([]);
+    await expect(page.locator('html')).not.toHaveClass(/leitung-aktiv/);
+    const linie = page.locator('[data-leitung]').first();
+    expect(await linie.evaluate((el) => getComputedStyle(el).transform)).toBe('none');
+  });
+
+  test('Leitung lädt GSAP erst in Sichtweite und zeichnet sich bis zum Seitenende', async ({ page }) => {
+    let gsap = 0;
+    page.on('request', (r) => {
+      if (/\/_astro\/scroll\.[^/]+\.js/.test(r.url())) gsap++;
+    });
+    await page.goto('/leistungen/wallbox/');
+    await page.waitForLoadState('load');
+    const linien = page.locator('[data-leitung]');
+    const ersteOben = await linien.first().evaluate((el) => el.closest('section')!.getBoundingClientRect().top);
+    // Not loaded while the first cable is more than half a viewport below the screen
+    if (ersteOben > 1.6 * (await page.evaluate(() => innerHeight))) expect(gsap).toBe(0);
+    for (let i = 0; i < 10 && gsap === 0; i++) {
+      await page.mouse.wheel(0, 400);
+      await page.waitForTimeout(150);
+    }
+    await expect(page.locator('html')).toHaveClass(/leitung-aktiv/, { timeout: 10_000 });
+    expect(gsap).toBe(1);
+    // At the very end of the page every node stays switched on
+    await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
+    await page.waitForTimeout(600);
+    const knoten = page.locator('[data-leitung-knoten]');
+    await expect(knoten.and(page.locator('.ist-an'))).toHaveCount(await knoten.count());
+  });
+
   test('Prozess-Leitung: alle Schritte vorhanden, Knoten schalten beim Scrollen ein', async ({ page }) => {
     await page.goto('/leistungen/komplettrenovierung/');
     const p = page.locator('[data-prozess]');
+    await p.scrollIntoViewIfNeeded(); // GSAP loads once the process comes near the viewport
     await expect(p).toHaveClass(/prozess-aktiv/, { timeout: 10_000 });
     const schritte = p.locator('[data-prozess-schritt]');
     expect(await schritte.count()).toBeGreaterThan(1);
