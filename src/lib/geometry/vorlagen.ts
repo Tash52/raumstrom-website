@@ -170,7 +170,7 @@ export interface VorlageInfo {
 export const VORLAGEN: VorlageInfo[] = DEFS.map(({ id, titel, beschreibung }) => ({ id, titel, beschreibung }));
 
 function baue(def: VorlageDef): Projekt {
-  let p = { ...leeresProjekt(def.titel), vorlage: def.id };
+  let p: Projekt = { ...leeresProjekt(def.titel), vorlage: def.id };
   const { breite: B, tiefe: T } = def.aussen;
   const aussen = { dicke: def.aussen.dicke ?? WANDDICKE.aussen, art: 'aussen' as const };
   const innen = { dicke: WANDDICKE.innen, art: 'innen' as const };

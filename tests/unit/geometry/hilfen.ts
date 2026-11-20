@@ -1,8 +1,8 @@
 // Test helpers: build projects from wall lists.
-import { type Projekt, WANDDICKE, fuegeWandHinzu, leeresProjekt, mitRaeumen } from '../../../src/lib/geometry/index.ts';
+import { type Projekt, type WandOptionen, WANDDICKE, fuegeWandHinzu, leeresProjekt, mitRaeumen } from '../../../src/lib/geometry/index.ts';
 
-export const AUSSEN = { dicke: WANDDICKE.aussen, art: 'aussen' as const };
-export const INNEN = { dicke: WANDDICKE.innen, art: 'innen' as const };
+export const AUSSEN: WandOptionen = { dicke: WANDDICKE.aussen, art: 'aussen' };
+export const INNEN: WandOptionen = { dicke: WANDDICKE.innen, art: 'innen' };
 export type Strecke = [number, number, number, number];
 
 export function mitWaenden(waende: Strecke[], opt = INNEN, p: Projekt = leeresProjekt()): Projekt {
