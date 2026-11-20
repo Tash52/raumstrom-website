@@ -8,6 +8,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { brotliDecompressSync, gunzipSync } from 'node:zlib';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { FALLBACK_CSP, WASM_WORKER_CSP } from '../../server/csp.mjs';
 import { CLIENT_IP_HEADER, clientIp, normalizeIp, prepareProxyHeaders } from '../../server/proxy.mjs';
 import { acceptedEncodings, resolveStatic } from '../../server/static.mjs';
 import { MIN_BYTES, precompress } from '../../scripts/lib/precompress.mjs';
@@ -110,6 +111,9 @@ mkdirSync(path.join(dist, 'server'));
 writeFileSync(path.join(client, 'index.html'), PAGE);
 writeFileSync(path.join(client, 'kontakt/index.html'), PAGE);
 writeFileSync(path.join(client, 'bild.png'), 'PNG'.repeat(400));
+mkdirSync(path.join(client, 'pdfjs'));
+writeFileSync(path.join(client, 'pdfjs/pdf.worker.min.mjs'), 'self.onmessage = () => {};');
+writeFileSync(path.join(client, 'pdfjs/anderes.mjs'), 'export {};');
 // Stands in for Astro's handler: reports the headers it receives.
 writeFileSync(
   path.join(dist, 'server/entry.mjs'),
@@ -258,13 +262,21 @@ describe('Server: vorkomprimierte Auslieferung', () => {
     expect(Number(r.headers['content-length'])).toBeGreaterThan(0);
     expect(r.body.length).toBe(0);
   });
-  it('veraltete Variante wird ignoriert', async () => {
+  it('Variante auch, wenn das Original neuer ist (dist-Kopie ohne Zeitstempel)', async () => {
     const file = path.join(client, 'index.html');
     const future = new Date(Date.now() + 60_000);
     utimesSync(file, future, future);
     const r = await request(direct, 'GET', '/', { 'accept-encoding': 'br, gzip' });
+    expect(r.headers['content-encoding']).toBe('br');
+    expect(brotliDecompressSync(r.body).toString()).toBe(PAGE);
+  });
+  it('Variante, die nicht kleiner als das Original ist, wird ignoriert', async () => {
+    const text = 'RAUMSTROM '.repeat(100);
+    writeFileSync(path.join(client, 'fremd.txt'), text);
+    writeFileSync(path.join(client, 'fremd.txt.br'), 'x'.repeat(text.length));
+    const r = await request(direct, 'GET', '/fremd.txt', { 'accept-encoding': 'br' });
     expect(r.headers['content-encoding']).toBeUndefined();
-    expect(r.body.toString()).toBe(PAGE);
+    expect(r.body.toString()).toBe(text);
   });
   it('Binärdateien und API nicht komprimiert', async () => {
     const png = await request(direct, 'GET', '/bild.png', { 'accept-encoding': 'br' });
@@ -273,5 +285,19 @@ describe('Server: vorkomprimierte Auslieferung', () => {
     const api = await request(direct, 'GET', '/api/echo', { 'accept-encoding': 'br, gzip' });
     expect(api.headers['content-encoding']).toBeUndefined();
     expect(echo(api).method).toBe('GET');
+  });
+});
+
+describe("Server: Worker-CSP für pdf.js", () => {
+  it("nur /pdfjs/pdf.worker.min.mjs erhält 'wasm-unsafe-eval'", async () => {
+    const worker = await request(direct, 'GET', '/pdfjs/pdf.worker.min.mjs');
+    const anderes = await request(direct, 'GET', '/pdfjs/anderes.mjs');
+    const kodiert = await request(direct, 'GET', '/pdfjs/pdf%2Eworker.min.mjs');
+    expect(worker.headers['content-security-policy']).toBe(WASM_WORKER_CSP);
+    expect(WASM_WORKER_CSP).toContain("script-src 'self' 'wasm-unsafe-eval'");
+    expect(WASM_WORKER_CSP).toContain("default-src 'none'");
+    expect(WASM_WORKER_CSP).not.toMatch(/'unsafe-(inline|eval)'/);
+    expect(anderes.headers['content-security-policy']).toBe(FALLBACK_CSP);
+    expect(kodiert.headers['content-security-policy']).toBe(FALLBACK_CSP);
   });
 });

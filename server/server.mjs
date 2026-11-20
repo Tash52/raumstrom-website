@@ -6,6 +6,7 @@ import path from 'node:path';
 import { existsSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { loadDotEnv, parseEnv } from './env.mjs';
+import { WASM_WORKER_CSP, WASM_WORKERS } from './csp.mjs';
 import { applySecurityHeaders } from './headers.mjs';
 import { prepareProxyHeaders } from './proxy.mjs';
 import { loadPagePolicies, resolveStatic, routeKey, sendFile } from './static.mjs';
@@ -102,6 +103,7 @@ async function handle(req, res) {
   }
   if (resolved.notFound) return notFound(req, res);
   if (resolved.file.endsWith('.html')) applySecurityHeaders(res, policyFor(pathname));
+  else if (WASM_WORKERS.has(pathname)) applySecurityHeaders(res, WASM_WORKER_CSP);
   return sendFile(req, res, resolved.file);
 }
 

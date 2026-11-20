@@ -1,5 +1,9 @@
 import { z } from 'zod';
 
+// Global for every bundle that uses the shared schemas (as in lib/geometry/projekt.ts): without JIT,
+// zod never probes `Function('')`, which the strict CSP (no 'unsafe-eval') would report.
+z.config({ jitless: true });
+
 /**
  * Placeholder convention: every missing value is written as
  * `[[PLATZHALTER: Beschreibung]]`. The launch check lists all of them.

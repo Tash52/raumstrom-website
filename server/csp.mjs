@@ -1,7 +1,8 @@
 // Shared CSP building blocks for astro.config.mjs (per-page policy with hashes)
 // and server/server.mjs (fallback policy for responses without a page policy).
 // No 'unsafe-inline', no foreign hosts. 'wasm-unsafe-eval' is added only on the
-// planner pages via Astro.csp.insertScriptResource("'wasm-unsafe-eval'").
+// planner pages via Astro.csp.insertScriptResource("'wasm-unsafe-eval'") and on the self-hosted
+// pdf.js worker (WASM_WORKERS), whose own response policy governs the worker.
 
 /** Directives besides script-src/style-src, which Astro fills with hashes. */
 export const CSP_DIRECTIVES = [
@@ -27,6 +28,15 @@ export const FALLBACK_CSP = [
   "script-src 'self'",
   "style-src 'self'",
 ].join('; ');
+
+/**
+ * Worker scripts that compile WebAssembly (pdf.js: openjpeg, jbig2, qcms from /pdfjs/wasm/).
+ * Exact decoded pathnames; anything else keeps FALLBACK_CSP.
+ */
+export const WASM_WORKERS = new Set(['/pdfjs/pdf.worker.min.mjs']);
+
+/** FALLBACK_CSP plus 'wasm-unsafe-eval' in script-src, only for WASM_WORKERS. */
+export const WASM_WORKER_CSP = FALLBACK_CSP.replace("script-src 'self'", "script-src 'self' 'wasm-unsafe-eval'");
 
 /** Directives that must be present in every page policy (meta tags cannot express frame-ancestors). */
 export const REQUIRED_DIRECTIVES = ['default-src', 'object-src', 'base-uri', 'form-action', 'frame-ancestors'];

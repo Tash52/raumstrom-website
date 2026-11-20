@@ -114,14 +114,19 @@ export function acceptedEncodings(header) {
   return new Set(PRECOMPRESSED.map((v) => v.encoding).filter(ok));
 }
 
-/** Picks the precompressed sibling for this request, if any (must not be older than the original). */
+/**
+ * Picks the precompressed sibling for this request, if any. No timestamp comparison: copies of dist
+ * (cp without -p, containers, rsync) lose mtimes, and scripts/lib/precompress.mjs rewrites or removes
+ * every variant on each build anyway. Sanity check only: the build writes a variant just when it is
+ * smaller than its source, so a variant at least as large as the original is treated as foreign.
+ */
 function pickVariant(req, file, stat) {
   if (!COMPRESSIBLE.includes(path.extname(file).toLowerCase())) return null;
   const accepted = acceptedEncodings(req.headers['accept-encoding']);
   for (const v of PRECOMPRESSED) {
     if (!accepted.has(v.encoding)) continue;
     const s = safeStat(file + v.ext);
-    if (s?.isFile() && s.mtimeMs >= stat.mtimeMs) return { file: file + v.ext, stat: s, encoding: v.encoding };
+    if (s?.isFile() && s.size < stat.size) return { file: file + v.ext, stat: s, encoding: v.encoding };
   }
   return null;
 }
