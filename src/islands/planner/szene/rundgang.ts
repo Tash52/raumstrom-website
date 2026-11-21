@@ -54,5 +54,11 @@ export function bewege(h: readonly Hindernis[], von: Punkt, d: Punkt, r = KOERPE
 export function startPunkt(p: Projekt, raumId?: string | null): Punkt {
   const km = knotenMap(p);
   const r = p.raeume.find((x) => x.id === raumId) ?? [...p.raeume].sort((a, b) => b.flaeche - a.flaeche)[0];
-  return r ? beschriftungsPunkt(raumPolygon(p, r.knoten, km)) : { x: 0, y: 0 };
+  if (!r) return { x: 0, y: 0 };
+  const poly = raumPolygon(p, r.knoten, km);
+  const mitte = beschriftungsPunkt(poly);
+  // step back towards the south wall (the view starts looking north), so the room is in view
+  const ys = poly.map((q) => q.y);
+  const zurueck = { x: mitte.x, y: mitte.y + (Math.max(...ys) - mitte.y) * 0.6 };
+  return kollidiert(hindernisse(p), zurueck) ? mitte : zurueck;
 }

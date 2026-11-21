@@ -527,3 +527,9 @@
     bottom: 5.5rem;
   }
 }
+@media (hover: hover) and (pointer: fine) {
+  /* mouse and keyboard: WASD and dragging, no joystick needed */
+  .planer-joystick {
+    display: none;
+  }
+}

@@ -68,6 +68,8 @@ const WAHL_TEIL: Record<'waende' | 'boden' | 'fliesen' | 'decke', keyof Wahl> = 
 const KAT: Record<'waende' | 'boden' | 'fliesen' | 'decke', Kategorie> = { waende: 'wand', boden: 'boden', fliesen: 'fliesen', decke: 'decke' };
 
 function ZielAnzeige() {
+  const modus = useGestalt((s) => s.modus);
+  const fliesenZiel = useGestalt((s) => s.fliesenZiel);
   const ziel = useGestalt((s) => s.ziel);
   const projekt = usePlaner((s) => s.projekt);
   const z = gueltigesZiel(projekt, ziel);
@@ -76,7 +78,7 @@ function ZielAnzeige() {
   if (z?.art === 'wandseite') {
     const nr = projekt.waende.findIndex((w) => w.id === z.wandId) + 1;
     text = `Wand ${nr}, Seite ${z.raumId ? `zu ${raumName(z.raumId)}` : 'außen'}`;
-  } else if (z?.art === 'boden') text = `Boden: ${raumName(z.raumId)}`;
+  } else if (z?.art === 'boden') text = modus === 'boden' || (modus === 'fliesen' && fliesenZiel === 'boden') ? `Boden: ${raumName(z.raumId)}` : `Raum: ${raumName(z.raumId)}`;
   else if (z?.art === 'decke') text = `Decke: ${raumName(z.raumId)}`;
   else if (!z) {
     const r = zielRaum(null, projekt);

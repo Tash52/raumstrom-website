@@ -35,9 +35,11 @@ describe('Rundgang', () => {
     expect(kollidiert(hindernisse(mitRaeumen(f.projekt)), { x: 3, y: 2 })).toBe(true);
   });
 
-  it('Startpunkt liegt im größten Raum', () => {
+  it('Startpunkt liegt im größten Raum, in die Südhälfte zurückversetzt', () => {
     const s = startPunkt(p0);
-    expect(s.y).toBeCloseTo(2, 1);
+    expect(s.y).toBeGreaterThan(2.5);
+    expect(s.y).toBeLessThan(3.8);
+    expect(kollidiert(hindernisse(p0), s)).toBe(false);
   });
 });
 

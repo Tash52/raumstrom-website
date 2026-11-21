@@ -42,6 +42,14 @@ export function Vorschau({ wert, groesse = 56 }: { wert: MaterialRef; groesse?: 
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.fillStyle = farbe;
       ctx.fillRect(0, 0, c.width, c.height);
+      if (!bild) {
+        // plain colours: a soft light falloff, so pale paints stay visible as a surface on the white tile
+        const v = ctx.createLinearGradient(0, 0, c.width, c.height);
+        v.addColorStop(0, 'rgba(255,255,255,0.18)');
+        v.addColorStop(1, 'rgba(0,0,0,0.12)');
+        ctx.fillStyle = v;
+        ctx.fillRect(0, 0, c.width, c.height);
+      }
       if (bild) {
         const muster = ctx.createPattern(bild.canvas, 'repeat');
         if (muster) {

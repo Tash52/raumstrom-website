@@ -250,6 +250,7 @@ function Licht({ szene, leicht }: { szene: Szene; leicht: boolean }) {
 
 /** Dimension labels (wall lengths, room names and areas) as DOM overlay. */
 function Masse({ projekt }: { projekt: Projekt }) {
+  const waende = useGestalt((s) => s.waende);
   const { gl, scene, camera, size } = useThree();
   const renderer = useMemo(() => new CSS2DRenderer(), []);
   const gruppe = useMemo(() => {
@@ -266,7 +267,7 @@ function Masse({ projekt }: { projekt: Projekt }) {
       div.className = 'planer-mass-label';
       div.textContent = formatLaenge(l);
       const o = new CSS2DObject(div);
-      o.position.set((a.x + b.x) / 2, k.hoehe + 0.08, (a.y + b.y) / 2);
+      o.position.set((a.x + b.x) / 2, (waende === 'niedrig' ? k.hoehe * 0.36 : waende === 'aus' ? 0 : k.hoehe) + 0.08, (a.y + b.y) / 2);
       g.add(o);
     }
     for (const r of projekt.raeume) {
@@ -279,7 +280,7 @@ function Masse({ projekt }: { projekt: Projekt }) {
       g.add(o);
     }
     return g;
-  }, [projekt]);
+  }, [projekt, waende]);
   useEffect(() => {
     const el = renderer.domElement;
     el.classList.add('planer-mass-ebene');
@@ -303,7 +304,7 @@ function Masse({ projekt }: { projekt: Projekt }) {
 
 const MARK = {
   hover: new THREE.MeshBasicMaterial({ color: 0xc5f01e, transparent: true, opacity: 0.22, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }),
-  wahl: new THREE.MeshBasicMaterial({ color: 0x3d6300, transparent: true, opacity: 0.3, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 }),
+  wahl: new THREE.MeshBasicMaterial({ color: 0x3d6300, transparent: true, opacity: 0.2, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 }),
 };
 
 function zielObjekt(gruppe: THREE.Object3D, z: Ziel): THREE.Object3D | null {
