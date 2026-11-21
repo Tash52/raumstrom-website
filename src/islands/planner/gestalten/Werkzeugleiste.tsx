@@ -64,7 +64,7 @@ export function wechsleModus(m: GestaltModus, webgl: boolean): void {
   const flaechen = ['waende', 'boden', 'fliesen', 'decke', 'oeffnungen', 'einrichtung', 'ansicht'];
   g.setze({ modus: m, pipette: false, ziel: m === 'elektro' || m === 'einrichtung' || m === 'oeffnungen' ? null : g.ziel?.art === 'wandseite' || g.ziel?.art === 'boden' || g.ziel?.art === 'decke' ? g.ziel : null });
   if (m === 'bauen') {
-    if (g.kamera === 'rundgang') g.setze({ kamera: 'orbit' });
+    if (g.blick === 'rundgang') g.setze({ blick: 'orbit' });
     st.setze({ werkzeug: 'auswahl' });
   } else {
     // drawing tools are off in the design modes; surfaces are easiest to pick in 3D

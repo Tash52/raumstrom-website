@@ -49,7 +49,7 @@ function startPosition(s: Szene, aspekt = 1.5): THREE.Vector3 {
 function Steuerung({ szene, befehl, onBereit }: { szene: Szene; befehl: Props['befehl']; onBereit?: () => void }) {
   const { camera, gl, invalidate } = useThree();
   const ctrl = useRef<OrbitControls | null>(null);
-  const kamera = useGestalt((s) => s.kamera);
+  const blick = useGestalt((s) => s.blick);
 
   useEffect(() => {
     const c = new OrbitControls(camera, gl.domElement);
@@ -102,9 +102,9 @@ function Steuerung({ szene, befehl, onBereit }: { szene: Szene; befehl: Props['b
     if (befehl) fuehreAus(befehl.b);
   }, [befehl]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
-    if (kamera === 'drauf') fuehreAus({ art: 'draufsicht' });
-    else if (kamera === 'orbit') fuehreAus({ art: 'schraeg' });
-  }, [kamera]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (blick === 'drauf') fuehreAus({ art: 'draufsicht' });
+    else if (blick === 'orbit') fuehreAus({ art: 'schraeg' });
+  }, [blick]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return null;
 }
@@ -352,7 +352,7 @@ function Modell({ projekt, leicht, onBereit, befehl, onTreffer }: Props) {
   const ziel = useGestalt((s) => s.ziel);
   const zonen = useGestalt((s) => s.zonen || s.modus === 'elektro');
   const waende = useGestalt((s) => s.waende);
-  const kamera = useGestalt((s) => s.kamera);
+  const blick = useGestalt((s) => s.blick);
   const masse = useGestalt((s) => s.masse);
   const screenshot = useGestalt((s) => s.screenshot);
   const hover = useRef<THREE.Object3D | null>(null);
@@ -440,7 +440,7 @@ function Modell({ projekt, leicht, onBereit, befehl, onTreffer }: Props) {
     return t.art === 'tuer' || t.art === 'fenster' ? { art: t.art, id: t.id, wandId: t.wandId, plan } : { art: 'leer', plan };
   };
 
-  const aktivModus = modus !== 'bauen' && modus !== 'ansicht' && kamera !== 'rundgang';
+  const aktivModus = modus !== 'bauen' && modus !== 'ansicht' && blick !== 'rundgang';
 
   return (
     <>
@@ -473,7 +473,7 @@ function Modell({ projekt, leicht, onBereit, befehl, onTreffer }: Props) {
         <primitive object={szene.gruppe} />
         <primitive object={ausstattung} />
       </group>
-      {kamera === 'rundgang' ? <Rundgang projekt={projekt} onBereit={onBereit} /> : <Steuerung szene={szene} befehl={befehl} onBereit={onBereit} />}
+      {blick === 'rundgang' ? <Rundgang projekt={projekt} onBereit={onBereit} /> : <Steuerung szene={szene} befehl={befehl} onBereit={onBereit} />}
       {masse && <Masse projekt={projekt} />}
     </>
   );

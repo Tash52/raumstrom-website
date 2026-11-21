@@ -109,8 +109,8 @@ export function wendeAn(ref: MaterialRef | null, optionen: { bereich?: 'flaeche'
   const kat = kategorieVon(g.modus, ziel);
   let teil: keyof RaumGestaltung | null = optionen.teil ?? (kat === 'wand' ? 'wand' : kat === 'boden' ? 'boden' : kat === 'decke' ? 'decke' : kat === 'fliesen' ? 'fliesen' : null);
   if (!teil) return false;
-  // tiles on a floor target (or with "Boden" chosen) go to the floor
-  if (teil === 'fliesen' && (ziel?.art === 'boden' || (ziel?.art !== 'wandseite' && g.fliesenZiel === 'boden'))) teil = 'boden';
+  // tiles go to the floor when "Boden" is chosen (a floor click in 3D/2D switches to it), never for a wall side
+  if (teil === 'fliesen' && ziel?.art !== 'wandseite' && g.fliesenZiel === 'boden') teil = 'boden';
   const kategorie: Kategorie = teil === 'wand' ? 'wand' : teil === 'fliesen' ? 'fliesen' : teil === 'boden' ? 'boden' : teil === 'decke' ? 'decke' : 'sockelleiste';
   const norm = normalisiereRef(ref, kategorie);
   const text = norm ? beschreibeRef(norm, farbName) : 'entfernt';
@@ -238,7 +238,7 @@ export function behandleTreffer(t: Treffer): void {
     st().melde('Diese Wandseite gehört zu keinem Raum (außen). Bereich „Fläche" wählen, um nur sie zu gestalten.', 'fehler');
     return;
   }
-  g.setze({ ziel });
+  g.setze(modus === 'fliesen' ? { ziel, fliesenZiel: ziel.art === 'boden' ? 'boden' : 'wand' } : { ziel });
   if (g.pipette) {
     nimmPipette(ziel);
     return;
@@ -435,12 +435,12 @@ export function wendeStilpaketAn(paket: Stilpaket, umfang: 'raum' | 'wohnung'): 
 export function treffer2D(p: Projekt, w: Punkt, radius: number): Treffer {
   const km = knotenMap(p);
   // electrical symbols first (small, on top)
-  let bestE: { id: string; d: number } | null = null;
+  let naechsterE: { id: string; d: number } | null = null;
   for (const e of p.elektro) {
     const d = Math.hypot(e.x - w.x, e.y - w.y);
-    if (d <= Math.max(radius, 0.12) && (!bestE || d < bestE.d)) bestE = { id: e.id, d };
+    if (d <= Math.max(radius, 0.12) && (!naechsterE || d < naechsterE.d)) naechsterE = { id: e.id, d };
   }
-  if (bestE) return { art: 'elektro', id: bestE.id, plan: w };
+  if (naechsterE) return { art: 'elektro', id: naechsterE.id, plan: w };
   for (const m of [...p.einrichtung].reverse()) {
     const def = moebelVon(m.typ);
     if (def && imPolygon(w, moebelUmriss(def, m.x, m.y, m.drehungGrad))) return { art: 'moebel', id: m.id, plan: w };

@@ -133,7 +133,7 @@ function Joystick() {
 
 function Bereich3D({ webgl, leicht }: { webgl: boolean; leicht: boolean }) {
   const projekt = usePlaner((s) => s.projekt);
-  const kamera = useGestalt((s) => s.kamera);
+  const blick = useGestalt((s) => s.blick);
   const modus = useGestalt((s) => s.modus);
   const hatMoebel = projekt.einrichtung.length > 0;
   const [befehl, setBefehl] = useState<{ nr: number; b: AnsichtBefehl } | null>(null);
@@ -147,14 +147,14 @@ function Bereich3D({ webgl, leicht }: { webgl: boolean; leicht: boolean }) {
       role="application"
       aria-roledescription="3D-Ansicht"
       aria-label={
-        kamera === 'rundgang'
+        blick === 'rundgang'
           ? '3D-Rundgang. W und S oder Pfeil hoch und runter gehen, A und D seitwärts, Pfeil links und rechts drehen.'
           : '3D-Ansicht des Grundrisses. Pfeiltasten drehen und neigen, Plus und Minus zoomen, D zeigt die Draufsicht, 0 setzt die Ansicht zurück. Flächen wählen Sie per Tippen oder in der Seitenleiste.'
       }
       data-planer-3d={bereit ? 'bereit' : 'laedt'}
-      data-planer-kamera={kamera}
+      data-planer-blick={blick}
       onKeyDown={(e) => {
-        if (kamera === 'rundgang') return;
+        if (blick === 'rundgang') return;
         const b = tasteZuBefehl(e);
         if (b) {
           e.preventDefault();
@@ -173,15 +173,15 @@ function Bereich3D({ webgl, leicht }: { webgl: boolean; leicht: boolean }) {
           <Ansicht3D projekt={projekt} befehl={befehl} leicht={leicht} onBereit={() => setBereit(true)} onTreffer={behandleTreffer} />
         </Suspense>
       </Fehlergrenze>
-      {kamera === 'rundgang' && <Joystick />}
+      {blick === 'rundgang' && <Joystick />}
       {hatMoebel && (modus === 'einrichtung' || modus === 'ansicht') && (
         <p className="planer-3d-hinweis" data-planer-nur-visualisierung="">
           {NUR_VISUALISIERUNG}
         </p>
       )}
-      {kamera === 'rundgang' ? (
+      {blick === 'rundgang' ? (
         <div className="planer-3d-knoepfe" role="toolbar" aria-label="Ansicht steuern">
-          <button type="button" className="planer-knopf" onClick={() => gestaltStore.getState().setze({ kamera: 'orbit' })}>
+          <button type="button" className="planer-knopf" onClick={() => gestaltStore.getState().setze({ blick: 'orbit' })}>
             Rundgang beenden
           </button>
         </div>
@@ -205,7 +205,7 @@ function Bereich3D({ webgl, leicht }: { webgl: boolean; leicht: boolean }) {
         <button type="button" className="planer-knopf" onClick={() => sende({ art: 'schraeg' })}>
           Schrägansicht
         </button>
-        <button type="button" className="planer-knopf" onClick={() => gestaltStore.getState().setze({ kamera: 'rundgang' })} data-planer-rundgang="">
+        <button type="button" className="planer-knopf" onClick={() => gestaltStore.getState().setze({ blick: 'rundgang' })} data-planer-rundgang="">
           Rundgang
         </button>
       </div>
@@ -355,7 +355,7 @@ export function Planer({ webgl, leicht, stilpakete = [] }: { webgl: boolean; lei
         <Startbildschirm />
       ) : (
         <>
-          <h2 className="visually-hidden">Grundriss bearbeiten und gestalten</h2>
+          <h2 className="visually-hidden">Grundriss bearbeiten</h2>
           <Werkzeugleiste webgl={webgl} />
           <div className="planer-leiste">
             <div className="planer-schritte" role="group" aria-label="Ansicht wählen">

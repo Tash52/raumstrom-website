@@ -768,7 +768,7 @@ function EinrichtungPanel() {
 // ---------- view ----------
 
 function AnsichtPanel({ webgl }: { webgl: boolean }) {
-  const kamera = useGestalt((s) => s.kamera);
+  const blick = useGestalt((s) => s.blick);
   const tageszeit = useGestalt((s) => s.tageszeit);
   const waende = useGestalt((s) => s.waende);
   const masse = useGestalt((s) => s.masse);
@@ -788,12 +788,12 @@ function AnsichtPanel({ webgl }: { webgl: boolean }) {
           ] as const
         ).map(([id, name]) => (
           <label key={id}>
-            <input type="radio" name="gestalt-kamera" checked={kamera === id} onChange={() => g.setze({ kamera: id })} data-gestalt-kamera={id} />
+            <input type="radio" name="gestalt-blick" checked={blick === id} onChange={() => g.setze({ blick: id })} data-gestalt-blick={id} />
             <span>{name}</span>
           </label>
         ))}
       </fieldset>
-      {kamera === 'rundgang' && <p className="planer-klein">Rundgang: W/S oder Pfeil hoch/runter gehen, A/D seitwärts, Pfeil links/rechts drehen, Ziehen schaut sich um. Auf Touch-Geräten mit dem Joystick unten links.</p>}
+      {blick === 'rundgang' && <p className="planer-klein">Rundgang: W/S oder Pfeil hoch/runter gehen, A/D seitwärts, Pfeil links/rechts drehen, Ziehen schaut sich um. Auf Touch-Geräten mit dem Joystick unten links.</p>}
       <div className="planer-feld">
         <label htmlFor="gestalt-tageszeit">Tageszeit und Licht: {uhr}</label>
         <input id="gestalt-tageszeit" type="range" min={6} max={22} step={0.5} value={tageszeit} onChange={(e) => g.setze({ tageszeit: Number(e.currentTarget.value) })} aria-valuetext={uhr} />

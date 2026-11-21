@@ -34,7 +34,7 @@ export type Ziel =
 
 export type Wahl = Record<'wand' | 'boden' | 'fliesen' | 'decke' | 'sockelleiste', MaterialRef | null>;
 
-export type KameraModus = 'orbit' | 'drauf' | 'rundgang';
+export type BlickModus = 'orbit' | 'drauf' | 'rundgang';
 export type WandModus = 'voll' | 'niedrig' | 'aus';
 
 export interface GestaltZustand {
@@ -52,7 +52,7 @@ export interface GestaltZustand {
   ueberArbeitsplatte: boolean;
   moebelTyp: string;
   zonen: boolean;
-  kamera: KameraModus;
+  blick: BlickModus;
   /** Hour of day for the sun (6 to 22). */
   tageszeit: number;
   waende: WandModus;
@@ -78,7 +78,7 @@ export const gestaltStore = createStore<GestaltZustand>()((set) => ({
   ueberArbeitsplatte: false,
   moebelTyp: 'moebel.sofa',
   zonen: false,
-  kamera: 'orbit',
+  blick: 'orbit',
   tageszeit: 14,
   waende: 'voll',
   masse: false,

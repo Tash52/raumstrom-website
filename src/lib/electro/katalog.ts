@@ -1,5 +1,5 @@
 // Electrical catalogue of the planner (pure TS). Ids are stored as Elektro.typ in the project model.
-// Wording: the doorbell/intercom is audio only (no cameras); no alarm or "security" terms.
+// Wording: the doorbell/intercom is audio only (no video); no surveillance or "security" terms.
 import type { ElektroOrt } from '../geometry/projekt.ts';
 
 export type ElektroKategorie = 'steckdose' | 'schalter' | 'daten' | 'licht' | 'sonstiges';
