@@ -17,6 +17,8 @@ import {
   wandLaenge,
 } from '../../lib/geometry/index.ts';
 import { knotenVon, planerStore, usePlaner } from './store.ts';
+import { GestaltPanel } from './gestalten/Panel.tsx';
+import { useGestalt } from './gestalten/store.ts';
 
 const cm = (m: number) => inZentimeter(m).toLocaleString('de-DE');
 const dickeText = (d: number) => `${cm(d)} cm`;
@@ -377,9 +379,17 @@ function Wandliste() {
   );
 }
 
-export function Seitenleiste() {
+export function Seitenleiste({ webgl = true }: { webgl?: boolean }) {
   const werkzeug = usePlaner((s) => s.werkzeug);
   const ansicht = usePlaner((s) => s.ansicht);
+  const modus = useGestalt((s) => s.modus);
+  if (modus !== 'bauen')
+    return (
+      <aside className="planer-seite" aria-label="Gestalten">
+        <GestaltPanel webgl={webgl} />
+        <Raumliste />
+      </aside>
+    );
   return (
     <aside className="planer-seite" aria-label="Eigenschaften">
       {ansicht === '2d' && <GrundrissEinstellungen />}

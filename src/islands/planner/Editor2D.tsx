@@ -1,7 +1,7 @@
 // 2D wall editor (mode A). Canvas layer: grid + floor plan image; SVG layer: rooms, walls, openings,
 // dimensions, snapping feedback. Input: Pointer Events (mouse, pen, touch incl. pinch) and keyboard.
 // No style attributes in markup (CSP): colours come from classes, geometry from SVG attributes.
-import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react';
 import {
   type FangErgebnis,
   type Projekt,
@@ -71,7 +71,21 @@ function textWinkel(r: Punkt): number {
 
 const f3 = (n: number) => Number(n.toFixed(4));
 
-export function Editor2D() {
+/**
+ * Extension hook for the design modes (planner-design, Phase 5): taps go to `tippen` instead of the
+ * drawing tools, `ebene` draws an extra SVG layer in plan coordinates, `taste` may consume keys first.
+ */
+export interface EditorErweiterung {
+  tippen(w: Punkt, radius: number): void;
+  taste?(e: ReactKeyboardEvent<HTMLDivElement>): boolean;
+  loeschen?(): boolean;
+  ebene?(ctx: { px: (n: number) => number; zoom: number; zeiger: Punkt | null; tastatur: boolean }): ReactNode;
+  hilfe?: string;
+}
+
+export function Editor2D({ erweiterung }: { erweiterung?: EditorErweiterung } = {}) {
+  const erwRef = useRef(erweiterung);
+  erwRef.current = erweiterung;
   const projekt = usePlaner((s) => s.projekt);
   const werkzeug = usePlaner((s) => s.werkzeug);
   const auswahl = usePlaner((s) => s.auswahl);
@@ -308,6 +322,10 @@ export function Editor2D() {
   const tippe = useCallback(
     (w: Punkt) => {
       const st = s();
+      if (erwRef.current) {
+        erwRef.current.tippen(w, FANG_PX / ansichtRef.current.zoom);
+        return;
+      }
       switch (st.werkzeug) {
         case 'wand':
           setzeWandPunkt(fang(w, startRef.current));
@@ -408,6 +426,10 @@ export function Editor2D() {
     const wz: Werkzeug = s().werkzeug;
     if (pan) {
       geste.current = { art: 'pan', id: e.pointerId, start: sp, t0: { x: v.tx, y: v.ty }, bewegt: false, tippen: false };
+      return;
+    }
+    if (erwRef.current) {
+      geste.current = { art: 'pan', id: e.pointerId, start: sp, t0: { x: v.tx, y: v.ty }, bewegt: false, tippen: true };
       return;
     }
     if (wz === 'auswahl') {
@@ -538,23 +560,25 @@ export function Editor2D() {
       return;
     }
     if (e.key === ' ') leertaste.current = true;
+    const erw = erwRef.current;
+    if (erw?.taste?.(e)) return;
 
     const d = pfeil[e.key];
     if (d) {
       e.preventDefault();
       const a = st.auswahl;
-      if (st.werkzeug === 'auswahl' && a?.art === 'knoten') {
+      if (!erw && st.werkzeug === 'auswahl' && a?.art === 'knoten') {
         const k = knotenVon(st.projekt).get(a.id);
         if (k) st.aendere((p) => verschiebeKnoten(p, a.id, plus(k, mal(d, schritt)), 0), `Eckpunkt verschoben.`);
         return;
       }
-      if (st.werkzeug === 'auswahl' && a?.art === 'oeffnung') {
+      if (!erw && st.werkzeug === 'auswahl' && a?.art === 'oeffnung') {
         const o = st.projekt.oeffnungen.find((x) => x.id === a.id);
         const lage = o && oeffnungsLage(st.projekt, o);
         if (lage) st.aendere((p) => verschiebeOeffnung(p, a.id, plus(lage.mitte, mal(d, schritt)), 0.01), 'Öffnung verschoben.');
         return;
       }
-      if (st.werkzeug === 'auswahl') {
+      if (!erw && st.werkzeug === 'auswahl') {
         setAnsicht({ ...v, tx: v.tx - d.x * 40, ty: v.ty - d.y * 40 });
         return;
       }
@@ -580,7 +604,7 @@ export function Editor2D() {
       return;
     }
 
-    if (e.key === 'Enter' || (e.key === ' ' && !e.repeat && st.werkzeug !== 'auswahl')) {
+    if (e.key === 'Enter' || (e.key === ' ' && !e.repeat && (erw || st.werkzeug !== 'auswahl'))) {
       e.preventDefault();
       if (st.werkzeug === 'wand' && start && eingabe) {
         const l = parseLaenge(eingabe, 'cm');
@@ -609,13 +633,14 @@ export function Editor2D() {
     }
     if (e.key === 'Delete' || e.key === 'Backspace') {
       e.preventDefault();
-      loescheAuswahl();
+      if (erw) erw.loeschen?.();
+      else loescheAuswahl();
       return;
     }
     if (e.key === '+' || e.key === '=') return zoomeUm(1.25, { x: groesse.b / 2, y: groesse.h / 2 });
     if (e.key === '-') return zoomeUm(0.8, { x: groesse.b / 2, y: groesse.h / 2 });
     if (e.key === '0') return passeEin();
-    if (strg || e.altKey) return;
+    if (strg || e.altKey || erw) return;
     const kurz: Record<string, Werkzeug> = { a: 'auswahl', v: 'auswahl', w: 'wand', t: 'tuer', f: 'fenster', m: 'massstab' };
     const wz = kurz[e.key.toLowerCase()];
     if (wz && (wz !== 'massstab' || st.projekt.grundriss)) {
@@ -631,7 +656,7 @@ export function Editor2D() {
   const px = (n: number) => n / ansicht.zoom;
   const ausgewaehlt = (art: string, id: string) => auswahl?.art === art && auswahl.id === id;
   const kp = vorschau?.punkt;
-  const zeigeKnoten = werkzeug === 'auswahl' || werkzeug === 'wand';
+  const zeigeKnoten = !erweiterung && (werkzeug === 'auswahl' || werkzeug === 'wand');
 
   return (
     <div
@@ -650,7 +675,7 @@ export function Editor2D() {
       onPointerLeave={(e) => {
         if (e.pointerType === 'mouse' && !geste.current && !tastaturZeiger.current) setZeiger(null);
       }}
-      onDoubleClick={() => werkzeug === 'wand' && beendeKette()}
+      onDoubleClick={() => !erweiterung && werkzeug === 'wand' && beendeKette()}
       onContextMenu={(e) => e.preventDefault()}
       onKeyDown={onKeyDown}
       onKeyUp={onKeyUp}
@@ -759,13 +784,14 @@ export function Editor2D() {
               </g>
             );
           })}
+          {erweiterung?.ebene?.({ px, zoom: ansicht.zoom, zeiger, tastatur: tastaturZeiger.current })}
           {/* nodes */}
           {zeigeKnoten &&
             projekt.knoten.map((k) => (
               <circle key={k.id} className={`knoten${ausgewaehlt('knoten', k.id) ? ' ist-ausgewaehlt' : ''}`} cx={k.x} cy={k.y} r={px(4)} />
             ))}
           {/* opening preview */}
-          {oeffnungsVorschau && (
+          {!erweiterung && oeffnungsVorschau && (
             <line
               className="oeffnung-vorschau"
               x1={oeffnungsVorschau.a.x}

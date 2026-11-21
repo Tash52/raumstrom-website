@@ -3,6 +3,16 @@
 // State for tests: [data-planer-zustand] = laedt | bereit | fehler.
 import { istSoftwareRenderer, pruefeWebGL } from '../../lib/motion/umgebung.ts';
 
+/** Active style packages, rendered by the page into data-planer-stilpakete (JSON, no inline script). */
+function leseStilpakete(host: HTMLElement): import('../../lib/materials/index.ts').Stilpaket[] {
+  try {
+    const roh: unknown = JSON.parse(host.dataset.planerStilpakete ?? '[]');
+    return Array.isArray(roh) ? roh.filter((x) => x && typeof x === 'object' && typeof x.id === 'string' && Array.isArray(x.wandfarben)) : [];
+  } catch {
+    return [];
+  }
+}
+
 export async function ladePlaner(): Promise<void> {
   const host = document.querySelector<HTMLElement>('[data-planer-host]');
   const laden = host?.querySelector<HTMLElement>('[data-planer-laden]');
@@ -25,7 +35,7 @@ export async function ladePlaner(): Promise<void> {
     const { startePlaner } = await modul;
     fortschritt(90);
     laden.remove();
-    startePlaner(host, { webgl: gl.ok, leicht });
+    startePlaner(host, { webgl: gl.ok, leicht, stilpakete: leseStilpakete(host) });
     host.dataset.planerZustand = 'bereit';
   } catch {
     host.dataset.planerZustand = 'fehler';

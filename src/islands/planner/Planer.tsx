@@ -1,6 +1,11 @@
 // Planner root: step navigation, tool bar, 2D editor or 3D view, side panel, status messages, notice.
-import { Component, Suspense, lazy, useEffect, useState, type ReactNode } from 'react';
-import { Editor2D, WERKZEUG_NAME } from './Editor2D.tsx';
+import { Component, Suspense, lazy, useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
+import { NUR_VISUALISIERUNG, type Stilpaket } from '../../lib/materials/index.ts';
+import { Editor2D, type EditorErweiterung, WERKZEUG_NAME } from './Editor2D.tsx';
+import { behandleTreffer, dreheMoebel, loescheZiel, treffer2D, verschiebeZiel } from './gestalten/aktionen.ts';
+import { Ebene2D } from './gestalten/Ebene2D.tsx';
+import { type GestaltModus, MODI, gestaltStore, rundgangEingabe, useGestalt } from './gestalten/store.ts';
+import { Werkzeugleiste, wechsleModus } from './gestalten/Werkzeugleiste.tsx';
 import { Seitenleiste } from './Seitenleiste.tsx';
 import { Startbildschirm } from './Startbildschirm.tsx';
 import { type Werkzeug, planerStore, usePlaner } from './store.ts';
@@ -89,8 +94,48 @@ function OhneWebGL({ grund }: { grund: 'kein-webgl' | 'fehler' }) {
   );
 }
 
+/** Touch joystick for the walk-through (writes into rundgangEingabe, read by the 3D view every frame). */
+function Joystick() {
+  const knauf = useRef<HTMLSpanElement>(null);
+  const aktiv = useRef<{ id: number; x: number; y: number } | null>(null);
+  const setze = (dx: number, dy: number) => {
+    const r = 40;
+    const l = Math.hypot(dx, dy);
+    const f = l > r ? r / l : 1;
+    if (knauf.current) knauf.current.style.transform = `translate(${dx * f}px, ${dy * f}px)`;
+    rundgangEingabe.vor = Math.max(-1, Math.min(1, (-dy * f) / r));
+    rundgangEingabe.drehen = Math.max(-1, Math.min(1, (-dx * f) / r));
+  };
+  const ende = () => {
+    aktiv.current = null;
+    setze(0, 0);
+  };
+  useEffect(() => ende, []); // eslint-disable-line react-hooks/exhaustive-deps
+  return (
+    <div
+      className="planer-joystick"
+      aria-hidden="true"
+      onPointerDown={(e) => {
+        e.currentTarget.setPointerCapture(e.pointerId);
+        aktiv.current = { id: e.pointerId, x: e.clientX, y: e.clientY };
+      }}
+      onPointerMove={(e) => {
+        const a = aktiv.current;
+        if (a && a.id === e.pointerId) setze(e.clientX - a.x, e.clientY - a.y);
+      }}
+      onPointerUp={ende}
+      onPointerCancel={ende}
+    >
+      <span ref={knauf} className="planer-joystick-knauf" />
+    </div>
+  );
+}
+
 function Bereich3D({ webgl, leicht }: { webgl: boolean; leicht: boolean }) {
   const projekt = usePlaner((s) => s.projekt);
+  const blick = useGestalt((s) => s.blick);
+  const modus = useGestalt((s) => s.modus);
+  const hatMoebel = projekt.einrichtung.length > 0;
   const [befehl, setBefehl] = useState<{ nr: number; b: AnsichtBefehl } | null>(null);
   const [bereit, setBereit] = useState(false);
   if (!webgl) return <OhneWebGL grund="kein-webgl" />;
@@ -101,9 +146,15 @@ function Bereich3D({ webgl, leicht }: { webgl: boolean; leicht: boolean }) {
       tabIndex={0}
       role="application"
       aria-roledescription="3D-Ansicht"
-      aria-label="3D-Ansicht des Grundrisses. Pfeiltasten drehen und neigen, Plus und Minus zoomen, D zeigt die Draufsicht, 0 setzt die Ansicht zurück."
+      aria-label={
+        blick === 'rundgang'
+          ? '3D-Rundgang. W und S oder Pfeil hoch und runter gehen, A und D seitwärts, Pfeil links und rechts drehen.'
+          : '3D-Ansicht des Grundrisses. Pfeiltasten drehen und neigen, Plus und Minus zoomen, D zeigt die Draufsicht, 0 setzt die Ansicht zurück. Flächen wählen Sie per Tippen oder in der Seitenleiste.'
+      }
       data-planer-3d={bereit ? 'bereit' : 'laedt'}
+      data-planer-blick={blick}
       onKeyDown={(e) => {
+        if (blick === 'rundgang') return;
         const b = tasteZuBefehl(e);
         if (b) {
           e.preventDefault();
@@ -119,9 +170,22 @@ function Bereich3D({ webgl, leicht }: { webgl: boolean; leicht: boolean }) {
             </p>
           }
         >
-          <Ansicht3D projekt={projekt} befehl={befehl} leicht={leicht} onBereit={() => setBereit(true)} />
+          <Ansicht3D projekt={projekt} befehl={befehl} leicht={leicht} onBereit={() => setBereit(true)} onTreffer={behandleTreffer} />
         </Suspense>
       </Fehlergrenze>
+      {blick === 'rundgang' && <Joystick />}
+      {hatMoebel && (modus === 'einrichtung' || modus === 'ansicht') && (
+        <p className="planer-3d-hinweis" data-planer-nur-visualisierung="">
+          {NUR_VISUALISIERUNG}
+        </p>
+      )}
+      {blick === 'rundgang' ? (
+        <div className="planer-3d-knoepfe" role="toolbar" aria-label="Ansicht steuern">
+          <button type="button" className="planer-knopf" onClick={() => gestaltStore.getState().setze({ blick: 'orbit' })}>
+            Rundgang beenden
+          </button>
+        </div>
+      ) : (
       <div className="planer-3d-knoepfe" role="toolbar" aria-label="Ansicht steuern">
         <button type="button" className="planer-knopf" onClick={() => sende({ art: 'drehen', wert: -Math.PI / 8 })}>
           Nach links drehen
@@ -141,7 +205,11 @@ function Bereich3D({ webgl, leicht }: { webgl: boolean; leicht: boolean }) {
         <button type="button" className="planer-knopf" onClick={() => sende({ art: 'schraeg' })}>
           Schrägansicht
         </button>
+        <button type="button" className="planer-knopf" onClick={() => gestaltStore.getState().setze({ blick: 'rundgang' })} data-planer-rundgang="">
+          Rundgang
+        </button>
       </div>
+      )}
     </div>
   );
 }
@@ -179,6 +247,9 @@ function Kurzanleitung({ onSchliessen }: { onSchliessen: () => void }) {
         <li>
           <strong>3D-Ansicht:</strong> Oben umschalten. Ziehen dreht, zwei Finger oder Mausrad zoomen.
         </li>
+        <li>
+          <strong>Gestalten:</strong> Modus wählen (Elektro, Wände, Boden, Fliesen …), Kachel antippen und auf eine Wand, einen Boden oder einen Raum anwenden. Rückgängig mit Strg+Z.
+        </li>
       </ol>
       <button type="button" className="planer-knopf planer-knopf-primaer" onClick={onSchliessen} autoFocus>
         Verstanden
@@ -187,8 +258,52 @@ function Kurzanleitung({ onSchliessen }: { onSchliessen: () => void }) {
   );
 }
 
-export function Planer({ webgl, leicht }: { webgl: boolean; leicht: boolean }) {
+const GESTALT_HILFE: Partial<Record<GestaltModus, string>> = {
+  elektro: 'Elektro: Typ wählen, dann neben einer Wand klicken oder tippen (Wandpunkte) oder in einen Raum (Decke, Boden). Vorhandene Punkte antippen, um sie zu ändern.',
+  waende: 'Wände: auf eine Wandseite tippen (nahe der Wand, auf der gewünschten Seite) oder in einen Raum.',
+  boden: 'Boden: in einen Raum tippen.',
+  fliesen: 'Fliesen: auf eine Wandseite oder in einen Raum tippen.',
+  decke: 'Decke: in einen Raum tippen, das wählt seine Decke.',
+  oeffnungen: 'Türen & Fenster: auf eine Tür oder ein Fenster tippen.',
+  einrichtung: 'Einrichtung: Möbel wählen und in einen Raum tippen. R dreht das gewählte Möbel, Alt+Pfeil verschiebt es.',
+  ansicht: 'Ansicht: Optionen in der Seitenleiste, 3D-Ansicht oben umschalten.',
+};
+
+const istEingabe = (t: EventTarget | null) => t instanceof HTMLElement && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName));
+
+export function Planer({ webgl, leicht, stilpakete = [] }: { webgl: boolean; leicht: boolean; stilpakete?: Stilpaket[] }) {
   const modus = usePlaner((s) => s.modus);
+  const gestaltModus = useGestalt((s) => s.modus);
+  useEffect(() => gestaltStore.getState().setze({ stilpakete }), [stilpakete]);
+  const erweiterung = useMemo<EditorErweiterung | undefined>(
+    () =>
+      gestaltModus === 'bauen'
+        ? undefined
+        : {
+            tippen: (w, r) => behandleTreffer(treffer2D(planerStore.getState().projekt, w, r)),
+            loeschen: () => loescheZiel(),
+            taste: (e) => {
+              if (e.key === 'Escape') {
+                gestaltStore.getState().setze({ ziel: null, pipette: false });
+                return false;
+              }
+              if ((e.key === 'r' || e.key === 'R') && !e.ctrlKey && !e.metaKey) {
+                dreheMoebel(e.shiftKey ? -90 : 90);
+                return true;
+              }
+              const pfeil: Record<string, [number, number]> = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+              const d = pfeil[e.key];
+              // with selected furniture or an electrical point, Alt+arrow moves it by 10 cm
+              if (d && e.altKey && verschiebeZiel(d[0] * 0.1, d[1] * 0.1)) {
+                e.preventDefault();
+                return true;
+              }
+              return false;
+            },
+            ebene: (ctx) => <Ebene2D px={ctx.px} zeiger={ctx.zeiger} tastatur={ctx.tastatur} />,
+          },
+    [gestaltModus],
+  );
   const ansicht = usePlaner((s) => s.ansicht);
   const werkzeug = usePlaner((s) => s.werkzeug);
   const hatGrundriss = usePlaner((s) => Boolean(s.projekt.grundriss));
@@ -207,13 +322,41 @@ export function Planer({ webgl, leicht }: { webgl: boolean; leicht: boolean }) {
     st.neuBeginnen();
   };
 
+  // global shortcuts: undo/redo anywhere in the planner (the 2D editor handles its own first), modes 1 to 9
+  const tasten = (e: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (e.defaultPrevented || istEingabe(e.target) || modus !== 'editor') return;
+    const strg = e.ctrlKey || e.metaKey;
+    if (strg && e.key.toLowerCase() === 'z') {
+      e.preventDefault();
+      if (e.shiftKey) st.wiederholen();
+      else st.rueckgaengig();
+      return;
+    }
+    if (strg && e.key.toLowerCase() === 'y') {
+      e.preventDefault();
+      st.wiederholen();
+      return;
+    }
+    if (strg || e.altKey) return;
+    const m = MODI.find((x) => x.taste === e.key);
+    if (m && !(e.target as HTMLElement).closest?.('[data-planer-editor]')) {
+      e.preventDefault();
+      wechsleModus(m.id, webgl);
+      return;
+    }
+    if ((e.key === 'Delete' || e.key === 'Backspace') && gestaltModus !== 'bauen' && (e.target as HTMLElement).closest?.('.planer-3d')) {
+      if (loescheZiel()) e.preventDefault();
+    }
+  };
+
   return (
-    <div className="planer" data-planer-modus={modus} data-planer-ansicht={ansicht} data-planer-webgl={webgl ? 'ja' : 'nein'}>
+    <div className="planer" data-planer-modus={modus} data-planer-ansicht={ansicht} data-planer-webgl={webgl ? 'ja' : 'nein'} data-gestalt-modus-aktiv={gestaltModus} onKeyDown={tasten}>
       {modus === 'start' ? (
         <Startbildschirm />
       ) : (
         <>
           <h2 className="visually-hidden">Grundriss bearbeiten</h2>
+          <Werkzeugleiste webgl={webgl} />
           <div className="planer-leiste">
             <div className="planer-schritte" role="group" aria-label="Ansicht wählen">
               <button type="button" className="planer-tab" onClick={neu}>
@@ -226,7 +369,7 @@ export function Planer({ webgl, leicht }: { webgl: boolean; leicht: boolean }) {
                 3D-Ansicht
               </button>
             </div>
-            {ansicht === '2d' && (
+            {ansicht === '2d' && gestaltModus === 'bauen' && (
               <div className="planer-werkzeuge" role="toolbar" aria-label="Werkzeuge">
                 {WERKZEUGE.filter((w) => w.id !== 'massstab' || hatGrundriss).map((w) => (
                   <button
@@ -261,12 +404,12 @@ export function Planer({ webgl, leicht }: { webgl: boolean; leicht: boolean }) {
               {/* drawing area and status message share one box, so on small screens the guide (in flow above it)
                   never covers the zoom buttons or the message */}
               <div className="planer-flaeche">
-                {ansicht === '2d' ? <Editor2D /> : <Bereich3D webgl={webgl} leicht={leicht} />}
+                {ansicht === '2d' ? <Editor2D erweiterung={erweiterung} /> : <Bereich3D webgl={webgl} leicht={leicht} />}
                 <Meldung />
               </div>
               {ansicht === '2d' && (
                 <p className="planer-hilfe" id="planer-editor-hilfe">
-                  {HILFE[werkzeug]} Tastatur: Pfeiltasten bewegen den Zeiger (Umschalt 1 m, Alt 1 cm), Eingabetaste setzt, Entf löscht, Strg+Z macht rückgängig, + und − zoomen.
+                  {gestaltModus === 'bauen' ? HILFE[werkzeug] : GESTALT_HILFE[gestaltModus]} Tastatur: Pfeiltasten bewegen den Zeiger (Umschalt 1 m, Alt 1 cm), Eingabetaste setzt, Entf löscht, Strg+Z macht rückgängig, + und − zoomen.
                 </p>
               )}
               {tour === 'offen' && (
@@ -279,7 +422,7 @@ export function Planer({ webgl, leicht }: { webgl: boolean; leicht: boolean }) {
                 />
               )}
             </div>
-            <Seitenleiste />
+            <Seitenleiste webgl={webgl} />
           </div>
         </>
       )}
