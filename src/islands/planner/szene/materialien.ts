@@ -38,11 +38,15 @@ export class MaterialCache {
   private karte = new Map<string, Eintrag>();
   private runde = 0;
 
-  constructor(
-    private renderer: THREE.WebGLRenderer,
-    private leicht: boolean,
-    private neuZeichnen: () => void,
-  ) {}
+  private renderer: THREE.WebGLRenderer;
+  private leicht: boolean;
+  private neuZeichnen: () => void;
+
+  constructor(renderer: THREE.WebGLRenderer, leicht: boolean, neuZeichnen: () => void) {
+    this.renderer = renderer;
+    this.leicht = leicht;
+    this.neuZeichnen = neuZeichnen;
+  }
 
   beginne(): void {
     this.runde++;

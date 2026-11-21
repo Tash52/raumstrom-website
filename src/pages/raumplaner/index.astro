@@ -7,7 +7,9 @@ import Abschnitte from '../../components/sections/Abschnitte.astro';
 import Entwurfsbanner from '../../components/sections/Entwurfsbanner.astro';
 import Seitenkopf from '../../components/sections/Seitenkopf.astro';
 import { getSeite } from '../../components/sections/seiten.ts';
+import { getCollection } from 'astro:content';
 import '../../islands/planner/planer.css';
+import '../../islands/planner/gestalten/gestalten.css';
 
 // insertScriptResource replaces Astro's default source list, so 'self' is added again explicitly.
 Astro.csp?.insertScriptResource("'self'");
@@ -15,13 +17,21 @@ Astro.csp?.insertScriptResource("'wasm-unsafe-eval'");
 Astro.csp?.insertDirective("worker-src 'self' blob:");
 
 const seite = await getSeite('raumplaner');
+
+// Style packages for the planner (Phase 5, planner-design): only active ones that are already valid at build
+// time, without the internal source note. Passed as data attribute (JSON), no inline script.
+const heute = new Date().toISOString().slice(0, 10);
+const stilpakete = (await getCollection('trends'))
+  .filter((t) => t.data.aktiv && t.data.gueltig_ab <= heute)
+  .sort((a, b) => a.data.name.localeCompare(b.data.name, 'de'))
+  .map(({ id, data: { trend_quelle_notiz: _notiz, aktiv: _aktiv, gueltig_ab: _ab, ...rest } }) => ({ id, ...rest }));
 ---
 <BaseLayout title={seite.data.meta_title} description={seite.data.meta_description}>
   <Entwurfsbanner entwurf={seite.data.entwurf} />
   <Seitenkopf titel={seite.data.titel} lead={seite.body?.trim()} pfad={[{ text: seite.data.titel }]} />
   <section class="planer-bereich" aria-label="Raumplaner">
     <div class="planer-container">
-      <div class="planer-host" data-planer-host data-planer-zustand="laedt">
+      <div class="planer-host" data-planer-host data-planer-zustand="laedt" data-planer-stilpakete={JSON.stringify(stilpakete)}>
         <div class="planer-laden" data-planer-laden hidden>
           <p data-planer-laden-text>Raumplaner wird geladen …</p>
           <progress max="100" value="5" aria-label="Ladefortschritt Raumplaner"></progress>

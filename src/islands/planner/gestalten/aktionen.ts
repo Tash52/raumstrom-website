@@ -43,7 +43,7 @@ const st = () => planerStore.getState();
 const gs = () => gestaltStore.getState();
 
 /** Catalogue category edited by a mode (fliesen on a floor target edits the floor). */
-export function kategorieVon(modus: GestaltModus, ziel: Ziel = gs().ziel): Kategorie | null {
+export function kategorieVon(modus: GestaltModus, _ziel?: Ziel): Kategorie | null {
   switch (modus) {
     case 'waende':
       return 'wand';
@@ -317,7 +317,7 @@ function elektroTreffer(t: Treffer): void {
       st().melde(`${def.name} sitzt an der Wand: bitte auf eine Wandseite tippen.`, 'fehler');
       return;
     }
-    const x = fuegeElektroHinzu(p, { typ, ort, x: Math.round(t.plan.x * 100) / 100, y: Math.round(t.plan.y * 100) / 100 });
+    const x = fuegeElektroHinzu(p, { typ, ort: ort as 'decke' | 'boden', x: Math.round(t.plan.x * 100) / 100, y: Math.round(t.plan.y * 100) / 100 });
     if (!x) return;
     st().aendere(() => x.projekt, `${def.name} gesetzt.`);
     g.setze({ ziel: { art: 'elektro', id: x.id } });
