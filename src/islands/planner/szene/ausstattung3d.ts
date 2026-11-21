@@ -79,6 +79,56 @@ function leiste(g: THREE.Object3D, mat: THREE.Material, a: { x: number; y: numbe
   return m;
 }
 
+/** Zone colours (WCAG 1.4.11): Kabelgrün and a dark amber, both >= 3:1 on the plan ground #FBFAF7. */
+export const ZONEN_FARBE = { waagerecht: '#3d6300', senkrecht: '#8c5c00' } as const;
+
+/** Repeating pattern of a zone band (UV in metres): dashes 12 cm period, hatching 6 cm period. */
+function zonenMaterial(waagerecht: boolean): THREE.Material {
+  return MAT(`zone|${waagerecht}`, () => {
+    const c = document.createElement('canvas');
+    c.width = c.height = 32;
+    const ctx = c.getContext('2d')!;
+    ctx.fillStyle = waagerecht ? ZONEN_FARBE.waagerecht : ZONEN_FARBE.senkrecht;
+    ctx.globalAlpha = 0.28;
+    ctx.fillRect(0, 0, 32, 32);
+    ctx.globalAlpha = 0.9;
+    if (waagerecht) ctx.fillRect(0, 0, 22, 32);
+    else {
+      // diagonal stripes that tile seamlessly
+      ctx.beginPath();
+      for (const o of [-32, 0, 32]) {
+        ctx.moveTo(o, 32);
+        ctx.lineTo(o + 14, 32);
+        ctx.lineTo(o + 46, 0);
+        ctx.lineTo(o + 32, 0);
+        ctx.closePath();
+      }
+      ctx.fill();
+    }
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(waagerecht ? 1 / 0.12 : 1 / 0.06, 1 / 0.06);
+    return new THREE.MeshBasicMaterial({
+      map: tex,
+      transparent: true,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+      toneMapped: false,
+      polygonOffset: true,
+      polygonOffsetFactor: -1,
+      polygonOffsetUnits: -1,
+    });
+  });
+}
+
+/** Free the per-band geometries of a furnishing layer (shared geometries and materials stay). */
+export function entsorgeAusstattung(g: THREE.Object3D): void {
+  g.traverse((o) => {
+    if ((o as THREE.Mesh).isMesh && o.userData.eigeneGeometrie) (o as THREE.Mesh).geometry.dispose();
+  });
+}
+
 export function baueAusstattung(p: Projekt, opt: AusstattungOptionen): THREE.Group {
   const g = new THREE.Group();
   g.name = 'ausstattung';
@@ -242,20 +292,31 @@ export function baueAusstattung(p: Projekt, opt: AusstattungOptionen): THREE.Gro
   }
 
   // ---------- installation zones (DIN 18015-3) ----------
+  // Unlit patterned bands (legible at night and on any wall colour): horizontal zones green and dashed,
+  // vertical zones dark amber and diagonally hatched, same colours and patterns as the 2D plan and legend.
   if (opt.zonen) {
-    const waag = farbMat(0x3d6300, 1, { transparent: true, opacity: 0.32, depthWrite: false, emissive: 0x3d6300, emissiveIntensity: 0.4 });
-    const senk = farbMat(0xc58a00, 1, { transparent: true, opacity: 0.4, depthWrite: false, emissive: 0xc58a00, emissiveIntensity: 0.4 });
     const zonen = new THREE.Group();
     zonen.name = 'installationszonen';
     for (const z of alleZonen(p)) {
       const dx = z.bis.x - z.von.x;
       const dy = z.bis.y - z.von.y;
-      const l = Math.hypot(dx, dy) || 1;
-      const m = leiste(zonen, istWaagerecht(z.art) ? waag : senk, z.von, z.bis, z.unten, z.oben, 0.002, { x: -dy / l, y: dx / l }, istWaagerecht(z.art) ? 0.01 : 0.012);
-      if (m) {
-        m.userData = { zone: z.art };
-        m.raycast = () => {};
-      }
+      const l = Math.hypot(dx, dy);
+      if (l < 0.01) continue;
+      const waagerecht = istWaagerecht(z.art);
+      const n = { x: -dy / l, y: dx / l };
+      const versatz = waagerecht ? 0.006 : 0.008;
+      const geo = new THREE.PlaneGeometry(l, z.oben - z.unten);
+      // UV in metres (u along the wall, v = height above the floor) so stripes run on across bands
+      const uv = geo.attributes.uv as THREE.BufferAttribute;
+      for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * l, z.unten + uv.getY(i) * (z.oben - z.unten));
+      const m = new THREE.Mesh(geo, zonenMaterial(waagerecht));
+      m.position.set((z.von.x + z.bis.x) / 2 + n.x * versatz, (z.unten + z.oben) / 2, (z.von.y + z.bis.y) / 2 + n.y * versatz);
+      m.rotation.y = -Math.atan2(dy, dx);
+      m.renderOrder = waagerecht ? 2 : 3;
+      m.castShadow = false;
+      m.userData = { zone: z.art, eigeneGeometrie: true };
+      m.raycast = () => {};
+      zonen.add(m);
     }
     wandTeile.add(zonen);
   }

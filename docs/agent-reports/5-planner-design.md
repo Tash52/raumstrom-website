@@ -99,3 +99,41 @@ Der Zuwachs von `start` stammt aus den Katalogen, den Panels und dem prozedurale
   - Möbel lassen sich nur per Knopf oder Taste verschieben, nicht per Ziehen in 3D.
 - Möbel blockieren den Rundgang nicht. Die Maserung der Detailtextur folgt beim Fischgrät nicht jedem Stab.
 - Die Fischgrät-Ausrichtung auf Böden und den Kontrast der Zonenfarben bitte im a11y/QA-Lauf mit echten Geräten prüfen. Die 60-fps-Messung auf Mittelklasse-Hardware steht noch aus, hier lief nur SwiftShader.
+
+## Fixes (Abnahme-Runde, 21.11.2026)
+
+Branch `worktree-agent-a8edbbb8dea560fe8`. Grundlage: `5-a11y-perf-tester.md` (B1–B4) und `5-qa-verifier.md` (Q1–Q4, H1, H2).
+
+- **Q1 Warntext**: `.gestalt-warnung` nutzt jetzt `var(--error)` (`gestalten.css`), auf dem hellen Panel also `--color-fehler`. Gemessen: `rgb(180,35,24)` auf `rgb(244,241,235)` = **5,83:1** (vorher 2,02:1). Token unverändert, kein neues Token nötig.
+- **B2 Zonen**: Farbe plus Muster, nie nur Farbe.
+  - Waagerechte Zonen: Kabelgrün, gestrichelt. Senkrechte Zonen: dunkler Bernstein `#8c5c00`, diagonal schraffiert. Das gilt im 2D-Plan, in der Legende und bei den 3D-Bändern gleich.
+  - Der 2D-Plan nutzt dafür `stroke-dasharray` und ein SVG-`<pattern>` (`Ebene2D.tsx`). Die Legende zeichnet die Muster per CSS-Verlauf und erklärt sie zusätzlich im Text.
+  - 3D: unbeleuchtete `MeshBasicMaterial` mit 32-px-Canvas-Muster und UV in Metern (`ausstattung3d.ts`, `zonenMaterial`). Die Bänder bleiben dadurch auch nachts und auf dunklen Wänden lesbar. Eigene Geometrien werden beim Neuaufbau freigegeben (`entsorgeAusstattung`).
+  - Kontraste gegen `#FBFAF7`: waagerecht 2D 5,35:1 (Alpha 0,9), senkrecht 5,52:1. Legende auf dem Panel `#F4F1EB`: 6,24:1 und 5,11:1. Vorher 1,74 bis 2,16:1.
+  - `#8c5c00` ist kein Token. **Offen für design-system**: Farbe übernehmen oder ein Token vorgeben.
+- **Q2 Pipette**: Im Modus Fliesen mit „Fliesen für: Wände" und gewähltem Raum liest die Pipette jetzt die Wandfliesen (`aktionen.ts`, `refAmZiel(..., fliesenZiel)` und `nimmPipette`). Es gilt dieselbe Regel wie bei `wendeAn`. Unit-Test vorhanden.
+- **Q3 Verlegerichtung**: `beschreibeRef` hängt „Verlegerichtung 90°" an, wenn das Material eine Richtung hat und diese nicht 0° ist (360° zählt als 0°). Damit enthält auch `raumMaterialien` (PDF, Phase 6) die Richtung. Unit-Test vorhanden.
+- **B1 Landmark**: Die Kachelgruppen (`<section>`) haben kein `aria-label` mehr. Die `h4` gliedert sie weiterhin, und „Decke" erscheint nur noch einmal als Landmark. axe im Modus Decke: 0 Verstöße (Desktop und Mobil).
+- **B3 Regler**: `.gestalt-panel input[type=range]` mit `min-height: 2.75rem`. Gemessen: 295 × 44 px (Desktop) und 366 × 44 px (Mobil). Die Raum-Knöpfe gehören zu planner-geometry und sind unverändert.
+- **B4 Leistungsstufe**: neue reine Funktion `istLeichtesGeraet` (`src/islands/planner/leistung.ts`), mit Test. „leicht" gilt bei:
+  - fehlendem WebGL oder Software-Renderer
+  - Viewport ≤ 40rem oder reinem Touch-Gerät (`pointer: coarse` und `hover: none`)
+  - `deviceMemory` ≤ 4 GB
+  - höchstens 2 Kernen
+
+  Begründung: 4 logische Kerne haben viele aktuelle Büro-Laptops, und deren GPU schafft die wenigen Draw-Calls. Was die Ansicht tatsächlich begrenzt, sind eine fehlende GPU, Handy-GPU, Akku und Wärme sowie wenig Speicher. Desktop-E2E bleibt „leicht", weil SwiftShader läuft.
+- **Hinweise**:
+  - KTX2-Kommentar in `katalog.ts` korrigiert (WebP, Grund CSP `'unsafe-eval'`).
+  - Elektro, Tippen auf ein Fenster: „Hier ist ein Fenster. Bitte daneben auf die Wandfläche tippen, …". Ebenso gibt es eigene Meldungen für eine Tür, die Wandkante und einen Treffer neben der Wandfläche. Vorher kam an dieser Stelle keine Rückmeldung.
+  - Maße in 3D: Raumlabels liegen immer oben. Längenlabels, die ein Raumlabel überdecken würden, werden für dieses Bild ausgeblendet (`entflechteLabels`, `Ansicht3D.tsx`). Gemessen: 0 sichtbare Überdeckungen, auf Mobil 2 von 10 Längen ausgeblendet. Längenlabels können sich untereinander weiterhin überlappen.
+
+**Geprüft**:
+- `npm test`: 31 Dateien, 486 Tests, Hook 7/7.
+- `npm run check`: 0 Fehler.
+- `scan:wording`: sauber.
+- `build:staging`: grün.
+- E2E `planer-gestalten.spec.ts` und `raumplaner.spec.ts` (chromium und mobile): 30/30.
+- Messskript gegen den Staging-Server (1440 und 390 px): Kontraste wie oben, 0 Konsolenfehler, 0 Fremd-Requests.
+- Screenshots: `screenshots/5-planner-design-fix-{zonen-2d,zonen-3d,legende,masse}-{1440,390}.png`.
+
+**Nicht geprüft**: Die Lesbarkeit der 3D-Bänder auf echter GPU, nur SwiftShader. Die Schraffur wird aus der Ferne durch Mipmapping heller, bleibt aber erkennbar.

@@ -59,6 +59,11 @@
   gap: var(--space-3);
   min-width: 0;
 }
+/* range sliders (time of day): 44 px target height, the whole box is draggable (WCAG 2.5.8) */
+.gestalt-panel input[type='range'] {
+  min-height: 2.75rem;
+  margin: 0;
+}
 .gestalt-panel-titel {
   font-size: var(--step-0);
 }
@@ -76,7 +81,8 @@
   font-weight: var(--weight-ui);
 }
 .gestalt-warnung {
-  color: var(--color-fehler-dunkel, var(--error));
+  /* --error follows the surface: --color-fehler (5.8:1) on the light panel, the light variant on dark */
+  color: var(--error);
   font-size: var(--step--1);
 }
 .gestalt-segment {
@@ -384,27 +390,38 @@
   list-style: none;
   font-size: var(--step--1);
 }
+/* Zones (WCAG 1.4.11, >= 3:1 on #FBFAF7 and on the panel): colour plus pattern, never colour alone.
+   Horizontal = Kabelgrün, dashed; vertical = dark amber #8c5c00, diagonally hatched (2D plan, 3D bands
+   and legend alike). Same colours as ZONEN_FARBE in szene/ausstattung3d.ts. */
 .gestalt-zone {
   display: inline-block;
-  width: 1.5rem;
-  height: 0.6rem;
+  width: 1.75rem;
+  height: 0.75rem;
   vertical-align: middle;
 }
 .gestalt-zone-waagerecht {
-  background: rgb(61 99 0 / 0.45);
+  height: 0.4rem;
+  background: repeating-linear-gradient(to right, var(--color-kabelgruen) 0 7px, transparent 7px 10px);
 }
 .gestalt-zone-senkrecht {
-  background: rgb(197 138 0 / 0.55);
+  border: 2px solid #8c5c00;
+  background: repeating-linear-gradient(45deg, #8c5c00 0 2px, transparent 2px 5px);
 }
 
 /* ---------- 2D layer ---------- */
 .gestalt-ebene .zone-waagerecht {
-  stroke: rgb(61 99 0 / 0.35);
+  stroke: rgb(61 99 0 / 0.9);
   stroke-linecap: butt;
 }
 .gestalt-ebene .zone-senkrecht {
-  stroke: rgb(197 138 0 / 0.75);
+  stroke: url(#gestalt-zone-schraffur);
   stroke-linecap: butt;
+}
+.gestalt-zone-schraffur-grund {
+  fill: #8c5c00;
+}
+.gestalt-zone-schraffur-linie {
+  stroke: #fbfaf7;
 }
 .gestalt-ziel-linie {
   stroke: var(--color-kabelgruen);
@@ -492,6 +509,9 @@
   font-family: var(--font-mono);
   font-size: 0.72rem;
   white-space: nowrap;
+}
+.planer-mass-label.ist-verdeckt {
+  visibility: hidden;
 }
 .planer-mass-raum {
   background: rgb(21 25 30 / 0.85);

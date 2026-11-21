@@ -37,9 +37,22 @@ export function Ebene2D({ px, zeiger, tastatur }: { px: (n: number) => number; z
 
   return (
     <g className={`gestalt-ebene gestalt-ebene-${modus}`}>
-      {zonen.map((z, i) => (
-        <line key={i} className={istWaagerecht(z.art) ? 'zone-waagerecht' : 'zone-senkrecht'} x1={z.von.x} y1={z.von.y} x2={z.bis.x} y2={z.bis.y} strokeWidth={istWaagerecht(z.art) ? px(5) : px(9)} data-zone={z.art} />
-      ))}
+      {zonen.length > 0 && (
+        <defs>
+          {/* diagonal hatching of the vertical zones (screen-sized, plan units via px) */}
+          <pattern id="gestalt-zone-schraffur" patternUnits="userSpaceOnUse" width={px(4)} height={px(4)} patternTransform="rotate(45)">
+            <rect className="gestalt-zone-schraffur-grund" x={0} y={0} width={px(4)} height={px(4)} />
+            <line className="gestalt-zone-schraffur-linie" x1={px(3)} y1={0} x2={px(3)} y2={px(4)} strokeWidth={px(1.3)} />
+          </pattern>
+        </defs>
+      )}
+      {zonen.map((z, i) =>
+        istWaagerecht(z.art) ? (
+          <line key={i} className="zone-waagerecht" x1={z.von.x} y1={z.von.y} x2={z.bis.x} y2={z.bis.y} strokeWidth={px(5)} strokeDasharray={`${px(8)} ${px(4)}`} data-zone={z.art} />
+        ) : (
+          <line key={i} className="zone-senkrecht" x1={z.von.x} y1={z.von.y} x2={z.bis.x} y2={z.bis.y} strokeWidth={px(9)} data-zone={z.art} />
+        ),
+      )}
       {zielForm}
       {projekt.einrichtung.map((m) => {
         const def = moebelVon(m.typ);

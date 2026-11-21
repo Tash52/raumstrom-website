@@ -2,6 +2,7 @@
 // planner chunk (React app, geometry). three.js/CSG load later, only when the 3D view opens.
 // State for tests: [data-planer-zustand] = laedt | bereit | fehler.
 import { istSoftwareRenderer, pruefeWebGL } from '../../lib/motion/umgebung.ts';
+import { istLeichtesGeraet } from './leistung.ts';
 
 /** Active style packages, rendered by the page into data-planer-stilpakete (JSON, no inline script). */
 function leseStilpakete(host: HTMLElement): import('../../lib/materials/index.ts').Stilpaket[] {
@@ -28,7 +29,14 @@ export async function ladePlaner(): Promise<void> {
   // planner works in 2D without WebGL; software renderers are allowed here (user asked for 3D explicitly)
   const gl = pruefeWebGL(false);
   host.dataset.planerWebgl = gl.ok ? 'ja' : 'nein';
-  const leicht = !gl.ok || istSoftwareRenderer(gl.renderer) || window.matchMedia('(max-width: 40rem)').matches || (navigator.hardwareConcurrency ?? 8) <= 4;
+  const leicht = istLeichtesGeraet({
+    webgl: gl.ok,
+    softwareRenderer: istSoftwareRenderer(gl.renderer),
+    schmal: window.matchMedia('(max-width: 40rem)').matches,
+    nurTouch: window.matchMedia('(pointer: coarse) and (hover: none)').matches,
+    kerne: navigator.hardwareConcurrency || undefined,
+    speicherGb: (navigator as Navigator & { deviceMemory?: number }).deviceMemory,
+  });
   try {
     const modul = import('./start.tsx');
     fortschritt(55, 'Raumplaner wird gestartet …');
