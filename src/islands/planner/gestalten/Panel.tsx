@@ -396,7 +396,8 @@ function FlaechenPanel({ modus }: { modus: 'waende' | 'boden' | 'fliesen' | 'dec
       </div>
       <Stilpakete />
       {gruppen.map((gr) => (
-        <section key={gr} className="gestalt-gruppe" aria-label={gr}>
+        // no aria-label: a named <section> becomes a region landmark and "Decke" would repeat the panel's name
+        <section key={gr} className="gestalt-gruppe">
           <h4 className="gestalt-gruppe-titel">{gr}</h4>
           <div className="gestalt-kacheln">
             {eintraege
@@ -715,7 +716,7 @@ function ElektroPanel() {
             </li>
           ))}
         </ul>
-        <p className="planer-klein">Hier dürfen Leitungen in der Wand verlaufen. Vereinfachte Darstellung, Maße ab fertigen Oberflächen.</p>
+        <p className="planer-klein">Grün gestrichelt: waagerechte Zonen, braun schraffiert: senkrechte Zonen. Hier dürfen Leitungen in der Wand verlaufen. Vereinfachte Darstellung, Maße ab fertigen Oberflächen.</p>
       </details>
       <Stueckliste />
     </>

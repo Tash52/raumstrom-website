@@ -12,7 +12,7 @@ import { CSS2DObject, CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer
 import { type Projekt, beschriftungsPunkt, formatFlaeche, formatLaenge, knotenMap, raumPolygon, wandKoerper } from '../../../lib/geometry/index.ts';
 import { type Ziel, gestaltStore, rundgangEingabe, useGestalt } from '../gestalten/store.ts';
 import type { Treffer } from '../gestalten/treffer.ts';
-import { baueAusstattung } from './ausstattung3d.ts';
+import { baueAusstattung, entsorgeAusstattung } from './ausstattung3d.ts';
 import { type Szene, baueSzene, teilVon } from './bauen.ts';
 import type { AnsichtBefehl } from './befehle.ts';
 import { entsorgeGestaltung, gestalteSzene } from './gestaltung3d.ts';
@@ -298,8 +298,33 @@ function Masse({ projekt }: { projekt: Projekt }) {
   useFrame(() => {
     gl.render(scene, camera);
     renderer.render(scene, camera);
+    entflechteLabels(gruppe);
   }, 1);
   return null;
+}
+
+/**
+ * Room labels stay readable: CSS2DRenderer sorts by distance (z-index), so a wall length could cover a room
+ * name. Room labels go on top, and wall-length labels that overlap a room label are hidden for this frame.
+ */
+function entflechteLabels(gruppe: THREE.Group): void {
+  const raeume: DOMRect[] = [];
+  const laengen: HTMLElement[] = [];
+  for (const o of gruppe.children) {
+    if (!(o instanceof CSS2DObject)) continue;
+    const el = o.element;
+    if (el.classList.contains('planer-mass-raum')) {
+      el.style.zIndex = '100000';
+      if (el.style.display !== 'none') raeume.push(el.getBoundingClientRect());
+    } else laengen.push(el);
+  }
+  for (const el of laengen) {
+    el.classList.remove('ist-verdeckt');
+    if (el.style.display === 'none') continue;
+    const r = el.getBoundingClientRect();
+    const ueber = raeume.some((q) => r.left < q.right + 2 && r.right > q.left - 2 && r.top < q.bottom + 2 && r.bottom > q.top - 2);
+    el.classList.toggle('ist-verdeckt', ueber);
+  }
 }
 
 const MARK = {
@@ -385,6 +410,7 @@ function Modell({ projekt, leicht, onBereit, befehl, onTreffer }: Props) {
   }, [szene, projekt, cache, invalidate]);
 
   const ausstattung = useMemo(() => baueAusstattung(projekt, { zonen, waendeSichtbar: waende === 'voll' }), [projekt, zonen, waende]);
+  useEffect(() => () => entsorgeAusstattung(ausstattung), [ausstattung]);
 
   // walls lowered (Sims-like cut-away) or hidden; ceilings only with full walls
   useEffect(() => {

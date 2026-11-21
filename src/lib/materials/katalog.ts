@@ -8,7 +8,10 @@ import { FORMATE, MUSTER, formatVon, musterVon } from './muster.ts';
 
 export type Kategorie = 'wand' | 'boden' | 'fliesen' | 'decke' | 'sockelleiste' | 'fensterbank';
 
-/** CC0 detail textures (public/textures/<id>-<px>.ktx2), loaded per category on demand. */
+/**
+ * CC0 detail textures (public/textures/<datei>-<px>.webp, 512/256 px plus -vorschau), loaded per category on demand.
+ * WebP instead of KTX2: the Basis transcoder needs 'unsafe-eval' (embind), which the strict CSP forbids.
+ */
 export type Textur = 'holz' | 'marmor' | 'beton' | 'putz';
 
 /** Procedural surface structure drawn into a canvas texture. */
@@ -457,5 +460,8 @@ export function beschreibeRef(ref: MaterialRef | null | undefined, farbName?: (h
   if (ref.farbe) teile.push(farbName?.(ref.farbe) ?? ref.farbe.toUpperCase());
   if (ref.fuge && m?.optionen.fuge) teile.push(`Fuge ${String(ref.fuge.breiteMm).replace('.', ',')} mm`);
   if (ref.fliesenhoehe) teile.push(FLIESENHOEHE_NAME[ref.fliesenhoehe]);
+  // laying direction in plan degrees (0° = along the plan's x axis); omitted for the default 0°
+  const richtung = ref.richtungGrad === undefined ? 0 : ((Math.round(ref.richtungGrad) % 360) + 360) % 360;
+  if (m?.optionen.richtung && richtung !== 0) teile.push(`Verlegerichtung ${richtung}°`);
   return teile.join(', ');
 }

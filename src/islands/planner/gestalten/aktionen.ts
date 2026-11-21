@@ -145,7 +145,7 @@ export function wendeAn(ref: MaterialRef | null, optionen: { bereich?: 'flaeche'
 }
 
 /** Material reference currently shown on a target for the mode's category (pipette). */
-export function refAmZiel(ziel: Ziel, teil: keyof RaumGestaltung, p: Projekt = st().projekt): MaterialRef | null {
+export function refAmZiel(ziel: Ziel, teil: keyof RaumGestaltung, p: Projekt = st().projekt, fliesenZiel: 'wand' | 'boden' = 'boden'): MaterialRef | null {
   if (!ziel) return null;
   if (ziel.art === 'wandseite') {
     const w = wirksameWandGestaltung(p, ziel.wandId, ziel.seite);
@@ -157,7 +157,8 @@ export function refAmZiel(ziel: Ziel, teil: keyof RaumGestaltung, p: Projekt = s
   const raumId = zielRaum(ziel, p);
   const r = raumId ? p.raeume.find((x) => x.id === raumId) : undefined;
   if (!r) return null;
-  if (teil === 'fliesen' && ziel.art === 'boden') return r.gestaltung.boden;
+  // tiles mode with a whole room chosen: "Boden" reads the floor, "Wände" the room's wall tiles
+  if (teil === 'fliesen' && ziel.art === 'boden' && fliesenZiel === 'boden') return r.gestaltung.boden;
   return r.gestaltung[teil];
 }
 
@@ -166,8 +167,9 @@ export function nimmPipette(ziel: Ziel): boolean {
   const g = gs();
   const kat = kategorieVon(g.modus, ziel);
   if (!kat) return false;
-  const teil = kat === 'fliesen' && ziel?.art === 'boden' ? 'boden' : (kat as keyof RaumGestaltung);
-  const ref = refAmZiel(ziel, teil);
+  // same rule as wendeAn: in the tiles mode the floor is only read when "Fliesen für: Boden" is chosen
+  const teil = kat === 'fliesen' && ziel?.art === 'boden' && g.fliesenZiel === 'boden' ? 'boden' : (kat as keyof RaumGestaltung);
+  const ref = refAmZiel(ziel, teil, st().projekt, g.fliesenZiel);
   gestaltStore.setState({ pipette: false });
   if (!ref) {
     st().melde('Diese Fläche hat noch kein Material. Nichts übernommen.', 'fehler');
@@ -301,7 +303,10 @@ function elektroTreffer(t: Treffer): void {
     }
     const w = p.waende.find((x) => x.id === t.wandId);
     const treffer = wandSeiteBei(p, t.plan, (w?.dicke ?? 0.3) / 2 + 0.3);
-    if (!treffer) return;
+    if (!treffer) {
+      st().melde('Diese Stelle liegt nicht auf einer Wandfläche. Bitte direkt auf die Wand tippen.', 'fehler');
+      return;
+    }
     const seite = t.seite;
     const raumId = t.raumId;
     const r = rasteAnZone(p, t.wandId, seite, raumId, treffer.abstand, typ);
@@ -321,6 +326,14 @@ function elektroTreffer(t: Treffer): void {
     if (!x) return;
     st().aendere(() => x.projekt, `${def.name} gesetzt.`);
     g.setze({ ziel: { art: 'elektro', id: x.id } });
+    return;
+  }
+  if (t.art === 'tuer' || t.art === 'fenster') {
+    st().melde(`Hier ist ${t.art === 'tuer' ? 'eine Tür' : 'ein Fenster'}. Bitte daneben auf die Wandfläche tippen, um dort einen Punkt zu setzen.`, 'fehler');
+    return;
+  }
+  if (t.art === 'wand') {
+    st().melde('Das ist die Wandkante. Bitte auf die Wandfläche im Raum tippen.', 'fehler');
     return;
   }
   st().melde('Tippen Sie auf eine Wandseite oder in einen Raum.', 'fehler');
